@@ -10,7 +10,7 @@ whichever one is playing.
 > endorsed by Apple. All artwork is drawn in code; no Apple software, fonts,
 > icons or sounds are included.
 
-## Features (stage 1)
+## Features
 
 - Borderless floating window: drag it anywhere, right-click for **Keep on Top** / **Quit**.
 - **Now Playing**: artwork, title, artist, album, progress, elapsed / remaining time.
@@ -18,6 +18,13 @@ whichever one is playing.
   center to select, MENU to go back, ⏮ / ⏭ to skip, ▶❚❚ to play/pause.
 - **Keyboard**: ↑ ↓ scroll, Return selects, Esc goes back, Space plays/pauses.
 - **Settings**: source (Auto / Apple Music / Spotify), clicker sound on/off.
+- **Music** (Apple Music library): Playlists, Artists, Albums and Songs. Picking a
+  song plays it in context: the rest of the playlist, album or song list follows.
+
+Albums, artists and Songs play through a playlist named **ClickWheel**, which
+ClickWheel creates in your Music library and refills each time. It syncs to your
+other devices with the rest of your library. Opening the Music menu launches
+Music if it isn't running.
 
 ## Build
 
@@ -38,7 +45,7 @@ System Settings → Privacy & Security → Automation.
 ## Roadmap
 
 1. ✅ Now Playing and transport controls
-2. Apple Music library menus (Playlists, Artists, Albums, Songs)
+2. ✅ Apple Music library menus (Playlists, Artists, Albums, Songs)
 3. Spotify library menus (via the Spotify Web API)
 4. Extras: alternate skins, more settings
 
