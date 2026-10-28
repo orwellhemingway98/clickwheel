@@ -14,6 +14,11 @@ final class TimeFormatTests: XCTestCase {
         XCTAssertEqual(TimeFormat.elapsed(.infinity), "0:00")
     }
 
+    func testHugeValuesDoNotCrash() {
+        XCTAssertEqual(TimeFormat.elapsed(1e20), "99:59:59")
+        XCTAssertEqual(TimeFormat.remaining(position: 0, duration: 1e20), "-99:59:59")
+    }
+
     func testRemaining() {
         XCTAssertEqual(TimeFormat.remaining(position: 83, duration: 200), "-1:57")
         XCTAssertEqual(TimeFormat.remaining(position: 250, duration: 200), "-0:00")

@@ -125,6 +125,27 @@ final class PlayerHubTests: XCTestCase {
         XCTAssertEqual(spotify.calls, ["setVolume(100)", "setVolume(0)"])
     }
 
+    func testOverlappingRefreshIsSkipped() async {
+        music.running = false
+        spotify.set(.playing)
+        spotify.snapshotDelay = 0.2
+        async let first: Void = hub.refresh()
+        async let second: Void = hub.refresh()
+        _ = await (first, second)
+        XCTAssertEqual(spotify.snapshotCallCount, 1)
+    }
+
+    func testRapidVolumeStepsAccumulate() async {
+        music.running = false
+        spotify.set(.playing, volume: 50)
+        await hub.refresh()
+        hub.adjustVolume(by: 3)
+        hub.adjustVolume(by: 3)
+        hub.adjustVolume(by: 3)
+        await hub.lastCommand?.value
+        XCTAssertEqual(spotify.calls.filter { $0.hasPrefix("setVolume") }, ["setVolume(53)", "setVolume(56)", "setVolume(59)"])
+    }
+
     func testCommandsWithNoActiveSourceAreNoOps() async {
         music.running = false; spotify.running = false
         await hub.refresh()

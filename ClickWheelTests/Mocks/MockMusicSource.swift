@@ -16,8 +16,11 @@ final class MockMusicSource: MusicSource {
 
     func isRunning() -> Bool { running }
 
+    var snapshotDelay: TimeInterval = 0
+
     func snapshot() throws -> PlayerSnapshot {
         snapshotCallCount += 1
+        if snapshotDelay > 0 { Thread.sleep(forTimeInterval: snapshotDelay) }
         if let snapshotError { throw snapshotError }
         return nextSnapshot
     }

@@ -50,6 +50,15 @@ final class ScriptOutputParserTests: XCTestCase {
         XCTAssertEqual(snap.track?.album, "")
     }
 
+    func testMissingValueBecomesEmpty() throws {
+        let snap = try XCTUnwrap(ScriptOutputParser.parse(
+            j("playing", "50", "X", "Ad", "missing value", "missing value", "missing value", "1", "", ""),
+            source: .spotify, durationIsMilliseconds: true))
+        XCTAssertEqual(snap.track?.artist, "")
+        XCTAssertEqual(snap.track?.album, "")
+        XCTAssertEqual(snap.track?.duration, 0)
+    }
+
     func testMissingIndexAndCount() throws {
         let snap = try XCTUnwrap(ScriptOutputParser.parse(
             j("playing", "50", "X", "T", "A", "B", "100", "1", "", ""),

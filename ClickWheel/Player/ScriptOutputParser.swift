@@ -7,7 +7,9 @@ enum ScriptOutputParser {
     static let separator: Character = "\u{1F}"
 
     static func parse(_ output: String, source: SourceID, durationIsMilliseconds: Bool) -> PlayerSnapshot? {
-        let fields = output.split(separator: separator, omittingEmptySubsequences: false).map(String.init)
+        // AppleScript renders absent values (ads, podcasts, streams) as "missing value".
+        let fields = output.split(separator: separator, omittingEmptySubsequences: false)
+            .map { $0 == "missing value" ? "" : String($0) }
         guard fields.count == 2 || fields.count == 10,
               let state = state(fields[0]),
               let volume = number(fields[1]).map({ Int($0.rounded()) }) else { return nil }

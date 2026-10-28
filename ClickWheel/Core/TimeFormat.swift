@@ -4,7 +4,8 @@ import Foundation
 /// duration) degrades to zero rather than showing garbage.
 enum TimeFormat {
     static func elapsed(_ seconds: Double) -> String {
-        let total = seconds.isFinite ? max(0, Int(seconds)) : 0
+        // Clamp before converting: Int(_:) traps on huge values.
+        let total = seconds.isFinite ? Int(min(max(0, seconds), 359_999)) : 0
         let h = total / 3600, m = (total % 3600) / 60, s = total % 60
         return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
     }

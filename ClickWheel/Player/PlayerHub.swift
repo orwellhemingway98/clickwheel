@@ -29,6 +29,11 @@ final class PlayerHub: ObservableObject, PlayerControlling {
     private let worker = DispatchQueue(label: "ClickWheel.PlayerHub")
     private var lastActive: SourceID?
     private var pollTimer: Timer?
+    private var isRefreshing = false
+    /// Volume we've asked for but not yet seen confirmed by a poll, so fast
+    /// wheel spins accumulate instead of all starting from the same value.
+    private var pendingVolume: Int?
+    private var pendingCommands = 0
 
     init(sources: [MusicSource], settings: AppSettings) {
         self.sources = sources
@@ -42,9 +47,12 @@ final class PlayerHub: ObservableObject, PlayerControlling {
     func startPolling(interval: TimeInterval = 1.0) {
         stopPolling()
         Task { await refresh() }
-        pollTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in await self?.refresh() }
         }
+        // .common keeps polling while the window is dragged or a menu is open.
+        RunLoop.main.add(timer, forMode: .common)
+        pollTimer = timer
     }
 
     func stopPolling() {
@@ -53,6 +61,10 @@ final class PlayerHub: ObservableObject, PlayerControlling {
     }
 
     func refresh() async {
+        // A blocked script (permission prompt, hung app) must not let polls pile up.
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        defer { isRefreshing = false }
         let wanted = candidates()
         let results = await onWorker { () -> [(SourceID, Result<PlayerSnapshot, MusicSourceError>)] in
             wanted.compactMap { source in
@@ -75,8 +87,9 @@ final class PlayerHub: ObservableObject, PlayerControlling {
     func previous() { command { try $0.previous() } }
 
     func adjustVolume(by delta: Int) {
-        guard let current = snapshot?.volume else { return }
+        guard let current = pendingVolume ?? snapshot?.volume else { return }
         let target = min(100, max(0, current + delta))
+        pendingVolume = target
         command { try $0.setVolume(target) }
     }
 
@@ -120,6 +133,7 @@ final class PlayerHub: ObservableObject, PlayerControlling {
         activeSource = chosen
         snapshot = chosen.flatMap { snapshots[$0] }
         status = newStatus
+        if pendingCommands == 0 { pendingVolume = nil }
     }
 
     private func command(_ action: @escaping (MusicSource) throws -> Void) {
@@ -127,7 +141,9 @@ final class PlayerHub: ObservableObject, PlayerControlling {
             lastCommand = nil
             return
         }
+        pendingCommands += 1
         lastCommand = Task {
+            defer { pendingCommands -= 1 }
             let error = await onWorker { () -> MusicSourceError? in
                 do { try action(source); return nil }
                 catch let error as MusicSourceError { return error }

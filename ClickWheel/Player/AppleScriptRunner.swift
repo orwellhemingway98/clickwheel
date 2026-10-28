@@ -42,10 +42,19 @@ class AppleScriptMusicSource {
     }
 
     /// Runs `body` inside `tell application "<app>"`, but only if the app is running,
-    /// because telling a closed app launches it.
+    /// because telling a closed app launches it. The check is repeated inside the
+    /// script (`is running` never launches anything) to close the gap if the app
+    /// quits between the two, and a timeout keeps a hung app from blocking polls.
     @discardableResult
     func tell(_ body: String) throws -> NSAppleEventDescriptor {
         guard isRunning() else { throw MusicSourceError.notRunning }
-        return try AppleScriptRunner.run("tell application \"\(appName)\"\n\(body)\nend tell")
+        return try AppleScriptRunner.run("""
+            if application id "\(bundleIdentifier)" is not running then error number -600
+            with timeout of 3 seconds
+            tell application id "\(bundleIdentifier)"
+            \(body)
+            end tell
+            end timeout
+            """)
     }
 }

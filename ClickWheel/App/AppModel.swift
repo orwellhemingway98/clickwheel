@@ -26,8 +26,8 @@ final class AppModel {
     }
 
     /// The iPod with every shared object injected.
-    func rootView() -> some View {
-        IPodView()
+    func rootView(includesWindowControls: Bool = true) -> some View {
+        IPodView(includesWindowControls: includesWindowControls)
             .environmentObject(settings)
             .environmentObject(hub)
             .environmentObject(navigator)
@@ -43,7 +43,7 @@ final class AppModel {
         if args.contains("--now-playing") { navigator.handle(.center) }
         Task {
             try? await Task.sleep(for: .seconds(2.5))
-            let renderer = ImageRenderer(content: rootView().padding(20))
+            let renderer = ImageRenderer(content: rootView(includesWindowControls: false).padding(20))
             renderer.scale = 2
             if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
                let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {

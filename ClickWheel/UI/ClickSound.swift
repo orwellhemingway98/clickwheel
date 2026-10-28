@@ -2,10 +2,13 @@ import AVFoundation
 
 /// A short synthesized "tick" for wheel steps: a 4 ms, 2 kHz sine burst
 /// with an exponential decay. Generated at launch, so no audio files ship.
+/// The audio engine only runs while clicking: a running output keeps the
+/// audio device busy and can stop the Mac from sleeping.
 final class ClickSound {
     private let engine = AVAudioEngine()
     private let player = AVAudioPlayerNode()
     private let buffer: AVAudioPCMBuffer?
+    private var idleStop: DispatchWorkItem?
 
     init() {
         let sampleRate = 44_100.0
@@ -21,13 +24,25 @@ final class ClickSound {
         }
         engine.attach(player)
         engine.connect(player, to: engine.mainMixerNode, format: format)
-        try? engine.start()
     }
 
     func play() {
         guard let buffer else { return }
-        if !engine.isRunning { try? engine.start() }
+        if !engine.isRunning {
+            do { try engine.start() } catch { return }
+        }
         player.scheduleBuffer(buffer, at: nil, options: .interrupts)
         if !player.isPlaying { player.play() }
+        scheduleIdleStop()
+    }
+
+    private func scheduleIdleStop() {
+        idleStop?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.player.stop()
+            self?.engine.stop()
+        }
+        idleStop = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: work)
     }
 }

@@ -44,7 +44,17 @@ final class WheelGestureTrackerTests: XCTestCase {
         var t = WheelGestureTracker()
         t.begin(at: p(0))
         XCTAssertEqual(t.move(to: p(90, r: 5)), 0)
-        XCTAssertEqual(t.move(to: p(20)), 1)
+        // Leaving the dead zone re-anchors rather than jumping.
+        XCTAssertEqual(t.move(to: p(20)), 0)
+        XCTAssertEqual(t.move(to: p(40)), 1)
+    }
+
+    func testDragThroughCenterReanchors() {
+        var t = WheelGestureTracker()
+        t.begin(at: p(0))
+        XCTAssertEqual(t.move(to: p(90, r: 5)), 0)
+        XCTAssertEqual(t.move(to: p(170)), 0)
+        XCTAssertEqual(t.move(to: p(190)), 1)
     }
 
     func testEndResetsCarry() {

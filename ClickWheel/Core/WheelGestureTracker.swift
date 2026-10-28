@@ -23,7 +23,13 @@ struct WheelGestureTracker {
 
     /// Returns the number of whole steps rotated since the previous call.
     mutating func move(to point: CGPoint) -> Int {
-        guard let angle = angle(of: point) else { return 0 }
+        guard let angle = angle(of: point) else {
+            // Passing through the center: re-anchor on the way out instead of
+            // treating the jump across the wheel as rotation.
+            lastAngle = nil
+            carry = 0
+            return 0
+        }
         guard let previous = lastAngle else {
             lastAngle = angle
             return 0
