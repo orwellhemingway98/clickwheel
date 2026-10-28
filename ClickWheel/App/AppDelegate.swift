@@ -35,11 +35,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak window] onTop in window?.level = onTop ? .floating : .normal }
             .store(in: &cancellables)
 
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak model] event in
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak model] event in
             guard let model,
-                  event.modifierFlags.intersection([.command, .control, .option]).isEmpty,
-                  let wheelEvent = KeyMap.event(forKeyCode: event.keyCode) else { return event }
-            model.navigator.handle(wheelEvent)
+                  event.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return event }
+            let key = event.type == .keyDown
+                ? KeyMap.keyDown(code: event.keyCode, isRepeat: event.isARepeat)
+                : KeyMap.keyUp(code: event.keyCode)
+            guard let key else {
+                // Swallow repeats of mapped keys so they don't beep.
+                return KeyMap.keyUp(code: event.keyCode) != nil ? nil : event
+            }
+            model.input.handle(key)
             return nil
         }
 

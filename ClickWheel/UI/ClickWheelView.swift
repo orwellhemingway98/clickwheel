@@ -1,14 +1,16 @@
 import SwiftUI
 
-/// The wheel: drag in a circle to scroll, tap the ring's top/left/right/bottom
-/// for MENU / previous / next / play-pause, tap the center to select.
+/// The wheel: drag in a circle to scroll; press the ring's top/left/right/bottom
+/// for MENU / ⏮ / ⏭ / ▶❚❚ and the center to select. Presses and releases go to
+/// `WheelInput`, which decides tap vs hold; a press that turns into a spin is cancelled.
 struct ClickWheelView: View {
-    let onEvent: (WheelEvent) -> Void
+    @EnvironmentObject private var input: WheelInput
 
     @State private var tracker = WheelGestureTracker()
     @State private var dragging = false
     @State private var rotated = false
-    @State private var pressedQuadrant: WheelEvent?
+    @State private var pressedButton: WheelButton?
+    @State private var pressedQuadrant: WheelButton?
     @State private var centerPressed = false
     @Environment(\.ipodGeometry) private var g
 
@@ -84,52 +86,59 @@ struct ClickWheelView: View {
 
     private var centerGesture: some Gesture {
         DragGesture(minimumDistance: 0)
-            .onChanged { _ in centerPressed = true }
+            .onChanged { _ in
+                guard !centerPressed else { return }
+                centerPressed = true
+                input.press(.center)
+            }
             .onEnded { value in
                 centerPressed = false
                 let d = hypot(value.location.x - button / 2, value.location.y - button / 2)
-                if d <= button / 2 { onEvent(.center) }
+                if d <= button / 2 { input.release(.center) } else { input.cancel() }
             }
     }
 
     private var ringGesture: some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                let point = relative(value.location)
+                let now = ProcessInfo.processInfo.systemUptime
                 if !dragging {
                     dragging = true
                     rotated = false
-                    tracker.begin(at: relative(value.startLocation))
+                    tracker.begin(at: relative(value.startLocation), now: now)
+                    let pressed = button(at: relative(value.startLocation))
+                    pressedButton = pressed
+                    pressedQuadrant = pressed
+                    input.press(pressed)
                 }
-                let steps = tracker.move(to: point)
+                let steps = tracker.move(to: relative(value.location))
+                let moved = hypot(value.translation.width, value.translation.height)
+                if pressedButton != nil, steps != 0 || moved >= 6 {
+                    // It's a spin, not a click.
+                    pressedButton = nil
+                    pressedQuadrant = nil
+                    input.cancel()
+                }
                 if steps != 0 {
                     rotated = true
-                    onEvent(.scroll(steps: steps))
+                    input.scroll(steps)
                 }
             }
-            .onEnded { value in
-                defer { tracker.end(); dragging = false }
-                let moved = hypot(value.translation.width, value.translation.height)
-                guard !rotated, moved < 6 else { return }
-                let event = buttonEvent(at: relative(value.startLocation))
-                flash(event)
-                onEvent(event)
+            .onEnded { _ in
+                tracker.end(now: ProcessInfo.processInfo.systemUptime)
+                dragging = false
+                if let pressed = pressedButton { input.release(pressed) }
+                pressedButton = nil
+                pressedQuadrant = nil
             }
-    }
-
-    private func flash(_ quadrant: WheelEvent) {
-        pressedQuadrant = quadrant
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            if pressedQuadrant == quadrant { pressedQuadrant = nil }
-        }
     }
 
     private func relative(_ location: CGPoint) -> CGPoint {
         CGPoint(x: location.x - size / 2, y: location.y - size / 2)
     }
 
-    /// Which of the four ring buttons a tap hit, by angle (y down).
-    private func buttonEvent(at point: CGPoint) -> WheelEvent {
+    /// Which of the four ring buttons a press hit, by angle (y down).
+    private func button(at point: CGPoint) -> WheelButton {
         let angle = atan2(point.y, point.x) * 180 / .pi
         switch angle {
         case -135 ..< -45: return .menu
@@ -140,7 +149,7 @@ struct ClickWheelView: View {
     }
 
     /// Center of each button's quadrant, in degrees (y down).
-    private func angle(of quadrant: WheelEvent) -> Double {
+    private func angle(of quadrant: WheelButton) -> Double {
         switch quadrant {
         case .menu: return -90
         case .next: return 0

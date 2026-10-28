@@ -13,6 +13,7 @@ final class AppModel {
     let settings = AppSettings()
     let hub: PlayerHub
     let navigator: Navigator
+    let input: WheelInput
     let artwork = ArtworkCache()
     let clickSound = ClickSound()
     /// One click per row moved, rate-limited during fast scrolls.
@@ -40,6 +41,8 @@ final class AppModel {
                 }
             })
         let navigator = navigator
+        input = WheelInput(navigator: navigator)
+        input.startTicking()
         trackObserver = hub.$snapshot
             .map { $0?.track }
             .sink { track in navigator.setTrack(track) }
@@ -55,6 +58,7 @@ final class AppModel {
         .environmentObject(hub)
         .environmentObject(navigator)
         .environmentObject(artwork)
+        .environmentObject(input)
     }
 
     /// Development aid: `ClickWheel --snapshot out.png [--now-playing] [--keys c,d,m]`

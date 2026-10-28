@@ -34,7 +34,12 @@ struct IPodView: View {
                     .allowsHitTesting(hub.status != .ok && hub.snapshot?.track == nil)
             }
             .position(x: g.bodySize.width / 2, y: g.windowTop + g.windowSize.height / 2)
-            ClickWheelView { navigator.handle($0) }
+            // One clear layer covers the white and the screen alike, so its gloss
+            // runs across both. The wheel is a separate part on top.
+            gloss
+                .padding(g.rimWidth)
+                .allowsHitTesting(false)
+            ClickWheelView()
                 .position(x: g.bodySize.width / 2, y: g.wheelCenterY)
         }
         .frame(width: g.bodySize.width, height: g.bodySize.height)
@@ -43,29 +48,37 @@ struct IPodView: View {
         .shadow(color: .black.opacity(Theme.shadowOpacity), radius: Theme.shadowRadius, y: 6)
     }
 
-    /// Glossy white acrylic: base gradient, a top-left specular highlight, a soft
-    /// diagonal sheen and a shadowed edge where it meets the chrome.
+    /// The white layer under the clear front, with a shadowed edge where it
+    /// meets the chrome and a faint line where the white begins.
     private var face: some View {
         faceShape
             .fill(Theme.acrylic)
-            .overlay {
-                RadialGradient(colors: [.white.opacity(0.95), .white.opacity(0)],
-                               center: UnitPoint(x: 0.15, y: 0.05), startRadius: 0, endRadius: g.bodySize.height * 0.4)
-                    .blendMode(.screen)
-            }
-            .overlay {
-                LinearGradient(stops: [.init(color: .white.opacity(0), location: 0.35),
-                                       .init(color: .white.opacity(0.45), location: 0.48),
-                                       .init(color: .white.opacity(0), location: 0.62)],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
-            }
             .overlay {
                 faceShape
                     .stroke(Color.black.opacity(0.18), lineWidth: 2)
                     .blur(radius: 1.5)
             }
+            .overlay {
+                RoundedRectangle(cornerRadius: g.cornerRadius - g.rimWidth - g.innerEdgeInset)
+                    .stroke(Color.black.opacity(0.06), lineWidth: 0.5)
+                    .padding(g.innerEdgeInset)
+            }
             .clipShape(faceShape)
             .overlay(faceShape.stroke(Color.white.opacity(0.7), lineWidth: 0.5))
+    }
+
+    /// The clear front's gloss: a top-left specular highlight and a soft
+    /// diagonal sheen, drawn over the white and the display window together.
+    private var gloss: some View {
+        ZStack {
+            RadialGradient(colors: [.white.opacity(0.45), .white.opacity(0)],
+                           center: UnitPoint(x: 0.15, y: 0.05), startRadius: 0, endRadius: g.bodySize.height * 0.4)
+            LinearGradient(stops: [.init(color: .white.opacity(0), location: 0.3),
+                                   .init(color: .white.opacity(0.16), location: 0.36),
+                                   .init(color: .white.opacity(0), location: 0.5)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
+        .clipShape(faceShape)
     }
 }
 
@@ -77,26 +90,16 @@ private struct DisplayWindow<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
+        // Deep glossy black under the clear layer; no border line (the real
+        // window is printed under the same clear plastic as the white).
         ZStack {
             RoundedRectangle(cornerRadius: g.windowCornerRadius)
                 .fill(Theme.bezel)
             content
                 .scaleEffect(g.lcdScale)
                 .frame(width: g.lcdSize.width, height: g.lcdSize.height)
-            // Recess: shadow falling from the top edge of the window.
-            LinearGradient(colors: [.black.opacity(0.28), .clear], startPoint: .top, endPoint: .init(x: 0.5, y: 0.08))
-                .allowsHitTesting(false)
-            // Glass glare across the top-left of the window.
-            LinearGradient(stops: [.init(color: .white.opacity(0.18), location: 0),
-                                   .init(color: .white.opacity(0.05), location: 0.45),
-                                   .init(color: .clear, location: 0.46)],
-                           startPoint: .topLeading, endPoint: .bottomTrailing)
-                .allowsHitTesting(false)
         }
         .frame(width: g.windowSize.width, height: g.windowSize.height)
         .clipShape(RoundedRectangle(cornerRadius: g.windowCornerRadius))
-        .overlay(RoundedRectangle(cornerRadius: g.windowCornerRadius)
-            .strokeBorder(LinearGradient(colors: [.black.opacity(0.35), .white.opacity(0.6)],
-                                         startPoint: .top, endPoint: .bottom), lineWidth: 1))
     }
 }

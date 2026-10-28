@@ -60,4 +60,17 @@ final class ButtonGestureRecognizerTests: XCTestCase {
     func testReleaseOfUnpressedButtonIsIgnored() {
         XCTAssertEqual(r.release(.center, now: 1), [])
     }
+
+    func testCancelDropsPressSilently() {
+        _ = r.press(.menu, now: 0)
+        XCTAssertEqual(r.cancel(), [])
+        XCTAssertEqual(r.poll(now: 2), [])
+        XCTAssertEqual(r.release(.menu, now: 2), [])
+    }
+
+    func testCancelEndsActiveSeek() {
+        _ = r.press(.next, now: 0)
+        _ = r.poll(now: 1)
+        XCTAssertEqual(r.cancel(), [.seekForward(active: false)])
+    }
 }

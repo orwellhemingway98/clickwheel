@@ -16,7 +16,7 @@ struct IPodGeometry: Equatable {
         static let bodyWidth: CGFloat = 61.80
         static let bodyHeight: CGFloat = 103.50
         static let cornerRadius: CGFloat = 6.8
-        static let rimWidth: CGFloat = 0.6
+        static let rimWidth: CGFloat = 0.4
         static let windowWidth: CGFloat = 52.42
         static let windowHeight: CGFloat = 39.94
         static let windowCenterFromBottom: CGFloat = 78.84
@@ -45,6 +45,8 @@ struct IPodGeometry: Equatable {
     var bodySize: CGSize { CGSize(width: pt(MM.bodyWidth), height: pt(MM.bodyHeight)) }
     var cornerRadius: CGFloat { pt(MM.cornerRadius) }
     var rimWidth: CGFloat { pt(MM.rimWidth) }
+    /// Where the white layer begins under the clear front (a faint inner edge).
+    var innerEdgeInset: CGFloat { pt(0.6) }
 
     var windowSize: CGSize { CGSize(width: pt(MM.windowWidth), height: pt(MM.windowHeight)) }
     /// Distance from the body's top edge to the display window's top edge.

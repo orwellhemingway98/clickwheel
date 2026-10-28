@@ -41,6 +41,15 @@ struct ButtonGestureRecognizer {
         return held ? endHold(of: button) : [tap(button)]
     }
 
+    /// Drops the current press without a tap: a ring press that turned into a spin.
+    mutating func cancel() -> [WheelEvent] {
+        guard let current = pressed else { return [] }
+        let events = endHold(of: current.button)
+        pressed = nil
+        held = false
+        return events
+    }
+
     mutating func poll(now: TimeInterval) -> [WheelEvent] {
         guard let current = pressed, !held, now - current.at >= holdThreshold,
               let event = holdEvent(current.button) else { return [] }
