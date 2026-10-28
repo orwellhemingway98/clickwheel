@@ -65,4 +65,29 @@ final class WheelGestureTrackerTests: XCTestCase {
         t.begin(at: p(0))
         XCTAssertEqual(t.move(to: p(10)), 0)
     }
+
+    func testQuantisedToSectors() {
+        var t = WheelGestureTracker()
+        t.begin(at: p(0))
+        XCTAssertEqual(t.move(to: p(3)), 0)
+        XCTAssertEqual(t.move(to: p(15.1)), 1)
+    }
+
+    func testLiftWithin150msContinues() {
+        var t = WheelGestureTracker()
+        t.begin(at: p(0), now: 0.9)
+        XCTAssertEqual(t.move(to: p(10)), 0)
+        t.end(now: 1.0)
+        t.begin(at: p(10), now: 1.1)
+        XCTAssertEqual(t.move(to: p(16)), 1)
+    }
+
+    func testLiftAfter150msResets() {
+        var t = WheelGestureTracker()
+        t.begin(at: p(0), now: 0.9)
+        XCTAssertEqual(t.move(to: p(10)), 0)
+        t.end(now: 1.0)
+        t.begin(at: p(10), now: 1.3)
+        XCTAssertEqual(t.move(to: p(16)), 0)
+    }
 }

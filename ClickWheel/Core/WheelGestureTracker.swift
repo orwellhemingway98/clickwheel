@@ -1,59 +1,73 @@
 import CoreGraphics
 import Foundation
 
-/// Turns a circular drag around the wheel center into discrete scroll steps.
+/// Turns a circular drag around the wheel center into discrete scroll steps,
+/// the way the 5G hardware does: the finger angle is quantised to 96 sectors
+/// (3.75° each) and one step is reported per 4 sectors (15°).
 /// Points are relative to the wheel center, in SwiftUI coordinates (y down),
 /// so increasing angle is clockwise on screen.
 struct WheelGestureTracker {
-    let degreesPerStep: Double
+    let sectors: Int
+    let sectorsPerStep: Int
     let deadZoneRadius: Double
+    /// A lift shorter than this continues the same gesture (keeps the remainder).
+    let liftTolerance: TimeInterval
 
-    private var lastAngle: Double?
-    private var carry: Double = 0
+    private var lastSector: Int?
+    private var carry = 0
+    private var liftedAt: TimeInterval?
 
-    init(degreesPerStep: Double = 15, deadZoneRadius: Double = 12) {
-        self.degreesPerStep = degreesPerStep
+    init(sectors: Int = 96, sectorsPerStep: Int = 4, deadZoneRadius: Double = 12, liftTolerance: TimeInterval = 0.15) {
+        self.sectors = sectors
+        self.sectorsPerStep = sectorsPerStep
         self.deadZoneRadius = deadZoneRadius
+        self.liftTolerance = liftTolerance
     }
 
-    mutating func begin(at point: CGPoint) {
-        carry = 0
-        lastAngle = angle(of: point)
+    mutating func begin(at point: CGPoint, now: TimeInterval? = nil) {
+        let continues = now.flatMap { now in liftedAt.map { now - $0 <= liftTolerance } } ?? false
+        if !continues { carry = 0 }
+        liftedAt = nil
+        lastSector = sector(of: point)
     }
 
     /// Returns the number of whole steps rotated since the previous call.
     mutating func move(to point: CGPoint) -> Int {
-        guard let angle = angle(of: point) else {
+        guard let sector = sector(of: point) else {
             // Passing through the center: re-anchor on the way out instead of
             // treating the jump across the wheel as rotation.
-            lastAngle = nil
+            lastSector = nil
             carry = 0
             return 0
         }
-        guard let previous = lastAngle else {
-            lastAngle = angle
+        guard let previous = lastSector else {
+            lastSector = sector
             return 0
         }
-        var delta = angle - previous
-        if delta > 180 { delta -= 360 }
-        if delta <= -180 { delta += 360 }
-        lastAngle = angle
+        var delta = sector - previous
+        if delta > sectors / 2 { delta -= sectors }
+        if delta < -sectors / 2 { delta += sectors }
+        lastSector = sector
         carry += delta
-        // Tolerance so exactly one step's worth of rotation isn't lost to
-        // floating-point error (e.g. 14.999999°).
-        let epsilon = 1e-6 * (carry < 0 ? -1.0 : 1.0)
-        let steps = Int((carry + epsilon) / degreesPerStep)
-        carry -= Double(steps) * degreesPerStep
+        let steps = carry / sectorsPerStep   // truncates toward zero
+        carry -= steps * sectorsPerStep
         return steps
     }
 
-    mutating func end() {
-        lastAngle = nil
-        carry = 0
+    /// Ends the gesture. With `now`, a new gesture starting within
+    /// `liftTolerance` keeps the remainder.
+    mutating func end(now: TimeInterval? = nil) {
+        lastSector = nil
+        liftedAt = now
+        if now == nil { carry = 0 }
     }
 
-    private func angle(of point: CGPoint) -> Double? {
+    private func sector(of point: CGPoint) -> Int? {
         guard hypot(point.x, point.y) >= deadZoneRadius else { return nil }
-        return atan2(Double(point.y), Double(point.x)) * 180 / .pi
+        var degrees = atan2(Double(point.y), Double(point.x)) * 180 / .pi
+        if degrees < 0 { degrees += 360 }
+        // Tolerance so an exact sector boundary (e.g. 30°) isn't lost to
+        // floating-point error (29.999999°).
+        return Int(degrees / (360 / Double(sectors)) + 1e-9) % sectors
     }
 }
