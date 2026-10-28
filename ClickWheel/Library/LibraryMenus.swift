@@ -16,9 +16,20 @@ enum LibraryMenus {
     }
 
     static func musicMenu(library: MusicLibrary, runner: BackgroundRunner) -> MenuScreen {
+        MenuScreen(title: "Music", items: [playlistsItem(library: library, runner: runner)]
+                   + browseMenu(library: library, runner: runner).items)
+    }
+
+    /// 1G firmware's main-menu Playlists row.
+    static func playlistsItem(library: MusicLibrary, runner: BackgroundRunner) -> MenuItem {
         let menus = Builder(library: library, runner: runner)
-        return MenuScreen(title: "Music", items: [
-            MenuItem("Playlists", action: .load(title: "Playlists", empty: "No playlists", loader: menus.playlists)),
+        return MenuItem("Playlists", action: .load(title: "Playlists", empty: "No playlists", loader: menus.playlists))
+    }
+
+    /// 1G firmware's Browse menu: Artists, Albums, Songs.
+    static func browseMenu(library: MusicLibrary, runner: BackgroundRunner) -> MenuScreen {
+        let menus = Builder(library: library, runner: runner)
+        return MenuScreen(title: "Browse", items: [
             MenuItem("Artists", quickScrollList: true,
                      action: .load(title: "Artists", empty: "No artists", loader: menus.artists)),
             MenuItem("Albums", quickScrollList: true,

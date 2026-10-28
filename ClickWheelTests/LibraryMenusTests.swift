@@ -129,4 +129,18 @@ final class LibraryMenusTests: XCTestCase {
     func testSongsArtistsAlbumsUseQuickScroll() {
         XCTAssertEqual(music.items.map(\.quickScrollList), [false, true, true, true])
     }
+
+    func testBrowseMenuForFirstGen() {
+        let browse = LibraryMenus.browseMenu(library: library, runner: BackgroundRunner(label: "test"))
+        XCTAssertEqual(browse.title, "Browse")
+        XCTAssertEqual(browse.items.map(\.label), ["Artists", "Albums", "Songs"])
+    }
+
+    func testPlaylistsItemLoadsPlaylists() async throws {
+        library.playlistsResult = [LibraryPlaylist(id: "P1", name: "Road Trip")]
+        let item = LibraryMenus.playlistsItem(library: library, runner: BackgroundRunner(label: "test"))
+        XCTAssertEqual(item.label, "Playlists")
+        let rows = try await load(item)
+        XCTAssertEqual(rows.map(\.label), ["Road Trip"])
+    }
 }

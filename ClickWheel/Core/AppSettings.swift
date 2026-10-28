@@ -14,6 +14,12 @@ final class AppSettings: ObservableObject {
     @Published var clickerEnabled: Bool {
         didSet { defaults.set(clickerEnabled, forKey: Keys.clicker) }
     }
+    @Published var model: IPodModel {
+        didSet { defaults.set(model.rawValue, forKey: Keys.model) }
+    }
+    @Published var backlightTimer: BacklightTimer {
+        didSet { defaults.set(backlightTimer.rawValue, forKey: Keys.backlightTimer) }
+    }
     @Published var keepOnTop: Bool {
         didSet { defaults.set(keepOnTop, forKey: Keys.keepOnTop) }
     }
@@ -23,11 +29,15 @@ final class AppSettings: ObservableObject {
         sourceMode = defaults.string(forKey: Keys.sourceMode).flatMap(SourceMode.init) ?? .auto
         clickerEnabled = defaults.object(forKey: Keys.clicker) as? Bool ?? true
         keepOnTop = defaults.object(forKey: Keys.keepOnTop) as? Bool ?? true
+        model = defaults.string(forKey: Keys.model).flatMap(IPodModel.init) ?? .fifthGen
+        backlightTimer = defaults.string(forKey: Keys.backlightTimer).flatMap(BacklightTimer.init) ?? .ten
     }
 
     private enum Keys {
         static let sourceMode = "sourceMode"
         static let clicker = "clickerEnabled"
         static let keepOnTop = "keepOnTop"
+        static let model = "model"
+        static let backlightTimer = "backlightTimer"
     }
 }

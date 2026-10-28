@@ -95,6 +95,7 @@ final class NavigatorTests: XCTestCase {
         nav.handle(.center)
         let source = { self.menu?.items.first { $0.label == "Source" } }
         XCTAssertEqual(source()?.detail(), "Auto")
+        nav.handle(.scroll(steps: 1))           // Model is the first row
         nav.handle(.center)
         XCTAssertEqual(settings.sourceMode, .appleMusic)
         XCTAssertEqual(source()?.detail(), "Apple Music")
@@ -108,10 +109,10 @@ final class NavigatorTests: XCTestCase {
     func testClickerToggles() {
         nav.handle(.scroll(steps: 1))
         nav.handle(.center)
-        nav.handle(.scroll(steps: 1))
+        nav.handle(.scroll(steps: 2))           // Model, Source, Clicker
         nav.handle(.center)
         XCTAssertFalse(settings.clickerEnabled)
-        XCTAssertEqual(menu?.items[1].detail(), "Off")
+        XCTAssertEqual(menu?.items[2].detail(), "Off")
     }
 
     func testScrollStepCallbackFiresOnlyWhenSelectionMoves() {

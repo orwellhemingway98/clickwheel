@@ -19,6 +19,8 @@ final class Navigator: ObservableObject {
     @Published private(set) var quickScrollLetter: String?
     @Published private(set) var lastNavigation: NavigationDirection = .forward
     @Published private(set) var stopwatch = Stopwatch()
+    @Published private(set) var backlight = Backlight()
+    private(set) var profile: FirmwareProfile
 
     /// Shared with the slide transition, which reads it at animation time.
     let slideDirection = SlideDirection()
@@ -30,6 +32,8 @@ final class Navigator: ObservableObject {
     private let settings: AppSettings
     private let musicMenu: (() -> MenuScreen)?
     private let shuffle: (() async throws -> Void)?
+    private let browse: (() -> MenuScreen)?
+    private let playlists: (() -> MenuItem)?
     private let now: () -> TimeInterval
     private let onPlayed: () -> Void
     private let onRowsMoved: (Int) -> Void
@@ -43,6 +47,9 @@ final class Navigator: ObservableObject {
     init(player: PlayerControlling, settings: AppSettings,
          musicMenu: (() -> MenuScreen)? = nil,
          shuffle: (() async throws -> Void)? = nil,
+         profile: FirmwareProfile = IPodModel.fifthGen.spec.firmware,
+         browse: (() -> MenuScreen)? = nil,
+         playlists: (() -> MenuItem)? = nil,
          now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
          onPlayed: @escaping () -> Void = {},
          onRowsMoved: @escaping (Int) -> Void = { _ in }) {
@@ -50,6 +57,9 @@ final class Navigator: ObservableObject {
         self.settings = settings
         self.musicMenu = musicMenu
         self.shuffle = shuffle
+        self.profile = profile
+        self.browse = browse
+        self.playlists = playlists
         self.now = now
         self.onPlayed = onPlayed
         self.onRowsMoved = onRowsMoved
@@ -59,11 +69,21 @@ final class Navigator: ObservableObject {
     var current: Screen { stack[stack.count - 1] }
 
     func handle(_ event: WheelEvent) {
+        // Any input lights the backlight, except the tick and the hold that toggles it.
+        switch event {
+        case .tick: break
+        case .menuHold where profile.holdMenu == .toggleBacklight: break
+        default: wakeBacklight()
+        }
         switch event {
         case .scroll(let steps): scroll(steps)
         case .center: center()
         case .menu: back()
-        case .menuHold: popToRoot()
+        case .menuHold:
+            switch profile.holdMenu {
+            case .home: popToRoot()
+            case .toggleBacklight: toggleBacklight()
+            }
         case .playPause:
             if case .stopwatch = current { stopwatch.reset() } else { player.playPause() }
         case .next: player.next()
@@ -72,6 +92,31 @@ final class Navigator: ObservableObject {
         case .seekBackward(let active): setSeeking(active ? -1 : nil)
         case .tick(let time): tick(time)
         }
+    }
+
+    /// Switches to another model's firmware: back to its main menu, with every
+    /// mode and overlay cleared.
+    func setProfile(_ newProfile: FirmwareProfile) {
+        profile = newProfile
+        nowPlayingMode = .normal
+        quickScrollLetter = nil
+        lastQuickScroll = nil
+        seeking = nil
+        accelerator.reset()
+        lastNavigation = .back
+        slideDirection.forward = false
+        stack = [.menu(rootMenu())]
+        wakeBacklight()
+    }
+
+    private func wakeBacklight() {
+        guard profile.backlight else { return }
+        backlight.wake(now: now(), timer: settings.backlightTimer)
+    }
+
+    private func toggleBacklight() {
+        guard profile.backlight else { return }
+        backlight.toggle(now: now(), timer: settings.backlightTimer)
     }
 
     /// The track now loaded (or nil). Adds or removes the root's Now Playing row
@@ -92,7 +137,7 @@ final class Navigator: ObservableObject {
             root.selectedIndex = max(0, root.items.count - 1)
         }
         root.windowStart = MenuWindow.start(previous: 0, selected: root.selectedIndex,
-                                            visible: MenuWindow.visibleRows, count: root.items.count)
+                                            visible: profile.visibleRows, count: root.items.count)
         stack[0] = .menu(root)
     }
 
@@ -131,9 +176,9 @@ final class Navigator: ObservableObject {
             guard target != screen.selectedIndex else { return }
             screen.selectedIndex = target
             screen.windowStart = MenuWindow.start(previous: screen.windowStart, selected: target,
-                                                  visible: MenuWindow.visibleRows, count: screen.items.count)
+                                                  visible: profile.visibleRows, count: screen.items.count)
             stack[stack.count - 1] = .menu(screen)
-            if screen.quickScroll && multiplier >= 2 {
+            if profile.quickScroll && screen.quickScroll && multiplier >= 2 {
                 quickScrollLetter = Self.indexLetter(for: screen.items[target].label)
                 lastQuickScroll = time
             }
@@ -198,6 +243,7 @@ final class Navigator: ObservableObject {
     }
 
     private func tick(_ time: TimeInterval) {
+        backlight.tick(now: time)
         switch nowPlayingMode {
         case .volume(let until) where time >= until: nowPlayingMode = .normal
         case .scrubbing(_, let until) where time >= until: nowPlayingMode = .normal
@@ -279,35 +325,62 @@ final class Navigator: ObservableObject {
 
     private func rootMenu() -> MenuScreen {
         var items: [MenuItem] = []
-        if let musicMenu {
-            items.append(MenuItem("Music", action: .push(musicMenu)))
-        }
-        items.append(MenuItem("Extras", action: .push { MenuScreen(title: "Extras", items: [
-            MenuItem("Clock", action: .open(.clock)),
-            MenuItem("Stopwatch", action: .open(.stopwatch)),
-        ]) }))
-        items.append(MenuItem("Settings", action: .push { [unowned self] in self.settingsMenu() }))
-        if let shuffle {
-            items.append(MenuItem("Shuffle Songs", action: .play(shuffle)))
+        let title: String
+        switch profile.menuStyle {
+        case .fifthGen:
+            title = "ClickWheel"
+            if let musicMenu {
+                items.append(MenuItem("Music", action: .push(musicMenu)))
+            }
+            items.append(MenuItem("Extras", action: .push { MenuScreen(title: "Extras", items: [
+                MenuItem("Clock", action: .open(.clock)),
+                MenuItem("Stopwatch", action: .open(.stopwatch)),
+            ]) }))
+            items.append(MenuItem("Settings", action: .push { [unowned self] in self.settingsMenu() }))
+            if let shuffle {
+                items.append(MenuItem("Shuffle Songs", action: .play(shuffle)))
+            }
+        case .firstGenLate:
+            title = "iPod"
+            if let playlists { items.append(playlists()) }
+            if let browse { items.append(MenuItem("Browse", action: .push(browse))) }
+            items.append(MenuItem("Extras", action: .push { MenuScreen(title: "Extras", items: [
+                MenuItem("Clock", action: .open(.clock)),
+            ]) }))
+            items.append(MenuItem("Settings", action: .push { [unowned self] in self.settingsMenu() }))
+            items.append(MenuItem("Backlight", action: .run { [unowned self] in self.toggleBacklight() }))
         }
         if track != nil {
             items.append(MenuItem("Now Playing", action: .showNowPlaying))
         }
-        return MenuScreen(title: "ClickWheel", items: items)
+        return MenuScreen(title: title, items: items)
     }
 
     private func settingsMenu() -> MenuScreen {
         let settings = self.settings
-        return MenuScreen(title: "Settings", items: [
+        var items = [
+            MenuItem("Model", detail: { settings.model.shortName }, action: .run {
+                let all = IPodModel.allCases
+                let index = all.firstIndex(of: settings.model) ?? 0
+                settings.model = all[(index + 1) % all.count]
+            }),
             MenuItem("Source", detail: { Self.label(for: settings.sourceMode) }, action: .run {
                 let all = SourceMode.allCases
                 let index = all.firstIndex(of: settings.sourceMode) ?? 0
                 settings.sourceMode = all[(index + 1) % all.count]
             }),
-            MenuItem("Clicker", detail: { settings.clickerEnabled ? "On" : "Off" }, action: .run {
-                settings.clickerEnabled.toggle()
-            }),
-        ])
+        ]
+        if profile.backlight {
+            items.append(MenuItem("Backlight Timer", detail: { settings.backlightTimer.label }, action: .run {
+                let all = BacklightTimer.allCases
+                let index = all.firstIndex(of: settings.backlightTimer) ?? 0
+                settings.backlightTimer = all[(index + 1) % all.count]
+            }))
+        }
+        items.append(MenuItem("Clicker", detail: { settings.clickerEnabled ? "On" : "Off" }, action: .run {
+            settings.clickerEnabled.toggle()
+        }))
+        return MenuScreen(title: "Settings", items: items)
     }
 
     private static func label(for mode: SourceMode) -> String {
