@@ -41,6 +41,7 @@ final class Navigator: ObservableObject {
         case .playPause: player.playPause()
         case .next: player.next()
         case .previous: player.previous()
+        case .menuHold, .seekForward, .seekBackward, .tick: break
         }
     }
 
