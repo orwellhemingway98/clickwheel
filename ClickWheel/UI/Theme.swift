@@ -30,6 +30,30 @@ enum Theme {
                                            startPoint: .top, endPoint: .bottom)
     static let wheelLabel = Color(hex: 0x9A9EA4)
 
+    // Skeuomorphic materials
+    static let rimWidth: CGFloat = 3
+    static let chrome = LinearGradient(
+        stops: [.init(color: Color(hex: 0xFAFBFC), location: 0),
+                .init(color: Color(hex: 0xB4BAC1), location: 0.28),
+                .init(color: Color(hex: 0xF1F3F5), location: 0.5),
+                .init(color: Color(hex: 0x8C939C), location: 0.78),
+                .init(color: Color(hex: 0xD9DCE0), location: 1)],
+        startPoint: .topLeading, endPoint: .bottomTrailing)
+    static let acrylic = LinearGradient(colors: [Color(hex: 0xFFFFFF), Color(hex: 0xF3F4F6), Color(hex: 0xE4E6E9)],
+                                        startPoint: .top, endPoint: .bottom)
+    static let bezelInset: CGFloat = 6
+    static let bezel = LinearGradient(colors: [Color(hex: 0x2B2E33), Color(hex: 0x0D0E10)],
+                                      startPoint: .top, endPoint: .bottom)
+    static let wheelSurface = RadialGradient(colors: [Color(hex: 0xF5F6F8), Color(hex: 0xDDE0E4)],
+                                             center: .center, startRadius: 30, endRadius: 92)
+    static let wheelRecess = LinearGradient(colors: [Color.black.opacity(0.22), Color.white.opacity(0.95)],
+                                            startPoint: .top, endPoint: .bottom)
+    static let engravedLabel = Color(hex: 0x8B9097)
+    static let buttonGloss = LinearGradient(colors: [Color(hex: 0xFFFFFF), Color(hex: 0xEDEFF1), Color(hex: 0xD8DBDF)],
+                                            startPoint: .top, endPoint: .bottom)
+    static let buttonRim = LinearGradient(colors: [Color.white, Color(hex: 0xA9AEB5)],
+                                          startPoint: .top, endPoint: .bottom)
+
     static func font(_ size: CGFloat, semibold: Bool = false) -> Font {
         .custom(semibold ? "SourceSans3-Semibold" : "SourceSans3-Regular", size: size)
     }
