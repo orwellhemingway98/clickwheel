@@ -4,6 +4,7 @@ import SwiftUI
 /// values, `›` on submenu rows, and a marquee on a selected row that doesn't fit.
 struct MenuListView: View {
     let screen: MenuScreen
+    @EnvironmentObject private var navigator: Navigator
 
     var body: some View {
         let start = screen.windowStart
@@ -12,6 +13,8 @@ struct MenuListView: View {
             ForEach(start..<end, id: \.self) { index in
                 let item = screen.items[index]
                 MenuRow(item: item, selected: index == screen.selectedIndex && item.isSelectable)
+                    .contentShape(Rectangle())
+                    .onTapGesture { navigator.choose(row: index) }
                     // Restart the marquee each time a row becomes selected.
                     .id("\(index)-\(index == screen.selectedIndex)")
             }

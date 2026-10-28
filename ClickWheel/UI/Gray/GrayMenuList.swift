@@ -5,6 +5,7 @@ import SwiftUI
 struct GrayMenuList: View {
     let screen: MenuScreen
     let colors: GrayColors
+    @EnvironmentObject private var navigator: Navigator
 
     private var rows: Int { 6 }
     private var scrolls: Bool { screen.items.count > rows }
@@ -17,6 +18,8 @@ struct GrayMenuList: View {
                 ForEach(start..<end, id: \.self) { index in
                     let item = screen.items[index]
                     row(item, selected: index == screen.selectedIndex && item.isSelectable)
+                        .contentShape(Rectangle())
+                        .onTapGesture { navigator.choose(row: index) }
                 }
             }
             .frame(maxHeight: .infinity, alignment: .top)

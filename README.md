@@ -27,6 +27,8 @@ whichever one is playing.
   - Hold them: hold MENU to jump to the main menu; hold ⏭ or ⏮ to fast-forward
     or rewind.
   - A 1 kHz clicker ticks as you scroll.
+- **Trackpad**: turn two fingers to turn the wheel; swipe with two fingers (or use a
+  mouse wheel) to scroll. **Click a menu row** to open it.
 - **Keyboard**: ↑ ↓ scroll; ← ⏮, → ⏭, Return center, Esc MENU, Space ▶❚❚
   (holds work too).
 - **Main menu**: Music, Extras (Clock, Stopwatch), Settings, Shuffle Songs, and

@@ -260,4 +260,34 @@ final class NavigatorFirstGenTests: XCTestCase {
         for i in 1...10 { nav.handle(.tick(now: clock + Double(i) / 10)) }
         XCTAssertEqual(changes, 0)
     }
+
+    // MARK: - Clickable rows
+
+    func testChooseRowHighlightsAndOpensIt() {
+        let nav = navigator()
+        nav.choose(row: 1)                       // Browse
+        XCTAssertEqual(menu(nav)?.title, "Browse")
+        nav.handle(.menu)
+        XCTAssertEqual(menu(nav)?.selectedIndex, 1, "the clicked row stays highlighted")
+    }
+
+    func testChooseIgnoresPlaceholderAndOutOfRangeRows() {
+        let nav = Navigator(player: spy, settings: settings, profile: IPodModel.firstGen.spec.firmware,
+                            browse: { MenuScreen(title: "Browse", items: [.placeholder("Loading…")]) },
+                            now: { [unowned self] in self.clock })
+        open(nav, "Browse")
+        nav.choose(row: 0)
+        XCTAssertEqual(menu(nav)?.title, "Browse")
+        nav.choose(row: 9)
+        XCTAssertEqual(nav.stack.count, 2)
+    }
+
+    func testClickingFifthGenerationInTheModelListSwitches() {
+        settings.model = .secondGen
+        let nav = navigator(.secondGen)
+        open(nav, "Settings")
+        nav.handle(.center)
+        nav.choose(row: 2)
+        XCTAssertEqual(settings.model, .fifthGen)
+    }
 }

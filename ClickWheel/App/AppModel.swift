@@ -53,7 +53,10 @@ final class AppModel {
                 }
             })
         let navigator = navigator
-        input = WheelInput(navigator: navigator)
+        input = WheelInput(navigator: navigator, degreesPerStep: {
+            // 96 sectors per turn: 3.75° each.
+            Double(settings.model.spec.controls.sectorsPerStep) * 3.75
+        })
         input.startTicking()
         trackObserver = hub.$snapshot
             .map { $0?.track }

@@ -97,6 +97,17 @@ final class Navigator: ObservableObject {
         }
     }
 
+    /// A click on a row: highlight it and open it, as if scrolled to and selected.
+    func choose(row: Int) {
+        guard case .menu(var screen) = current, screen.items.indices.contains(row),
+              screen.items[row].isSelectable else { return }
+        backlightBeforeInput = backlight.isOn
+        wakeBacklight()
+        screen.selectedIndex = row
+        stack[stack.count - 1] = .menu(screen)
+        select(in: screen)
+    }
+
     /// Switches to another model's firmware: back to its main menu, with every
     /// mode and overlay cleared.
     func setProfile(_ newProfile: FirmwareProfile) {

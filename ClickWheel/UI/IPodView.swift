@@ -28,10 +28,8 @@ struct IPodView: View {
                     }
                 }
             DisplayWindow {
+                // Menu rows are clickable; the body around the screen still drags the window.
                 ScreenView()
-                    // The screen only needs clicks for the permission button;
-                    // otherwise let them reach the drag area so it moves the window.
-                    .allowsHitTesting(hub.status != .ok && hub.snapshot?.track == nil)
             }
             .position(x: g.bodySize.width / 2, y: g.windowTop + g.windowSize.height / 2)
             // One clear layer covers the white and the screen alike, so its gloss

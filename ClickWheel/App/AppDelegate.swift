@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var model: AppModel?
     private var window: FloatingWindow?
     private var keyMonitor: Any?
+    private var trackpadMonitor: Any?
     private var cancellables: Set<AnyCancellable> = []
 
     @MainActor
@@ -40,6 +41,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.settings.$keepOnTop
             .sink { [weak window] onTop in window?.level = onTop ? .floating : .normal }
             .store(in: &cancellables)
+
+        // The trackpad as the wheel, while the pointer is over the iPod.
+        trackpadMonitor = NSEvent.addLocalMonitorForEvents(matching: [.rotate, .scrollWheel]) { [weak model, weak window] event in
+            guard let model, let window, event.window === window else { return event }
+            if event.type == .rotate {
+                model.input.rotate(degrees: Double(event.rotation))
+            } else {
+                model.input.scrollWheel(deltaY: event.scrollingDeltaY,
+                                        precise: event.hasPreciseScrollingDeltas,
+                                        momentum: event.momentumPhase != [])
+            }
+            return nil
+        }
 
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak model] event in
             guard let model else { return event }

@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 /// Routes wheel and keyboard input to the navigator: presses and releases go
@@ -7,10 +8,26 @@ import Foundation
 final class WheelInput: ObservableObject {
     private let navigator: Navigator
     private var recognizer = ButtonGestureRecognizer()
+    private var trackpad = TrackpadWheel()
+    /// Degrees of two-finger rotation per step: the current model's wheel step.
+    private let degreesPerStep: () -> Double
     private var timer: Timer?
 
-    init(navigator: Navigator) {
+    init(navigator: Navigator, degreesPerStep: @escaping () -> Double = { 15 }) {
         self.navigator = navigator
+        self.degreesPerStep = degreesPerStep
+    }
+
+    /// Two-finger rotation on the trackpad turns the wheel.
+    func rotate(degrees: Double) {
+        let steps = trackpad.rotate(degrees: degrees, degreesPerStep: degreesPerStep())
+        if steps != 0 { scroll(steps) }
+    }
+
+    /// Two-finger swipes and mouse wheels scroll like the wheel.
+    func scrollWheel(deltaY: CGFloat, precise: Bool, momentum: Bool) {
+        let steps = trackpad.scroll(deltaY: deltaY, precise: precise, momentum: momentum)
+        if steps != 0 { scroll(steps) }
     }
 
     private var now: TimeInterval { ProcessInfo.processInfo.systemUptime }
