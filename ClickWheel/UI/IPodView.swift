@@ -67,12 +67,10 @@ struct IPodView: View {
             .overlay(faceShape.stroke(Color.white.opacity(0.7), lineWidth: 0.5))
     }
 
-    /// The clear front's gloss: a top-left specular highlight and a soft
-    /// diagonal sheen, drawn over the white and the display window together.
+    /// The clear front's gloss: a soft diagonal sheen, drawn over the white and
+    /// the display window together. (A fixed corner highlight read as a smudge.)
     private var gloss: some View {
         ZStack {
-            RadialGradient(colors: [.white.opacity(0.45), .white.opacity(0)],
-                           center: UnitPoint(x: 0.15, y: 0.05), startRadius: 0, endRadius: g.bodySize.height * 0.4)
             LinearGradient(stops: [.init(color: .white.opacity(0), location: 0.3),
                                    .init(color: .white.opacity(0.16), location: 0.36),
                                    .init(color: .white.opacity(0), location: 0.5)],
