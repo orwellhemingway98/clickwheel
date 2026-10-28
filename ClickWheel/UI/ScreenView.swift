@@ -15,7 +15,7 @@ struct ScreenView: View {
         .background(Theme.lcdGradient)
         .clipShape(RoundedRectangle(cornerRadius: Theme.screenCornerRadius))
         .overlay(RoundedRectangle(cornerRadius: Theme.screenCornerRadius).stroke(Theme.lcdBorder, lineWidth: 1))
-        .frame(width: Theme.screenSize.width, height: Theme.screenSize.height)
+        .frame(width: IPodGeometry.lcdDesignSize.width, height: IPodGeometry.lcdDesignSize.height)
     }
 
     private var title: String {

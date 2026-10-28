@@ -14,12 +14,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let model = AppModel()
         self.model = model
 
-        let margin: CGFloat = 20
-        let size = CGSize(width: Theme.bodySize.width + margin * 2, height: Theme.bodySize.height + margin * 2)
-        let root = model.rootView().padding(margin)
+        let root = model.rootView().padding(Self.shadowMargin)
         let host = NSHostingView(rootView: root)
-        let window = FloatingWindow(contentView: host, size: size)
+        let window = FloatingWindow(contentView: host, size: windowSize(for: model.display.geometry))
         self.window = window
+
+        // Stay life size: re-measure whenever the window lands on another display.
+        model.display.update(for: window.screen)
+        model.display.$geometry
+            .sink { [weak self, weak window] geometry in
+                guard let self, let window else { return }
+                window.resizeKeepingTopLeft(to: self.windowSize(for: geometry))
+            }
+            .store(in: &cancellables)
+        NotificationCenter.default.publisher(for: NSWindow.didChangeScreenNotification, object: window)
+            .sink { [weak model, weak window] _ in model?.display.update(for: window?.screen) }
+            .store(in: &cancellables)
 
         model.settings.$keepOnTop
             .sink { [weak window] onTop in window?.level = onTop ? .floating : .normal }
@@ -36,6 +46,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.makeKeyAndOrderFront(nil)
         NSApp.activate()
         model.renderSnapshotIfRequested()
+    }
+
+    /// Room around the body for its drop shadow.
+    private static let shadowMargin: CGFloat = 20
+
+    private func windowSize(for geometry: IPodGeometry) -> CGSize {
+        CGSize(width: geometry.bodySize.width + Self.shadowMargin * 2,
+               height: geometry.bodySize.height + Self.shadowMargin * 2)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }

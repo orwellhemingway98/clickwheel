@@ -16,6 +16,7 @@ final class AppModel {
     let clickSound = ClickSound()
     let library = AppleMusicLibrary()
     let libraryRunner = BackgroundRunner(label: "ClickWheel.Library")
+    let display = DisplayGeometry()
 
     init() {
         hub = PlayerHub(sources: [AppleMusicSource(), SpotifySource()], settings: settings)
@@ -34,11 +35,13 @@ final class AppModel {
 
     /// The iPod with every shared object injected.
     func rootView(includesWindowControls: Bool = true) -> some View {
-        IPodView(includesWindowControls: includesWindowControls)
-            .environmentObject(settings)
-            .environmentObject(hub)
-            .environmentObject(navigator)
-            .environmentObject(artwork)
+        LifeSizeRoot(display: display) {
+            IPodView(includesWindowControls: includesWindowControls)
+        }
+        .environmentObject(settings)
+        .environmentObject(hub)
+        .environmentObject(navigator)
+        .environmentObject(artwork)
     }
 
     /// Development aid: `ClickWheel --snapshot out.png [--now-playing] [--keys c,d,m]`

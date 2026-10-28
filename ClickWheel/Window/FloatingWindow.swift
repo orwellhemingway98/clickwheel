@@ -18,6 +18,13 @@ final class FloatingWindow: NSWindow {
         setFrameAutosaveName(Self.autosaveName)
     }
 
+    /// Changes the window's size without moving its top-left corner.
+    func resizeKeepingTopLeft(to size: CGSize) {
+        guard frame.size != size else { return }
+        let topLeft = NSPoint(x: frame.minX, y: frame.maxY)
+        setFrame(NSRect(x: topLeft.x, y: topLeft.y - size.height, width: size.width, height: size.height), display: true)
+    }
+
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
 }

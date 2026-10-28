@@ -10,8 +10,10 @@ struct ClickWheelView: View {
     @State private var rotated = false
     @State private var pressedQuadrant: WheelEvent?
     @State private var centerPressed = false
+    @Environment(\.ipodGeometry) private var g
 
-    private let size = Theme.wheelDiameter
+    private var size: CGFloat { g.wheelDiameter }
+    private var button: CGFloat { g.buttonDiameter }
 
     var body: some View {
         ZStack {
@@ -40,19 +42,19 @@ struct ClickWheelView: View {
         if let quadrant = pressedQuadrant {
             QuadrantShape(centerAngle: angle(of: quadrant))
                 .fill(Color.black.opacity(0.07))
-                .mask(Circle().strokeBorder(lineWidth: (size - Theme.centerDiameter) / 2))
+                .mask(Circle().strokeBorder(lineWidth: (size - button) / 2))
         }
     }
 
     private var labels: some View {
-        let offset = (size + Theme.centerDiameter) / 4
+        let offset = (size + button) / 4
         return ZStack {
             Text("MENU").offset(y: -offset)
             Text("⏮").offset(x: -offset)
             Text("⏭").offset(x: offset)
             Text("▶❚❚").offset(y: offset)
         }
-        .font(Theme.font(12, semibold: true))
+        .font(Theme.font(g.wheelLabelSize, semibold: true))
         .foregroundStyle(Theme.engravedLabel)
         // Engraved: a light edge just below each stroke.
         .shadow(color: .white.opacity(0.95), radius: 0, y: 1)
@@ -65,13 +67,13 @@ struct ClickWheelView: View {
             .overlay {
                 Ellipse()
                     .fill(LinearGradient(colors: [.white.opacity(0.7), .white.opacity(0)], startPoint: .top, endPoint: .bottom))
-                    .frame(width: Theme.centerDiameter * 0.8, height: Theme.centerDiameter * 0.45)
-                    .offset(y: -Theme.centerDiameter * 0.18)
+                    .frame(width: button * 0.8, height: button * 0.45)
+                    .offset(y: -button * 0.18)
                     .blur(radius: 3)
             }
             .overlay(Circle().fill(Color.black.opacity(centerPressed ? 0.08 : 0)))
             .overlay(Circle().strokeBorder(Theme.buttonRim, lineWidth: 1))
-            .frame(width: Theme.centerDiameter, height: Theme.centerDiameter)
+            .frame(width: button, height: button)
             .scaleEffect(centerPressed ? 0.96 : 1)
             .shadow(color: .black.opacity(centerPressed ? 0.1 : 0.22), radius: centerPressed ? 0.5 : 2, y: centerPressed ? 0.5 : 1.5)
             .contentShape(Circle())
@@ -85,8 +87,8 @@ struct ClickWheelView: View {
             .onChanged { _ in centerPressed = true }
             .onEnded { value in
                 centerPressed = false
-                let d = hypot(value.location.x - Theme.centerDiameter / 2, value.location.y - Theme.centerDiameter / 2)
-                if d <= Theme.centerDiameter / 2 { onEvent(.center) }
+                let d = hypot(value.location.x - button / 2, value.location.y - button / 2)
+                if d <= button / 2 { onEvent(.center) }
             }
     }
 

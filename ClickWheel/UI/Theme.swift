@@ -2,17 +2,12 @@ import SwiftUI
 
 enum Theme {
     // Body
-    static let bodySize = CGSize(width: 280, height: 460)
-    static let bodyCornerRadius: CGFloat = 36
-    static let bodyGradient = LinearGradient(colors: [Color(hex: 0xFFFFFF), Color(hex: 0xDADDE1)],
-                                             startPoint: .top, endPoint: .bottom)
     static let shadowRadius: CGFloat = 12
     static let shadowOpacity = 0.25
 
     // Screen
-    static let screenInset: CGFloat = 20
-    static let screenSize = CGSize(width: 240, height: 180)
-    static let screenCornerRadius: CGFloat = 8
+    /// LCD corners, in LCD design points (the panel is nearly square-cornered).
+    static let screenCornerRadius: CGFloat = 2
     static let lcdGradient = LinearGradient(colors: [Color(hex: 0xC9D3DC), Color(hex: 0xE8EDF1)],
                                             startPoint: .top, endPoint: .bottom)
     static let lcdBorder = Color(hex: 0x3A3F45)
@@ -22,16 +17,7 @@ enum Theme {
     static let selection = LinearGradient(colors: [Color(hex: 0x5EA0E6), Color(hex: 0x2D6FC4)],
                                           startPoint: .top, endPoint: .bottom)
 
-    // Wheel
-    static let wheelDiameter: CGFloat = 180
-    static let centerDiameter: CGFloat = 64
-    static let wheelFill = Color(hex: 0xE9EBEE)
-    static let centerFill = LinearGradient(colors: [Color(hex: 0xFFFFFF), Color(hex: 0xE4E6E9)],
-                                           startPoint: .top, endPoint: .bottom)
-    static let wheelLabel = Color(hex: 0x9A9EA4)
-
     // Skeuomorphic materials
-    static let rimWidth: CGFloat = 3
     static let chrome = LinearGradient(
         stops: [.init(color: Color(hex: 0xFAFBFC), location: 0),
                 .init(color: Color(hex: 0xB4BAC1), location: 0.28),
@@ -41,7 +27,6 @@ enum Theme {
         startPoint: .topLeading, endPoint: .bottomTrailing)
     static let acrylic = LinearGradient(colors: [Color(hex: 0xFFFFFF), Color(hex: 0xF3F4F6), Color(hex: 0xE4E6E9)],
                                         startPoint: .top, endPoint: .bottom)
-    static let bezelInset: CGFloat = 6
     static let bezel = LinearGradient(colors: [Color(hex: 0x2B2E33), Color(hex: 0x0D0E10)],
                                       startPoint: .top, endPoint: .bottom)
     static let wheelSurface = RadialGradient(colors: [Color(hex: 0xF5F6F8), Color(hex: 0xDDE0E4)],
