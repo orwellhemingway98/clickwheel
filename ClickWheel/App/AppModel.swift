@@ -25,6 +25,15 @@ final class AppModel {
         hub.startPolling()
     }
 
+    /// The iPod with every shared object injected.
+    func rootView() -> some View {
+        IPodView()
+            .environmentObject(settings)
+            .environmentObject(hub)
+            .environmentObject(navigator)
+            .environmentObject(artwork)
+    }
+
     /// Development aid: `ClickWheel --snapshot out.png [--now-playing]` renders the
     /// iPod to a PNG after the first poll, then quits.
     func renderSnapshotIfRequested() {
@@ -34,11 +43,7 @@ final class AppModel {
         if args.contains("--now-playing") { navigator.handle(.center) }
         Task {
             try? await Task.sleep(for: .seconds(2.5))
-            let view = IPodView()
-                .environmentObject(settings).environmentObject(hub)
-                .environmentObject(navigator).environmentObject(artwork)
-                .padding(20)
-            let renderer = ImageRenderer(content: view)
+            let renderer = ImageRenderer(content: rootView().padding(20))
             renderer.scale = 2
             if let image = renderer.nsImage, let tiff = image.tiffRepresentation,
                let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) {
