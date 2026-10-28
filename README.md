@@ -41,6 +41,18 @@ Albums, artists, Songs and Shuffle Songs play through a playlist named
 time. It syncs to your other devices with the rest of your library. Opening a
 Music list launches Music if it isn't running.
 
+## Models
+
+Choose the iPod in **Settings › Model**. The window reshapes to that model at life size.
+
+| Model | Year | What's different |
+|---|---|---|
+| **iPod (1st generation)** | 2001 | A wheel that really turns (its texture follows your finger), inside a ring of four buttons. Black-and-white Chicago screen: grey-green, lighting up pale blue when you touch anything (hold MENU toggles the light; Settings › Backlight Timer). Firmware 1.3.1 menus: Playlists, Browse, Extras, Settings, Backlight. |
+| **iPod (5th generation)** | 2005 | Click wheel and colour screen (see Features). |
+
+More models are coming, in release order: 2G, 3G, mini, 4G, photo, mini 2G, nano 1G,
+nano 2G, classic, nano 3G–5G.
+
 ## Build
 
 Requires macOS 14+, Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
@@ -71,4 +83,9 @@ System Settings → Privacy & Security → Automation.
 - Screen layout and colour values are modified/derived from the **iVideo** theme
   for iPod Video (CC-BY-SA 3.0) by Humberto Santana; see
   `docs/reference/ipod-5g-screen-values.md`.
+- [ChicagoFLF](https://fontlibrary.org/en/font/chicagoflf) by Robin Casady, which he
+  placed in the public domain (see `ClickWheel/Resources/Fonts/ChicagoFLF-README.txt`).
+- The 1st-generation front layout was measured from Apple's own interactive
+  recreation on the Apple Music "Page Not Found" page (see
+  `docs/reference/ipod-1g-front-values.md`). No Apple artwork or code is included.
 - MIT licensed. See [LICENSE](LICENSE).
