@@ -4,11 +4,13 @@ import CoreGraphics
 /// millimetres, display, controls and firmware behaviour.
 enum IPodModel: String, CaseIterable {
     case firstGen
+    case secondGen
     case fifthGen
 
     var shortName: String {
         switch self {
         case .firstGen: return "1st gen"
+        case .secondGen: return "2nd gen"
         case .fifthGen: return "5th gen"
         }
     }
@@ -16,6 +18,7 @@ enum IPodModel: String, CaseIterable {
     var spec: ModelSpec {
         switch self {
         case .firstGen: return .firstGen
+        case .secondGen: return .secondGen
         case .fifthGen: return .fifthGen
         }
     }
@@ -80,6 +83,8 @@ struct ControlSpec: Equatable {
     let centerFromBottom: CGFloat
     /// Wheel sectors (of 96 per turn) per list step: 4 → 24 steps, 6 → 16 steps.
     let sectorsPerStep: Int
+    /// The wheel physically rotates (1G); touch wheels stay still (2G on).
+    var wheelTurns: Bool = false
 }
 
 enum MenuStyle: Equatable {
@@ -131,7 +136,17 @@ extension ModelSpec {
                              pixels: CGSize(width: 160, height: 128), pixelPitch: 0.248,
                              designSize: CGSize(width: 160, height: 128)),
         controls: ControlSpec(kind: .scrollWheel, outerDiameter: 52.1, wheelDiameter: 41.1,
-                              buttonDiameter: 20.7, centerFromBottom: 32.3, sectorsPerStep: 6),
+                              buttonDiameter: 20.7, centerFromBottom: 32.3, sectorsPerStep: 6, wheelTurns: true),
         firmware: FirmwareProfile(menuStyle: .firstGenLate, holdMenu: .toggleBacklight, quickScroll: false,
                                   backlight: true, visibleRows: 6))
+
+    /// iPod (2nd generation), 2002: the 1st generation's body, screen, ring and
+    /// firmware, with a touch-sensitive wheel that doesn't move.
+    static let secondGen = ModelSpec(
+        name: "iPod (2nd generation)", year: 2002,
+        body: firstGen.body,
+        display: firstGen.display,
+        controls: ControlSpec(kind: .scrollWheel, outerDiameter: 52.1, wheelDiameter: 41.1,
+                              buttonDiameter: 20.7, centerFromBottom: 32.3, sectorsPerStep: 6, wheelTurns: false),
+        firmware: firstGen.firmware)
 }

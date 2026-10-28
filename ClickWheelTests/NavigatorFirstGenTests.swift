@@ -79,6 +79,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         open(nav, "Settings")
         XCTAssertEqual(menu(nav)?.items.first?.detail(), "1st gen")
         nav.handle(.center)
+        XCTAssertEqual(settings.model, .secondGen)
+        nav.handle(.center)
         XCTAssertEqual(settings.model, .fifthGen)
         nav.handle(.center)
         XCTAssertEqual(settings.model, .firstGen)

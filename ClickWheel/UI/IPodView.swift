@@ -52,7 +52,7 @@ struct IPodView: View {
     /// meets the chrome and a faint line where the white begins.
     private var face: some View {
         faceShape
-            .fill(g.model == .firstGen ? Theme.firstGenFace : Theme.acrylic)
+            .fill(g.model.spec.controls.kind == .scrollWheel ? Theme.firstGenFace : Theme.acrylic)
             .overlay {
                 faceShape
                     .stroke(Color.black.opacity(0.18), lineWidth: 2)

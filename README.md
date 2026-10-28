@@ -48,9 +48,10 @@ Choose the iPod in **Settings › Model**. The window reshapes to that model at 
 | Model | Year | What's different |
 |---|---|---|
 | **iPod (1st generation)** | 2001 | A wheel that really turns (its texture follows your finger), inside a ring of four buttons. Black-and-white Chicago screen: grey-green, lighting up pale blue when you touch anything (hold MENU toggles the light; Settings › Backlight Timer). Firmware 1.3.1 menus: Playlists, Browse, Extras, Settings, Backlight. |
+| **iPod (2nd generation)** | 2002 | The same front as the 1st gen, with a touch-sensitive wheel that stays still (smooth, no grooves). |
 | **iPod (5th generation)** | 2005 | Click wheel and colour screen (see Features). |
 
-More models are coming, in release order: 2G, 3G, mini, 4G, photo, mini 2G, nano 1G,
+More models are coming, in release order: 3G, mini, 4G, photo, mini 2G, nano 1G,
 nano 2G, classic, nano 3G–5G.
 
 ## Build

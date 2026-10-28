@@ -75,18 +75,22 @@ struct ScrollWheelView: View {
         .allowsHitTesting(false)
     }
 
+    private var turns: Bool { g.model.spec.controls.wheelTurns }
+
     private var wheel: some View {
         ZStack {
-            Circle().fill(Theme.firstGenWheel)
-            // Fine radial texture that turns with the finger.
-            ForEach(0..<72, id: \.self) { i in
-                Rectangle()
-                    .fill(Color.black.opacity(0.06))
-                    .frame(width: (g.wheelDiameter - g.buttonDiameter) / 2, height: 0.3)
-                    .offset(x: (g.wheelDiameter + g.buttonDiameter) / 4)
-                    .rotationEffect(.degrees(Double(i) * 5))
+            Circle().fill(turns ? Theme.firstGenWheel : Theme.touchWheel)
+            if turns {
+                // Fine radial texture that turns with the finger.
+                ForEach(0..<72, id: \.self) { i in
+                    Rectangle()
+                        .fill(Color.black.opacity(0.06))
+                        .frame(width: (g.wheelDiameter - g.buttonDiameter) / 2, height: 0.3)
+                        .offset(x: (g.wheelDiameter + g.buttonDiameter) / 4)
+                        .rotationEffect(.degrees(Double(i) * 5))
+                }
+                .rotationEffect(.degrees(wheelAngle))
             }
-            .rotationEffect(.degrees(wheelAngle))
             Circle().strokeBorder(Color(hex: 0x7E7E7E), lineWidth: 0.3 * g.pointsPerMM)
         }
         .frame(width: g.wheelDiameter, height: g.wheelDiameter)
@@ -115,7 +119,7 @@ struct ScrollWheelView: View {
                 switch touch {
                 case .wheel:
                     let steps = tracker.move(to: point)
-                    turnTexture(to: point)
+                    if turns { turnTexture(to: point) }
                     if steps != 0 { input.scroll(steps) }
                 case .ring:
                     if hypot(value.translation.width, value.translation.height) >= 6, pressedButton != nil {

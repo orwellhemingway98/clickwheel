@@ -44,6 +44,19 @@ final class IPodModelTests: XCTestCase {
 
     func testModelsAreInReleaseOrder() {
         XCTAssertEqual(IPodModel.allCases.map(\.spec.year), IPodModel.allCases.map(\.spec.year).sorted())
-        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "5th gen"])
+        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "5th gen"])
+    }
+
+    func testSecondGenIsTheFirstGenWithATouchWheel() {
+        let first = IPodModel.firstGen.spec, second = IPodModel.secondGen.spec
+        XCTAssertEqual(second.name, "iPod (2nd generation)")
+        XCTAssertEqual(second.year, 2002)
+        XCTAssertEqual(second.body, first.body)
+        XCTAssertEqual(second.display, first.display)
+        XCTAssertEqual(second.firmware, first.firmware)
+        XCTAssertEqual(second.controls.kind, .scrollWheel)
+        XCTAssertEqual(second.controls.sectorsPerStep, 6)
+        XCTAssertTrue(first.controls.wheelTurns, "the 1G wheel physically turns")
+        XCTAssertFalse(second.controls.wheelTurns, "the 2G touch wheel stays still")
     }
 }
