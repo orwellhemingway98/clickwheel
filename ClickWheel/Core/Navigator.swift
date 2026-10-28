@@ -20,6 +20,8 @@ final class Navigator: ObservableObject {
     @Published private(set) var lastNavigation: NavigationDirection = .forward
     @Published private(set) var stopwatch = Stopwatch()
     @Published private(set) var backlight = Backlight()
+    /// Whether the light was on before the current input woke it (for toggles).
+    private var backlightBeforeInput = false
     private(set) var profile: FirmwareProfile
 
     /// Shared with the slide transition, which reads it at animation time.
@@ -70,6 +72,7 @@ final class Navigator: ObservableObject {
 
     func handle(_ event: WheelEvent) {
         // Any input lights the backlight, except the tick and the hold that toggles it.
+        backlightBeforeInput = backlight.isOn
         switch event {
         case .tick: break
         case .menuHold where profile.holdMenu == .toggleBacklight: break
@@ -116,7 +119,7 @@ final class Navigator: ObservableObject {
 
     private func toggleBacklight() {
         guard profile.backlight else { return }
-        backlight.toggle(now: now(), timer: settings.backlightTimer)
+        backlight.toggle(now: now(), timer: settings.backlightTimer, wasOn: backlightBeforeInput)
     }
 
     /// The track now loaded (or nil). Adds or removes the root's Now Playing row
@@ -243,7 +246,12 @@ final class Navigator: ObservableObject {
     }
 
     private func tick(_ time: TimeInterval) {
-        backlight.tick(now: time)
+        // Only publish when something changes, so idle ticks don't redraw the screen.
+        if profile.backlight {
+            var next = backlight
+            next.tick(now: time)
+            if next != backlight { backlight = next }
+        }
         switch nowPlayingMode {
         case .volume(let until) where time >= until: nowPlayingMode = .normal
         case .scrubbing(_, let until) where time >= until: nowPlayingMode = .normal
@@ -374,10 +382,11 @@ final class Navigator: ObservableObject {
             }),
         ]
         if profile.backlight {
-            items.append(MenuItem("Backlight Timer", detail: { settings.backlightTimer.label }, action: .run {
+            items.append(MenuItem("Backlight Timer", detail: { settings.backlightTimer.label }, action: .run { [unowned self] in
                 let all = BacklightTimer.allCases
                 let index = all.firstIndex(of: settings.backlightTimer) ?? 0
                 settings.backlightTimer = all[(index + 1) % all.count]
+                self.backlight.apply(timer: settings.backlightTimer, now: self.now())
             }))
         }
         items.append(MenuItem("Clicker", detail: { settings.clickerEnabled ? "On" : "Off" }, action: .run {

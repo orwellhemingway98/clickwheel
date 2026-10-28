@@ -180,4 +180,49 @@ final class NavigatorFirstGenTests: XCTestCase {
         nav.handle(.menu)
         XCTAssertEqual(menu(nav)?.title, "iPod", "MENU goes back from Settings")
     }
+
+    // MARK: - Backlight review fixes
+
+    private func row(_ nav: Navigator, _ label: String) {
+        guard let index = menu(nav)?.items.firstIndex(where: { $0.label == label }) else { return XCTFail("no \(label)") }
+        nav.handle(.scroll(steps: index - menu(nav)!.selectedIndex))
+    }
+
+    func testBacklightRowTurnsOnThenOff() {
+        settings.backlightTimer = .ten
+        let nav = navigator()
+        row(nav, "Backlight")
+        nav.handle(.tick(now: clock + 11))          // let it go dark
+        XCTAssertFalse(nav.backlight.isOn)
+        clock += 11
+        nav.handle(.center)
+        XCTAssertTrue(nav.backlight.isOn, "Backlight row lights a dark screen")
+        nav.handle(.center)
+        XCTAssertFalse(nav.backlight.isOn, "Backlight row turns a lit screen off")
+    }
+
+    func testTimerChangeAppliesImmediately() {
+        settings.backlightTimer = .twenty
+        let nav = navigator()
+        open(nav, "Settings")
+        row(nav, "Backlight Timer")
+        nav.handle(.center)                         // 20 s → Always
+        XCTAssertEqual(settings.backlightTimer, .always)
+        nav.handle(.tick(now: clock + 1000))
+        XCTAssertTrue(nav.backlight.isOn, "Always never times out")
+        nav.handle(.center)                         // Always → Off
+        nav.handle(.center)                         // Off → 2 s
+        XCTAssertEqual(settings.backlightTimer, .two)
+        nav.handle(.tick(now: clock + 3))
+        XCTAssertFalse(nav.backlight.isOn, "the new 2 s timer applies; Always doesn't linger")
+    }
+
+    func testTickDoesNotRepublishWhenNothingChanges() {
+        let nav = navigator(.fifthGen)
+        var changes = 0
+        let observer = nav.objectWillChange.sink { changes += 1 }
+        defer { observer.cancel() }
+        for i in 1...10 { nav.handle(.tick(now: clock + Double(i) / 10)) }
+        XCTAssertEqual(changes, 0)
+    }
 }
