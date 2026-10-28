@@ -393,22 +393,17 @@ final class Navigator: ObservableObject {
     }
 
     /// Settings › Model: every iPod in release order, the current one ticked.
-    /// Choosing another switches to it (the app then resets to its main menu);
-    /// choosing the current one just goes back.
+    /// Like every iPod list it opens at the top. Choosing another switches to it
+    /// (the app then resets to its main menu); choosing the current one goes back.
     private func modelMenu() -> MenuScreen {
         let settings = self.settings
-        var screen = MenuScreen(title: "Model", items: IPodModel.allCases.map { model in
+        return MenuScreen(title: "Model", items: IPodModel.allCases.map { model in
             MenuItem(model.generationName,
                      detail: { (settings.model == model ? "✓ " : "") + String(model.spec.year) },
                      action: .run { [unowned self] in
                          if settings.model == model { self.back() } else { settings.model = model }
                      })
         })
-        let current = IPodModel.allCases.firstIndex(of: settings.model) ?? 0
-        screen.selectedIndex = current
-        screen.windowStart = MenuWindow.start(previous: 0, selected: current,
-                                              visible: profile.visibleRows, count: screen.items.count)
-        return screen
     }
 
     private static func label(for mode: SourceMode) -> String {

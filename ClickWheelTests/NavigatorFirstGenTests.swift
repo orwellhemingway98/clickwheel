@@ -83,7 +83,20 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertEqual(menu(nav)?.title, "Model")
         XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "5th generation"])
         XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2005"])
-        XCTAssertEqual(menu(nav)?.selectedIndex, 0, "the current model is selected")
+        XCTAssertEqual(menu(nav)?.selectedIndex, 0)
+    }
+
+    func testModelListAlwaysOpensAtTheTop() {
+        settings.model = .fifthGen
+        let nav = navigator(.fifthGen)
+        open(nav, "Settings")
+        nav.handle(.center)
+        XCTAssertEqual(menu(nav)?.title, "Model")
+        XCTAssertEqual(menu(nav)?.selectedIndex, 0, "like every iPod list, it starts at the top")
+        XCTAssertEqual(menu(nav)?.items.last?.detail(), "✓ 2005", "the tick still marks the current model")
+        nav.handle(.scroll(steps: 1))
+        nav.handle(.center)
+        XCTAssertEqual(settings.model, .secondGen, "one step down from the top is the 2nd generation")
     }
 
     func testSelectingAModelSwitchesAndPersists() {
