@@ -90,4 +90,10 @@ final class WheelGestureTrackerTests: XCTestCase {
         t.begin(at: p(10), now: 1.3)
         XCTAssertEqual(t.move(to: p(16)), 0)
     }
+
+    func testSixSectorsPerStepGivesSixteenPerTurn() {
+        var t = WheelGestureTracker(sectorsPerStep: 6)
+        t.begin(at: p(0))
+        XCTAssertEqual(t.move(to: p(90)), 4)
+    }
 }
