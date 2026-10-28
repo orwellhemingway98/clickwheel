@@ -73,18 +73,37 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertEqual(menu(fifth)?.items.map(\.label), ["Model", "Source", "Clicker"])
     }
 
-    func testModelRowCyclesAndPersists() {
+    func testModelRowOpensTheList() {
         settings.model = .firstGen
         let nav = navigator()
         open(nav, "Settings")
         XCTAssertEqual(menu(nav)?.items.first?.detail(), "1st gen")
+        XCTAssertTrue(menu(nav)?.items.first?.opensSubmenu == true)
         nav.handle(.center)
+        XCTAssertEqual(menu(nav)?.title, "Model")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "5th generation"])
+        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2005"])
+        XCTAssertEqual(menu(nav)?.selectedIndex, 0, "the current model is selected")
+    }
+
+    func testSelectingAModelSwitchesAndPersists() {
+        settings.model = .firstGen
+        let nav = navigator()
+        open(nav, "Settings")
+        nav.handle(.center)
+        open(nav, "2nd generation")
         XCTAssertEqual(settings.model, .secondGen)
+        XCTAssertEqual(AppSettings(defaults: UserDefaults(suiteName: suiteName)!).model, .secondGen)
+    }
+
+    func testSelectingTheCurrentModelGoesBack() {
+        settings.model = .firstGen
+        let nav = navigator()
+        open(nav, "Settings")
         nav.handle(.center)
-        XCTAssertEqual(settings.model, .fifthGen)
-        nav.handle(.center)
+        nav.handle(.center)                 // "1st generation" is current
         XCTAssertEqual(settings.model, .firstGen)
-        XCTAssertEqual(AppSettings(defaults: UserDefaults(suiteName: suiteName)!).model, .firstGen)
+        XCTAssertEqual(menu(nav)?.title, "Settings")
     }
 
     func testBacklightTimerRowCycles() {
@@ -173,7 +192,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         let observer = settings.$model.dropFirst().sink { [unowned nav] model in nav.setProfile(model.spec.firmware) }
         defer { observer.cancel() }
         open(nav, "Settings")
-        nav.handle(.center)                      // Model row: 5th gen → 1st gen
+        nav.handle(.center)                      // Model list
+        open(nav, "1st generation")              // 5th gen → 1st gen
         XCTAssertEqual(settings.model, .firstGen)
         XCTAssertEqual(nav.stack.count, 1)
         XCTAssertEqual(menu(nav)?.title, "iPod", "the new model's main menu, not the old Settings screen")

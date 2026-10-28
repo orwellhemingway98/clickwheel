@@ -43,7 +43,7 @@ Music list launches Music if it isn't running.
 
 ## Models
 
-Choose the iPod in **Settings › Model**. The window reshapes to that model at life size.
+Choose the iPod from the list in **Settings › Model** (the current one is ticked). The window reshapes to that model at life size.
 
 | Model | Year | What's different |
 |---|---|---|

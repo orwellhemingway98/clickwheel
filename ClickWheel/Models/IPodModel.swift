@@ -15,6 +15,15 @@ enum IPodModel: String, CaseIterable {
         }
     }
 
+    /// The row label in Settings › Model.
+    var generationName: String {
+        switch self {
+        case .firstGen: return "1st generation"
+        case .secondGen: return "2nd generation"
+        case .fifthGen: return "5th generation"
+        }
+    }
+
     var spec: ModelSpec {
         switch self {
         case .firstGen: return .firstGen

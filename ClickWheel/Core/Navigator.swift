@@ -370,11 +370,8 @@ final class Navigator: ObservableObject {
     private func settingsMenu() -> MenuScreen {
         let settings = self.settings
         var items = [
-            MenuItem("Model", detail: { settings.model.shortName }, action: .run {
-                let all = IPodModel.allCases
-                let index = all.firstIndex(of: settings.model) ?? 0
-                settings.model = all[(index + 1) % all.count]
-            }),
+            MenuItem("Model", detail: { settings.model.shortName },
+                     action: .push { [unowned self] in self.modelMenu() }),
             MenuItem("Source", detail: { Self.label(for: settings.sourceMode) }, action: .run {
                 let all = SourceMode.allCases
                 let index = all.firstIndex(of: settings.sourceMode) ?? 0
@@ -393,6 +390,25 @@ final class Navigator: ObservableObject {
             settings.clickerEnabled.toggle()
         }))
         return MenuScreen(title: "Settings", items: items)
+    }
+
+    /// Settings › Model: every iPod in release order, the current one ticked.
+    /// Choosing another switches to it (the app then resets to its main menu);
+    /// choosing the current one just goes back.
+    private func modelMenu() -> MenuScreen {
+        let settings = self.settings
+        var screen = MenuScreen(title: "Model", items: IPodModel.allCases.map { model in
+            MenuItem(model.generationName,
+                     detail: { (settings.model == model ? "✓ " : "") + String(model.spec.year) },
+                     action: .run { [unowned self] in
+                         if settings.model == model { self.back() } else { settings.model = model }
+                     })
+        })
+        let current = IPodModel.allCases.firstIndex(of: settings.model) ?? 0
+        screen.selectedIndex = current
+        screen.windowStart = MenuWindow.start(previous: 0, selected: current,
+                                              visible: profile.visibleRows, count: screen.items.count)
+        return screen
     }
 
     private static func label(for mode: SourceMode) -> String {
