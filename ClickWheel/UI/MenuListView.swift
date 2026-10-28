@@ -2,22 +2,15 @@ import SwiftUI
 
 struct MenuListView: View {
     let screen: MenuScreen
-    @State private var firstVisible = 0
-
-    private var visibleRows: Int {
-        Int((Theme.screenSize.height - Theme.headerHeight) / Theme.rowHeight)
-    }
 
     var body: some View {
-        let start = MenuWindow.start(previous: firstVisible, selected: screen.selectedIndex,
-                                     visible: visibleRows, count: screen.items.count)
-        let end = min(start + visibleRows, screen.items.count)
+        let start = screen.windowStart
+        let end = min(start + MenuWindow.visibleRows, screen.items.count)
         VStack(spacing: 0) {
             ForEach(start..<end, id: \.self) { index in
                 row(screen.items[index], selected: index == screen.selectedIndex && screen.items[index].isSelectable)
             }
         }
-        .onChange(of: start) { _, newStart in firstVisible = newStart }
     }
 
     private func row(_ item: MenuItem, selected: Bool) -> some View {

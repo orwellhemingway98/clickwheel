@@ -69,12 +69,17 @@ final class LibraryOutputParserTests: XCTestCase {
 
     func testSingleTrackWithEmptyFields() {
         let output = columns(["A"], ["Solo"], [""], [""], [""], ["1"], ["1"])
-        XCTAssertEqual(LibraryOutputParser.trackColumns(output).map(\.name), ["Solo"])
+        XCTAssertEqual(LibraryOutputParser.trackColumns(output)?.map(\.name), ["Solo"])
     }
 
     func testMismatchedColumnsAreRejected() {
         let output = columns(["A", "B"], ["One"], ["", ""], ["", ""], ["", ""], ["1", "1"], ["1", "1"])
-        XCTAssertEqual(LibraryOutputParser.trackColumns(output), [])
+        XCTAssertNil(LibraryOutputParser.trackColumns(output))
+    }
+
+    func testExtraColumnIsRejected() {
+        let output = columns(["A"], ["x"], ["y"], [""], [""], [""], ["1"], ["1"])
+        XCTAssertNil(LibraryOutputParser.trackColumns(output))
     }
 
     func testParsesPlaylists() {

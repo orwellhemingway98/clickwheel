@@ -44,9 +44,14 @@ struct MenuScreen {
     let id = UUID()
     var title: String
     var items: [MenuItem] {
-        didSet { selectedIndex = Self.firstSelectable(in: items) }
+        didSet {
+            selectedIndex = Self.firstSelectable(in: items)
+            windowStart = 0
+        }
     }
     var selectedIndex: Int
+    /// First visible row, kept with the screen so returning to it restores the view.
+    var windowStart = 0
 
     init(title: String, items: [MenuItem]) {
         self.title = title
@@ -67,6 +72,9 @@ enum Screen {
 /// Which rows of a list are on screen: like the iPod, the window only moves
 /// when the selection would leave it.
 enum MenuWindow {
+    /// Rows that fit on the screen below the header.
+    static let visibleRows = 7
+
     static func start(previous: Int, selected: Int, visible: Int, count: Int) -> Int {
         guard count > visible else { return 0 }
         var start = previous

@@ -58,6 +58,8 @@ final class Navigator: ObservableObject {
             let target = selectable[min(max(position + steps, 0), selectable.count - 1)]
             guard target != screen.selectedIndex else { return }
             screen.selectedIndex = target
+            screen.windowStart = MenuWindow.start(previous: screen.windowStart, selected: target,
+                                                  visible: MenuWindow.visibleRows, count: screen.items.count)
             stack[stack.count - 1] = .menu(screen)
             onScrollStep()
         }

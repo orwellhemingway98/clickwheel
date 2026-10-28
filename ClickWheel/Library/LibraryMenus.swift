@@ -3,6 +3,18 @@ import Foundation
 /// Builds the Music menu tree (Playlists / Artists / Albums / Songs) for a library.
 /// Each list loads fresh when opened; each song plays in the list it was picked from.
 enum LibraryMenus {
+    /// Longest queue sent to Music: AppleScript can't hold ~8k IDs in one script,
+    /// and copying each track into the ClickWheel playlist takes time.
+    static let maxQueueLength = 100
+
+    /// The tracks to queue when picking `index`: the whole list if it's short,
+    /// otherwise the picked song and the ones after it.
+    static func queueRequest(ids: [String], startIndex index: Int) -> PlayRequest {
+        guard ids.count > maxQueueLength else { return .queue(trackIDs: ids, startIndex: index) }
+        let end = min(index + maxQueueLength, ids.count)
+        return .queue(trackIDs: Array(ids[index..<end]), startIndex: 0)
+    }
+
     static func musicMenu(library: MusicLibrary, runner: BackgroundRunner) -> MenuScreen {
         let menus = Builder(library: library, runner: runner)
         return MenuScreen(title: "Music", items: [
@@ -44,7 +56,7 @@ enum LibraryMenus {
         func songs() async throws -> [MenuItem] {
             let sorted = LibraryIndex.sortedSongs(try await fetch { try $0.allTracks() })
             let ids = sorted.map(\.id)
-            return songRows(sorted) { .queue(trackIDs: ids, startIndex: $0) }
+            return songRows(sorted) { LibraryMenus.queueRequest(ids: ids, startIndex: $0) }
         }
 
         private func albumRow(_ album: LibraryAlbum, tracks: [LibraryTrack], showArtist: Bool) -> MenuItem {
@@ -52,7 +64,7 @@ enum LibraryMenus {
                      action: .load(title: album.name, empty: "No songs") {
                          let albumTracks = LibraryIndex.tracks(in: tracks, album: album)
                          let ids = albumTracks.map(\.id)
-                         return songRows(albumTracks, artistDetail: false) { .queue(trackIDs: ids, startIndex: $0) }
+                         return songRows(albumTracks, artistDetail: false) { LibraryMenus.queueRequest(ids: ids, startIndex: $0) }
                      })
         }
 

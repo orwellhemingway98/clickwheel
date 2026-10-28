@@ -10,14 +10,19 @@ final class AppleMusicScriptsTests: XCTestCase {
         let script = AppleMusicScripts.queue(trackIDs: ["AB\"C"], startIndex: 0, knownPlaylistID: "P1")
         XCTAssertTrue(script.contains(AppleMusicScripts.quoted("AB\"C")))
         XCTAssertTrue(script.contains(AppleMusicScripts.quoted("P1")))
-        XCTAssertTrue(script.contains("play track 1 of"))
+        XCTAssertTrue(script.contains("if (count of tracks of q) > 0 then delete every track of q"))
+    }
+
+    func testQueueScriptSkipsFailingTracksAndStartsByPickedID() {
+        let script = AppleMusicScripts.queue(trackIDs: ["A", "B", "C"], startIndex: 1, knownPlaylistID: nil)
+        XCTAssertTrue(script.contains("try\nduplicate"))
+        XCTAssertTrue(script.contains("whose persistent ID is \"B\""))
     }
 
     func testQueueScriptWithoutKnownID() {
         let script = AppleMusicScripts.queue(trackIDs: ["A", "B"], startIndex: 1, knownPlaylistID: nil)
         XCTAssertTrue(script.contains("name is \"ClickWheel\""))
         XCTAssertFalse(script.contains("persistent ID is \"\""))
-        XCTAssertTrue(script.contains("play track 2 of"))
     }
 
     func testPlayPlaylistScript() {
@@ -27,6 +32,7 @@ final class AppleMusicScriptsTests: XCTestCase {
     }
 
     func testTracksInPlaylistQuotesID() {
-        XCTAssertTrue(AppleMusicScripts.tracks(inPlaylist: "Q\"").contains(AppleMusicScripts.quoted("Q\"")))
+        XCTAssertTrue(AppleMusicScripts.trackColumns(source: AppleMusicScripts.playlistSource("Q\""))
+            .contains(AppleMusicScripts.quoted("Q\"")))
     }
 }

@@ -91,6 +91,17 @@ final class LibraryMenusTests: XCTestCase {
         XCTAssertEqual(library.played, [.queue(trackIDs: ["a", "b", "c"], startIndex: 2)])
     }
 
+    func testSongsQueueIsBoundedFromPickedSong() async throws {
+        library.allTracksResult = (0..<250).map { track(String(format: "id%03d", $0), String(format: "Song %03d", $0)) }
+        let songs = try await load(row(music.items, "Songs"))
+        try await play(songs[200])
+        try await play(songs[10])
+        XCTAssertEqual(library.played, [
+            .queue(trackIDs: (200..<250).map { String(format: "id%03d", $0) }, startIndex: 0),
+            .queue(trackIDs: (10..<110).map { String(format: "id%03d", $0) }, startIndex: 0),
+        ])
+    }
+
     func testLoadersPrepareLibrary() async throws {
         _ = try await load(row(music.items, "Playlists"))
         XCTAssertEqual(library.prepareCount, 1)

@@ -18,16 +18,19 @@ enum LibraryOutputParser {
     /// Column-oriented tracks: seven columns (same order as `tracks`) joined by
     /// ASCII 29, each a list of values joined by ASCII 30. Music can produce this
     /// without a per-track loop, which matters for libraries of thousands of songs.
-    /// Columns of different lengths mean the data can't be trusted, so nothing is returned.
-    static func trackColumns(_ output: String) -> [LibraryTrack] {
+    /// Returns nil when the columns don't line up (a tag containing ASCII 29 or 30),
+    /// so the caller can fall back to the record format.
+    static func trackColumns(_ output: String) -> [LibraryTrack]? {
+        guard !output.isEmpty else { return [] }
         let columns = output.split(separator: column, omittingEmptySubsequences: false).map { col in
             col.split(separator: record, omittingEmptySubsequences: false)
                 .map { $0 == "missing value" ? "" : String($0) }
         }
         // IDs are never empty, so an empty ID column means an empty library.
-        guard columns.count == 7, columns[0] != [""] else { return [] }
+        guard columns.count == 7 else { return nil }
+        guard columns[0] != [""] else { return [] }
         let count = columns[0].count
-        guard columns.allSatisfy({ $0.count == count }) else { return [] }
+        guard columns.allSatisfy({ $0.count == count }) else { return nil }
         return (0..<count).map { i in
             LibraryTrack(id: columns[0][i], name: columns[1][i], artist: columns[2][i], albumArtist: columns[3][i],
                          album: columns[4][i], discNumber: Int(columns[5][i]) ?? 0, trackNumber: Int(columns[6][i]) ?? 0)

@@ -135,6 +135,19 @@ final class NavigatorLoadingTests: XCTestCase {
         XCTAssertEqual(steps, 1)
     }
 
+    func testWindowStartRememberedAcrossNowPlaying() async {
+        var items = (0..<20).map { item("Row \($0)") }
+        items[12] = MenuItem("Song", action: .play {})
+        let nav = navigator(items)
+        nav.handle(.scroll(steps: 12))
+        XCTAssertEqual(menu(nav)?.windowStart, 12 - MenuWindow.visibleRows + 1)
+        nav.handle(.center)
+        await nav.lastTask?.value
+        nav.handle(.menu)
+        XCTAssertEqual(menu(nav)?.selectedIndex, 12)
+        XCTAssertEqual(menu(nav)?.windowStart, 12 - MenuWindow.visibleRows + 1)
+    }
+
     func testSelectionStartsOnFirstSelectableRow() {
         let nav = navigator([.placeholder("—"), item("A")])
         XCTAssertEqual(menu(nav)?.selectedIndex, 1)
