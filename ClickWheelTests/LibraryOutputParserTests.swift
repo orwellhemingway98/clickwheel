@@ -48,6 +48,35 @@ final class LibraryOutputParserTests: XCTestCase {
         XCTAssertEqual(tracks.map(\.id), ["A", "B"])
     }
 
+    private func columns(_ cols: [String]...) -> String {
+        cols.map { $0.joined(separator: String(LibraryOutputParser.record)) }
+            .joined(separator: String(LibraryOutputParser.column))
+    }
+
+    func testParsesTrackColumns() {
+        let output = columns(["A", "B"], ["One", "Two 🎸"], ["Ar", "missing value"], ["", "AA"],
+                             ["Al", "Bl"], ["1", "2"], ["3", "missing value"])
+        XCTAssertEqual(LibraryOutputParser.trackColumns(output), [
+            LibraryTrack(id: "A", name: "One", artist: "Ar", albumArtist: "", album: "Al", discNumber: 1, trackNumber: 3),
+            LibraryTrack(id: "B", name: "Two 🎸", artist: "", albumArtist: "AA", album: "Bl", discNumber: 2, trackNumber: 0),
+        ])
+    }
+
+    func testEmptyLibraryColumnsIsEmpty() {
+        XCTAssertEqual(LibraryOutputParser.trackColumns(columns([], [], [], [], [], [], [])), [])
+        XCTAssertEqual(LibraryOutputParser.trackColumns(""), [])
+    }
+
+    func testSingleTrackWithEmptyFields() {
+        let output = columns(["A"], ["Solo"], [""], [""], [""], ["1"], ["1"])
+        XCTAssertEqual(LibraryOutputParser.trackColumns(output).map(\.name), ["Solo"])
+    }
+
+    func testMismatchedColumnsAreRejected() {
+        let output = columns(["A", "B"], ["One"], ["", ""], ["", ""], ["", ""], ["1", "1"], ["1", "1"])
+        XCTAssertEqual(LibraryOutputParser.trackColumns(output), [])
+    }
+
     func testParsesPlaylists() {
         let playlists = LibraryOutputParser.playlists(out(rec("A1", "Road Trip"), rec("B2", "Road Trip")))
         XCTAssertEqual(playlists, [LibraryPlaylist(id: "A1", name: "Road Trip"), LibraryPlaylist(id: "B2", name: "Road Trip")])

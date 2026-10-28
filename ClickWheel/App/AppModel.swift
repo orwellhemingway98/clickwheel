@@ -14,14 +14,21 @@ final class AppModel {
     let navigator: Navigator
     let artwork = ArtworkCache()
     let clickSound = ClickSound()
+    let library = AppleMusicLibrary()
+    let libraryRunner = BackgroundRunner(label: "ClickWheel.Library")
 
     init() {
         hub = PlayerHub(sources: [AppleMusicSource(), SpotifySource()], settings: settings)
         let settings = settings
         let clickSound = clickSound
-        navigator = Navigator(player: hub, settings: settings, onScrollStep: {
-            if settings.clickerEnabled { clickSound.play() }
-        })
+        let hub = hub
+        let library = library
+        let libraryRunner = libraryRunner
+        navigator = Navigator(
+            player: hub, settings: settings,
+            musicMenu: { LibraryMenus.musicMenu(library: library, runner: libraryRunner) },
+            onPlayed: { Task { await hub.refresh() } },
+            onScrollStep: { if settings.clickerEnabled { clickSound.play() } })
         hub.startPolling()
     }
 
@@ -34,14 +41,29 @@ final class AppModel {
             .environmentObject(artwork)
     }
 
-    /// Development aid: `ClickWheel --snapshot out.png [--now-playing]` renders the
-    /// iPod to a PNG after the first poll, then quits.
+    /// Development aid: `ClickWheel --snapshot out.png [--now-playing] [--keys c,d,m]`
+    /// renders the iPod to a PNG after the first poll, then quits. `--keys` presses
+    /// c(enter) d(own) u(p) m(enu) with a pause after each, so loads can finish.
     func renderSnapshotIfRequested() {
         let args = CommandLine.arguments
         guard let flag = args.firstIndex(of: "--snapshot"), args.indices.contains(flag + 1) else { return }
         let path = args[flag + 1]
-        if args.contains("--now-playing") { navigator.handle(.center) }
+        let keys = args.firstIndex(of: "--keys").flatMap { args.indices.contains($0 + 1) ? args[$0 + 1] : nil }
         Task {
+            if args.contains("--now-playing") {
+                navigator.handle(.scroll(steps: 1))
+                navigator.handle(.center)
+            }
+            for key in (keys ?? "").split(separator: ",") {
+                switch key {
+                case "c": navigator.handle(.center)
+                case "d": navigator.handle(.scroll(steps: 1))
+                case "u": navigator.handle(.scroll(steps: -1))
+                case "m": navigator.handle(.menu)
+                default: break
+                }
+                try? await Task.sleep(for: .seconds(1.5))
+            }
             try? await Task.sleep(for: .seconds(2.5))
             let renderer = ImageRenderer(content: rootView(includesWindowControls: false).padding(20))
             renderer.scale = 2

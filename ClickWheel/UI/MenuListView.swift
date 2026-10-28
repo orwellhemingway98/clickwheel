@@ -14,7 +14,7 @@ struct MenuListView: View {
         let end = min(start + visibleRows, screen.items.count)
         VStack(spacing: 0) {
             ForEach(start..<end, id: \.self) { index in
-                row(screen.items[index], selected: index == screen.selectedIndex)
+                row(screen.items[index], selected: index == screen.selectedIndex && screen.items[index].isSelectable)
             }
         }
         .onChange(of: start) { _, newStart in firstVisible = newStart }
