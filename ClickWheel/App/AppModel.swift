@@ -15,6 +15,8 @@ final class AppModel {
     let navigator: Navigator
     let artwork = ArtworkCache()
     let clickSound = ClickSound()
+    /// One click per row moved, rate-limited during fast scrolls.
+    private let clicks = ClickThrottle()
     let library = AppleMusicLibrary()
     let libraryRunner = BackgroundRunner(label: "ClickWheel.Library")
     let display = DisplayGeometry()
@@ -32,7 +34,11 @@ final class AppModel {
             musicMenu: { LibraryMenus.musicMenu(library: library, runner: libraryRunner) },
             shuffle: LibraryMenus.shuffleAction(library: library, runner: libraryRunner),
             onPlayed: { Task { await hub.refresh() } },
-            onRowsMoved: { _ in if settings.clickerEnabled { clickSound.play() } })
+            onRowsMoved: { [clicks] _ in
+                if settings.clickerEnabled, clicks.shouldClick(now: ProcessInfo.processInfo.systemUptime) {
+                    clickSound.play()
+                }
+            })
         let navigator = navigator
         trackObserver = hub.$snapshot
             .map { $0?.track }
@@ -87,4 +93,10 @@ final class AppModel {
             NSApp.terminate(nil)
         }
     }
+}
+
+/// A reference wrapper so the navigator's callback can mutate the limiter.
+private final class ClickThrottle {
+    private var limiter = ClickRateLimiter()
+    func shouldClick(now: TimeInterval) -> Bool { limiter.shouldClick(now: now) }
 }
