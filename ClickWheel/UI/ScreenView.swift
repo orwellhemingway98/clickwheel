@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The LCD: a header bar, then either a menu list or Now Playing.
+/// The 5G colour LCD: the gradient header, then the current screen, sliding
+/// in from the right when entering and back when leaving.
 struct ScreenView: View {
     @EnvironmentObject private var navigator: Navigator
     @EnvironmentObject private var hub: PlayerHub
@@ -8,14 +9,20 @@ struct ScreenView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider().overlay(Theme.lcdBorder.opacity(0.5))
-            content.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            ZStack {
+                content
+                    .id(navigator.stack.count)
+                    .transition(.push(from: navigator.lastNavigation == .forward ? .trailing : .leading))
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .clipped()
+            .overlay { QuickScrollOverlay(letter: navigator.quickScrollLetter) }
         }
-        .foregroundStyle(Theme.lcdText)
-        .background(Theme.lcdGradient)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.screenCornerRadius))
-        .overlay(RoundedRectangle(cornerRadius: Theme.screenCornerRadius).stroke(Theme.lcdBorder, lineWidth: 1))
+        .animation(ScreenTheme.transition, value: navigator.stack.count)
+        .foregroundStyle(ScreenTheme.text)
+        .background(ScreenTheme.background)
         .frame(width: IPodGeometry.lcdDesignSize.width, height: IPodGeometry.lcdDesignSize.height)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.screenCornerRadius))
     }
 
     private var title: String {
@@ -29,25 +36,37 @@ struct ScreenView: View {
 
     private var header: some View {
         ZStack {
-            Text(title).font(Theme.font(13, semibold: true)).lineLimit(1)
-            HStack {
+            Text(title)
+                .font(ScreenTheme.font(ScreenTheme.titleSize, semibold: true))
+                .lineLimit(1)
+                .shadow(color: ScreenTheme.titleShadow, radius: 0, y: 0.75)
+                .padding(.horizontal, ScreenTheme.titleInset)
+                .id(title)
+                .transition(.opacity)
+            HStack(spacing: 0) {
                 Text(hub.snapshot?.state == .playing ? "▶" : "❚❚")
-                    .font(Theme.font(9, semibold: true))
+                    .font(ScreenTheme.font(8, semibold: true))
+                    .foregroundStyle(ScreenTheme.playGlyph)
                     .opacity(hub.snapshot?.track == nil ? 0 : 1)
+                    .padding(.leading, ScreenTheme.playGlyphX)
                 Spacer()
                 BatteryIcon()
+                    .padding(.trailing, ScreenTheme.batteryTrailing)
             }
-            .padding(.horizontal, 6)
         }
-        .frame(height: Theme.headerHeight)
-        .background(LinearGradient(colors: [.white.opacity(0.7), .white.opacity(0.2)], startPoint: .top, endPoint: .bottom))
+        .frame(height: ScreenTheme.headerHeight)
+        .background(ScreenTheme.headerGradient)
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(ScreenTheme.headerRule).frame(height: ScreenTheme.headerRuleWidth)
+        }
     }
 
     @ViewBuilder private var content: some View {
         switch navigator.current {
         case .menu(let screen): MenuListView(screen: screen)
         case .nowPlaying: NowPlayingView()
-        case .clock, .stopwatch: EmptyView()
+        case .clock: ClockView()
+        case .stopwatch: StopwatchView()
         }
     }
 }
@@ -55,12 +74,12 @@ struct ScreenView: View {
 /// Purely decorative, always full.
 private struct BatteryIcon: View {
     var body: some View {
-        HStack(spacing: 1) {
-            RoundedRectangle(cornerRadius: 2)
-                .stroke(Theme.lcdText, lineWidth: 1)
-                .overlay(RoundedRectangle(cornerRadius: 1).fill(Color(hex: 0x4CAF50)).padding(2))
-                .frame(width: 18, height: 9)
-            Rectangle().fill(Theme.lcdText).frame(width: 2, height: 4)
+        HStack(spacing: 0.5) {
+            RoundedRectangle(cornerRadius: 1.5)
+                .strokeBorder(ScreenTheme.batteryOutline, lineWidth: 0.75)
+                .background(RoundedRectangle(cornerRadius: 1).fill(ScreenTheme.batteryFill).padding(1.5))
+                .frame(width: ScreenTheme.batterySize.width - 1.5, height: ScreenTheme.batterySize.height)
+            Rectangle().fill(ScreenTheme.batteryOutline).frame(width: 1.5, height: 4)
         }
     }
 }
