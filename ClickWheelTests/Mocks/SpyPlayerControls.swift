@@ -1,5 +1,6 @@
 @testable import ClickWheel
 
+@MainActor
 final class SpyPlayerControls: PlayerControlling {
     private(set) var calls: [String] = []
     func playPause() { calls.append("playPause") }

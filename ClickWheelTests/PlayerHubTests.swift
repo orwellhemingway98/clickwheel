@@ -62,6 +62,13 @@ final class PlayerHubTests: XCTestCase {
         XCTAssertEqual(hub.activeSource, .spotify)
     }
 
+    func testAutoFreshPrefersSourceWithTrackOverStopped() async {
+        music.set(.stopped); spotify.set(.paused)
+        await hub.refresh()
+        XCTAssertEqual(hub.activeSource, .spotify)
+        XCTAssertEqual(hub.snapshot?.track?.title, "Song")
+    }
+
     func testFixedModeIgnoresOtherSource() async {
         settings.sourceMode = .spotify
         music.set(.playing); spotify.set(.paused)

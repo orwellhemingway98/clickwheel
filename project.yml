@@ -20,6 +20,7 @@ targets:
         CFBundleShortVersionString: "0.1.0"
         CFBundleVersion: "1"
         LSApplicationCategoryType: public.app-category.music
+        ATSApplicationFontsPath: "."
         NSAppleEventsUsageDescription: "ClickWheel controls Apple Music and Spotify so it can show what's playing and play, pause or skip tracks."
     entitlements:
       path: ClickWheel/App/ClickWheel.entitlements

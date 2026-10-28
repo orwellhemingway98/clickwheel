@@ -6,6 +6,7 @@ enum HubStatus: Equatable {
     case error(String)
 }
 
+@MainActor
 protocol PlayerControlling: AnyObject {
     func playPause()
     func next()
@@ -112,7 +113,7 @@ final class PlayerHub: ObservableObject, PlayerControlling {
         } else if let last = lastActive, order.contains(last) {
             chosen = last
         } else {
-            chosen = order.first
+            chosen = order.first { snapshots[$0]?.track != nil } ?? order.first
         }
 
         if chosen != nil { lastActive = chosen }
