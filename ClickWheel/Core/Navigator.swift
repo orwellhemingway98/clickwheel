@@ -275,8 +275,11 @@ final class Navigator: ObservableObject {
         case .open(let screen): push(screen)
         case .run(let action):
             action()
-            // Re-publish so rows showing a detail value refresh.
-            stack[stack.count - 1] = .menu(screen)
+            // Re-publish so rows showing a detail value refresh — but only if the
+            // action didn't navigate (switching Model resets to the new main menu).
+            if case .menu(let top) = current, top.id == screen.id {
+                stack[stack.count - 1] = .menu(screen)
+            }
         case .play(let start): play(start)
         }
     }

@@ -163,4 +163,21 @@ final class NavigatorFirstGenTests: XCTestCase {
         nav.handle(.scroll(steps: 7))
         XCTAssertEqual(menu(nav)?.windowStart, 2)
     }
+
+    func testChangingModelFromSettingsLeavesAWorkingMenu() {
+        let nav = navigator(.fifthGen)
+        settings.model = .fifthGen
+        // As in the app: a model change switches the navigator's firmware.
+        let observer = settings.$model.dropFirst().sink { [unowned nav] model in nav.setProfile(model.spec.firmware) }
+        defer { observer.cancel() }
+        open(nav, "Settings")
+        nav.handle(.center)                      // Model row: 5th gen → 1st gen
+        XCTAssertEqual(settings.model, .firstGen)
+        XCTAssertEqual(nav.stack.count, 1)
+        XCTAssertEqual(menu(nav)?.title, "iPod", "the new model's main menu, not the old Settings screen")
+        open(nav, "Settings")
+        XCTAssertEqual(menu(nav)?.title, "Settings")
+        nav.handle(.menu)
+        XCTAssertEqual(menu(nav)?.title, "iPod", "MENU goes back from Settings")
+    }
 }
