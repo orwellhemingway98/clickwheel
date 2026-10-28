@@ -27,6 +27,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 window.resizeKeepingTopLeft(to: self.windowSize(for: geometry))
             }
             .store(in: &cancellables)
+        // A release that happens in another app never reaches us: drop any press
+        // (and stop fast-forward/rewind) when ClickWheel loses focus.
+        NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)
+            .merge(with: NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification, object: window))
+            .sink { [weak model] _ in model?.input.cancel() }
+            .store(in: &cancellables)
         NotificationCenter.default.publisher(for: NSWindow.didChangeScreenNotification, object: window)
             .sink { [weak model, weak window] _ in model?.display.update(for: window?.screen) }
             .store(in: &cancellables)
@@ -36,8 +42,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
 
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak model] event in
-            guard let model,
-                  event.modifierFlags.intersection([.command, .control, .option]).isEmpty else { return event }
+            guard let model else { return event }
+            // Key-ups always count, even with ⌘ held, so a hold can't get stuck;
+            // key-downs with modifiers belong to menu shortcuts.
+            if event.type == .keyDown, !event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
+                return event
+            }
             let key = event.type == .keyDown
                 ? KeyMap.keyDown(code: event.keyCode, isRepeat: event.isARepeat)
                 : KeyMap.keyUp(code: event.keyCode)

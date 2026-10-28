@@ -25,6 +25,8 @@ struct ButtonGestureRecognizer {
             events = endHold(of: current.button)
             cancelled = current.button
         }
+        // A fresh press of a button supersedes any release we were still waiting to swallow.
+        if cancelled == button { cancelled = nil }
         pressed = (button, now)
         held = false
         return events
@@ -43,10 +45,14 @@ struct ButtonGestureRecognizer {
 
     /// Drops the current press without a tap: a ring press that turned into a spin.
     mutating func cancel() -> [WheelEvent] {
-        guard let current = pressed else { return [] }
+        guard let current = pressed else {
+            cancelled = nil
+            return []
+        }
         let events = endHold(of: current.button)
         pressed = nil
         held = false
+        cancelled = nil
         return events
     }
 

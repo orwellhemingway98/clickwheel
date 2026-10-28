@@ -84,18 +84,13 @@ final class NavigatorModesTests: XCTestCase {
         let nav = navigator()
         nav.handle(.center)
         XCTAssertEqual(nav.lastNavigation, .forward)
+        XCTAssertTrue(nav.slideDirection.forward)
         nav.handle(.menu)
         XCTAssertEqual(nav.lastNavigation, .back)
+        XCTAssertFalse(nav.slideDirection.forward)
     }
 
     // MARK: Acceleration and Quick Scroll
-
-    private func longList(_ nav: Navigator) {
-        let items = (0..<50).map { MenuItem(String(UnicodeScalar(65 + $0 % 26)!) + "song\($0)", quickScrollList: true, action: .run {}) }
-        nav.handle(.center)  // Music
-        nav.handle(.center)  // the long list (opens via load)
-        _ = items
-    }
 
     private func fastSpin(_ nav: Navigator, steps: Int, every dt: Double = 0.02) {
         for _ in 0..<steps {
@@ -162,6 +157,8 @@ final class NavigatorModesTests: XCTestCase {
         nav.handle(.scroll(steps: 1))
         XCTAssertEqual(spy.calls.last, "adjustVolume(3)")
         guard case .volume = nav.nowPlayingMode else { return XCTFail("expected volume mode") }
+        nav.handle(.tick(now: clock + 1.9))
+        guard case .volume = nav.nowPlayingMode else { return XCTFail("volume bar should still show at 1.9 s") }
         nav.handle(.tick(now: clock + 2.1))
         XCTAssertEqual(nav.nowPlayingMode, .normal)
     }
@@ -183,6 +180,12 @@ final class NavigatorModesTests: XCTestCase {
         XCTAssertEqual(position, 50)
         nav.handle(.scroll(steps: 1))
         XCTAssertEqual(spy.calls.last, "setPosition(52.0)")
+        nav.handle(.tick(now: clock + 2.9))
+        guard case .scrubbing = nav.nowPlayingMode else { return XCTFail("scrubber should still show at 2.9 s") }
+        clock += 2.5
+        nav.handle(.scroll(steps: 1))       // input extends the deadline
+        nav.handle(.tick(now: clock + 2.9))
+        guard case .scrubbing = nav.nowPlayingMode else { return XCTFail("scrolling should extend the scrubber") }
         nav.handle(.tick(now: clock + 3.1))
         XCTAssertEqual(nav.nowPlayingMode, .normal)
     }
@@ -253,5 +256,35 @@ final class NavigatorModesTests: XCTestCase {
     func testStopwatchFormat() {
         XCTAssertEqual(TimeFormat.stopwatch(61.25), "01:01.2")
         XCTAssertEqual(TimeFormat.stopwatch(0), "00:00.0")
+    }
+
+    func testMenuAfterVolumeGoesBack() {
+        let nav = navigator()
+        nav.setTrack(track())
+        openNowPlaying(nav)
+        nav.handle(.scroll(steps: 1))
+        nav.handle(.menu)
+        guard case .menu = nav.current else { return XCTFail("MENU should leave Now Playing") }
+    }
+
+    func testMissedTicksFireOneSeek() {
+        let nav = navigator()
+        nav.handle(.seekForward(active: true))
+        nav.handle(.tick(now: clock + 5))
+        XCTAssertEqual(spy.calls, ["seek(5.0)"])
+    }
+
+    func testScrubClampsAtBothEnds() {
+        let nav = navigator()
+        nav.setTrack(track(position: 1))
+        openNowPlaying(nav)
+        nav.handle(.center)
+        nav.handle(.scroll(steps: -1))
+        XCTAssertEqual(spy.calls.last, "setPosition(0.0)")
+        nav.setTrack(track(position: 199))
+        nav.handle(.menu)
+        nav.handle(.center)
+        nav.handle(.scroll(steps: 1))
+        XCTAssertEqual(spy.calls.last, "setPosition(200.0)")
     }
 }

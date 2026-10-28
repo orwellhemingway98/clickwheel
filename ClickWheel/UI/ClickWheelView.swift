@@ -12,6 +12,9 @@ struct ClickWheelView: View {
     @State private var pressedButton: WheelButton?
     @State private var pressedQuadrant: WheelButton?
     @State private var centerPressed = false
+    /// True while a drag is live; resets by itself if macOS cancels the gesture.
+    @GestureState private var ringTouched = false
+    @GestureState private var centerTouched = false
     @Environment(\.ipodGeometry) private var g
 
     private var size: CGFloat { g.wheelDiameter }
@@ -24,6 +27,20 @@ struct ClickWheelView: View {
             centerButton
         }
         .frame(width: size, height: size)
+        // A cancelled gesture never calls onEnded: clean up so no press stays stuck.
+        .onChange(of: ringTouched) { _, touched in
+            guard !touched, dragging else { return }
+            dragging = false
+            pressedButton = nil
+            pressedQuadrant = nil
+            tracker.end()
+            input.cancel()
+        }
+        .onChange(of: centerTouched) { _, touched in
+            guard !touched, centerPressed else { return }
+            centerPressed = false
+            input.cancel()
+        }
     }
 
     // MARK: - Drawing
@@ -86,6 +103,7 @@ struct ClickWheelView: View {
 
     private var centerGesture: some Gesture {
         DragGesture(minimumDistance: 0)
+            .updating($centerTouched) { _, state, _ in state = true }
             .onChanged { _ in
                 guard !centerPressed else { return }
                 centerPressed = true
@@ -100,6 +118,7 @@ struct ClickWheelView: View {
 
     private var ringGesture: some Gesture {
         DragGesture(minimumDistance: 0)
+            .updating($ringTouched) { _, state, _ in state = true }
             .onChanged { value in
                 let now = ProcessInfo.processInfo.systemUptime
                 if !dragging {

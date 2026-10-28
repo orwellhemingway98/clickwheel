@@ -211,4 +211,26 @@ final class PlayerHubTests: XCTestCase {
         await hub.lastCommand?.value
         XCTAssertEqual(spotify.calls, [])
     }
+
+    func testPendingSeekDoesNotCarryIntoTheNextTrack() async {
+        await playSpotify(at: 195)
+        hub.seek(by: 5)                     // pending 200 on track 1
+        spotify.nextSnapshot.track = NowPlayingInfo(trackID: "next", title: "Next", artist: "A", album: "B",
+                                                    duration: 180, position: 3, index: nil, count: nil, source: .spotify)
+        await hub.lastCommand?.value        // its refresh sees the new track
+        hub.seek(by: 5)
+        await hub.lastCommand?.value
+        XCTAssertEqual(spotify.calls, ["setPosition(200.0)", "setPosition(8.0)"])
+    }
+
+    func testRestartOrPreviousIgnoresAnOldTracksPendingPosition() async {
+        await playSpotify(at: 195)
+        hub.seek(by: 5)
+        spotify.nextSnapshot.track = NowPlayingInfo(trackID: "next", title: "Next", artist: "A", album: "B",
+                                                    duration: 180, position: 1, index: nil, count: nil, source: .spotify)
+        await hub.lastCommand?.value
+        hub.restartOrPrevious()
+        await hub.lastCommand?.value
+        XCTAssertEqual(spotify.calls.last, "previous")
+    }
 }

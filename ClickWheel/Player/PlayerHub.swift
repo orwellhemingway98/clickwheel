@@ -39,7 +39,8 @@ final class PlayerHub: ObservableObject, PlayerControlling {
     private var pendingVolume: Int?
     /// Position we've asked for but not yet seen confirmed, so repeated seeks
     /// (fast-forward, scrubbing) build on each other.
-    private var pendingPosition: Double?
+    /// Tied to the track it was for, so it never carries into the next song.
+    private var pendingPosition: (trackID: String, seconds: Double)?
     private var pendingCommands = 0
 
     init(sources: [MusicSource], settings: AppSettings) {
@@ -102,19 +103,25 @@ final class PlayerHub: ObservableObject, PlayerControlling {
 
     func seek(by seconds: Double) {
         guard let track = snapshot?.track else { return }
-        setPosition((pendingPosition ?? track.position) + seconds)
+        setPosition(position(of: track) + seconds)
     }
 
     func setPosition(_ seconds: Double) {
         guard let track = snapshot?.track else { return }
         let target = min(max(0, seconds), track.duration)
-        pendingPosition = target
+        pendingPosition = (track.trackID, target)
         command { try $0.setPosition(target) }
     }
 
     func restartOrPrevious() {
         guard let track = snapshot?.track else { return }
-        if (pendingPosition ?? track.position) > 3 { setPosition(0) } else { previous() }
+        if position(of: track) > 3 { setPosition(0) } else { previous() }
+    }
+
+    /// The position we last asked for on this track, else the polled one.
+    private func position(of track: NowPlayingInfo) -> Double {
+        guard let pending = pendingPosition, pending.trackID == track.trackID else { return track.position }
+        return pending.seconds
     }
 
     // MARK: - Private
@@ -159,6 +166,9 @@ final class PlayerHub: ObservableObject, PlayerControlling {
         status = newStatus
         if pendingCommands == 0 {
             pendingVolume = nil
+            pendingPosition = nil
+        }
+        if let pending = pendingPosition, pending.trackID != snapshot?.track?.trackID {
             pendingPosition = nil
         }
     }

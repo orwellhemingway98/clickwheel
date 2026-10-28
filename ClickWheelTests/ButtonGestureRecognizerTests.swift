@@ -73,4 +73,20 @@ final class ButtonGestureRecognizerTests: XCTestCase {
         _ = r.poll(now: 1)
         XCTAssertEqual(r.cancel(), [.seekForward(active: false)])
     }
+
+    func testCancelClearsAStaleCancelledButton() {
+        _ = r.press(.next, now: 0)
+        _ = r.press(.menu, now: 0.1)      // .next is now cancelled; its release went missing
+        _ = r.cancel()
+        _ = r.press(.next, now: 1)
+        XCTAssertEqual(r.release(.next, now: 1.1), [.next])
+    }
+
+    func testPressingTheCancelledButtonAgainClearsIt() {
+        _ = r.press(.next, now: 0)
+        _ = r.press(.menu, now: 0.1)
+        _ = r.release(.menu, now: 0.2)
+        _ = r.press(.next, now: 1)
+        XCTAssertEqual(r.release(.next, now: 1.1), [.next])
+    }
 }

@@ -12,7 +12,7 @@ struct ScreenView: View {
             ZStack {
                 content
                     .id(navigator.stack.count)
-                    .transition(.push(from: navigator.lastNavigation == .forward ? .trailing : .leading))
+                    .transition(.iPodPush(navigator.slideDirection, width: IPodGeometry.lcdDesignSize.width))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .clipped()

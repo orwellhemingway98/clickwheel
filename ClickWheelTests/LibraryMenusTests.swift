@@ -123,6 +123,7 @@ final class LibraryMenusTests: XCTestCase {
         XCTAssertEqual(Set(ids).count, 100)
         XCTAssertTrue(Set(ids).isSubset(of: Set(library.allTracksResult.map(\.id))))
         XCTAssertEqual(start, 0)
+        XCTAssertNotEqual(ids, (0..<100).map { "id\($0)" }, "songs should be shuffled")
     }
 
     func testSongsArtistsAlbumsUseQuickScroll() {

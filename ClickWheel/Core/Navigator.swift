@@ -20,6 +20,9 @@ final class Navigator: ObservableObject {
     @Published private(set) var lastNavigation: NavigationDirection = .forward
     @Published private(set) var stopwatch = Stopwatch()
 
+    /// Shared with the slide transition, which reads it at animation time.
+    let slideDirection = SlideDirection()
+
     /// The most recent load or play, so callers (and tests) can await it.
     private(set) var lastTask: Task<Void, Never>?
 
@@ -158,7 +161,8 @@ final class Navigator: ObservableObject {
     }
 
     private func back() {
-        if case .nowPlaying = current, nowPlayingMode != .normal {
+        // MENU leaves the scrubber first; the volume bar doesn't hold MENU back.
+        if case .nowPlaying = current, case .scrubbing = nowPlayingMode {
             nowPlayingMode = .normal
             return
         }
@@ -175,6 +179,7 @@ final class Navigator: ObservableObject {
 
     private func leftScreen() {
         lastNavigation = .back
+        slideDirection.forward = false
         nowPlayingMode = .normal
         quickScrollLetter = nil
         accelerator.reset()
@@ -182,6 +187,7 @@ final class Navigator: ObservableObject {
 
     private func push(_ screen: Screen) {
         lastNavigation = .forward
+        slideDirection.forward = true
         quickScrollLetter = nil
         accelerator.reset()
         stack.append(screen)
