@@ -10,7 +10,9 @@ final class AppModel {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
-    let settings = AppSettings()
+    /// Snapshot renders use throwaway settings so they never change the user's.
+    let settings = AppSettings(defaults: CommandLine.arguments.contains("--snapshot")
+                               ? UserDefaults(suiteName: "ClickWheel.snapshot")! : .standard)
     let hub: PlayerHub
     let navigator: Navigator
     let input: WheelInput
@@ -20,10 +22,17 @@ final class AppModel {
     private let clicks = ClickThrottle()
     let library = AppleMusicLibrary()
     let libraryRunner = BackgroundRunner(label: "ClickWheel.Library")
-    let display = DisplayGeometry()
+    let display: DisplayGeometry
     private var trackObserver: AnyCancellable?
+    private var modelObserver: AnyCancellable?
 
     init() {
+        if CommandLine.arguments.contains("--snapshot") {
+            let flag = CommandLine.arguments.firstIndex(of: "--model")
+            let requested = flag.flatMap { CommandLine.arguments.indices.contains($0 + 1) ? CommandLine.arguments[$0 + 1] : nil }
+            settings.model = requested.flatMap(IPodModel.init) ?? .fifthGen
+        }
+        display = DisplayGeometry(model: settings.model)
         hub = PlayerHub(sources: [AppleMusicSource(), SpotifySource()], settings: settings)
         let settings = settings
         let clickSound = clickSound
@@ -34,6 +43,9 @@ final class AppModel {
             player: hub, settings: settings,
             musicMenu: { LibraryMenus.musicMenu(library: library, runner: libraryRunner) },
             shuffle: LibraryMenus.shuffleAction(library: library, runner: libraryRunner),
+            profile: settings.model.spec.firmware,
+            browse: { LibraryMenus.browseMenu(library: library, runner: libraryRunner) },
+            playlists: { LibraryMenus.playlistsItem(library: library, runner: libraryRunner) },
             onPlayed: { Task { await hub.refresh() } },
             onRowsMoved: { [clicks] _ in
                 if settings.clickerEnabled, clicks.shouldClick(now: ProcessInfo.processInfo.systemUptime) {
@@ -46,6 +58,14 @@ final class AppModel {
         trackObserver = hub.$snapshot
             .map { $0?.track }
             .sink { track in navigator.setTrack(track) }
+        let display = display
+        modelObserver = settings.$model
+            .dropFirst()
+            .removeDuplicates()
+            .sink { model in
+                display.setModel(model)
+                navigator.setProfile(model.spec.firmware)
+            }
         hub.startPolling()
     }
 

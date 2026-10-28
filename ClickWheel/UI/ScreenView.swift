@@ -5,8 +5,16 @@ import SwiftUI
 struct ScreenView: View {
     @EnvironmentObject private var navigator: Navigator
     @EnvironmentObject private var hub: PlayerHub
+    @Environment(\.ipodGeometry) private var g
 
     var body: some View {
+        switch g.model.spec.display.kind {
+        case .gray(let palette): GrayScreenView(palette: palette)
+        case .color: colorScreen
+        }
+    }
+
+    private var colorScreen: some View {
         VStack(spacing: 0) {
             header
             ZStack {

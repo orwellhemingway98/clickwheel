@@ -4,14 +4,32 @@ import SwiftUI
 /// The geometry for the display the iPod is on, kept current as the window moves.
 final class DisplayGeometry: ObservableObject {
     @Published private(set) var geometry: IPodGeometry
+    private var model: IPodModel
+    private weak var screen: NSScreen?
 
-    init(screen: NSScreen? = NSScreen.main) {
-        geometry = screen.map { IPodGeometry.lifeSize(on: $0) } ?? .default
+    init(screen: NSScreen? = NSScreen.main, model: IPodModel = .fifthGen) {
+        self.model = model
+        self.screen = screen
+        geometry = Self.geometry(on: screen, model: model)
     }
 
     func update(for screen: NSScreen?) {
-        let new = screen.map { IPodGeometry.lifeSize(on: $0) } ?? .default
+        self.screen = screen
+        publish()
+    }
+
+    func setModel(_ model: IPodModel) {
+        self.model = model
+        publish()
+    }
+
+    private func publish() {
+        let new = Self.geometry(on: screen, model: model)
         if new != geometry { geometry = new }
+    }
+
+    private static func geometry(on screen: NSScreen?, model: IPodModel) -> IPodGeometry {
+        screen.map { IPodGeometry.lifeSize(on: $0, model: model) } ?? IPodGeometry(model: model, pointsPerMM: IPodGeometry.default.pointsPerMM)
     }
 }
 
