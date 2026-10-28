@@ -35,6 +35,7 @@ struct MenuListView: View {
         .padding(.horizontal, 8)
         .frame(height: Theme.rowHeight)
         .foregroundStyle(selected ? Color.white : Theme.lcdText)
+        .opacity(item.isSelectable ? 1 : 0.6)
         .background { if selected { Theme.selection } }
     }
 }

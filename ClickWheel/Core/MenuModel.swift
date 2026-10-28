@@ -1,7 +1,13 @@
+import Foundation
+
 enum MenuAction {
     case push(() -> MenuScreen)
+    /// Opens a screen right away showing "Loading…", then fills it in.
+    case load(title: String, empty: String, loader: () async throws -> [MenuItem])
     case showNowPlaying
     case run(() -> Void)
+    /// Starts playback, then shows Now Playing if it worked.
+    case play(() async throws -> Void)
 }
 
 struct MenuItem: Identifiable {
@@ -10,24 +16,47 @@ struct MenuItem: Identifiable {
     /// Value shown on the right of the row (e.g. "On"); evaluated on each render.
     let detail: () -> String?
     let action: MenuAction
+    /// False for informational rows ("Loading…", "No songs") that the wheel skips.
+    let isSelectable: Bool
 
-    init(_ label: String, detail: @escaping () -> String? = { nil }, action: MenuAction) {
+    init(_ label: String, detail: @escaping () -> String? = { nil }, isSelectable: Bool = true, action: MenuAction) {
         self.id = label
         self.label = label
         self.detail = detail
+        self.isSelectable = isSelectable
         self.action = action
     }
 
+    static func placeholder(_ label: String) -> MenuItem {
+        MenuItem(label, isSelectable: false, action: .run {})
+    }
+
     var opensSubmenu: Bool {
-        if case .push = action { return true }
-        return false
+        switch action {
+        case .push, .load: return true
+        default: return false
+        }
     }
 }
 
 struct MenuScreen {
+    /// Identifies this screen so late-arriving loads can find it (or see it's gone).
+    let id = UUID()
     var title: String
-    var items: [MenuItem]
-    var selectedIndex: Int = 0
+    var items: [MenuItem] {
+        didSet { selectedIndex = Self.firstSelectable(in: items) }
+    }
+    var selectedIndex: Int
+
+    init(title: String, items: [MenuItem]) {
+        self.title = title
+        self.items = items
+        self.selectedIndex = Self.firstSelectable(in: items)
+    }
+
+    private static func firstSelectable(in items: [MenuItem]) -> Int {
+        items.firstIndex { $0.isSelectable } ?? 0
+    }
 }
 
 enum Screen {
