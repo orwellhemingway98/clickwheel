@@ -30,6 +30,7 @@ final class MockMusicSource: MusicSource {
     func next() throws { calls.append("next") }
     func previous() throws { calls.append("previous") }
     func setVolume(_ value: Int) throws { calls.append("setVolume(\(value))") }
+    func setPosition(_ seconds: Double) throws { calls.append("setPosition(\(seconds))") }
 
     func set(_ state: PlayerState, volume: Int = 50) {
         let track = state == .stopped ? nil : NowPlayingInfo(

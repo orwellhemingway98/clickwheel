@@ -162,4 +162,53 @@ final class PlayerHubTests: XCTestCase {
         XCTAssertFalse(reloaded.clickerEnabled)
         XCTAssertTrue(reloaded.keepOnTop)
     }
+
+    // MARK: - Seeking
+
+    private func playSpotify(at position: Double) async {
+        music.running = false
+        spotify.set(.playing)
+        spotify.nextSnapshot.track?.position = position
+        await hub.refresh()
+    }
+
+    func testSeekClampsToTrack() async {
+        await playSpotify(at: 10)
+        hub.seek(by: -30)
+        await hub.lastCommand?.value
+        hub.seek(by: 500)
+        await hub.lastCommand?.value
+        XCTAssertEqual(spotify.calls, ["setPosition(0.0)", "setPosition(200.0)"])
+    }
+
+    func testRapidSeeksAccumulate() async {
+        await playSpotify(at: 10)
+        hub.seek(by: 5)
+        hub.seek(by: 5)
+        await hub.lastCommand?.value
+        XCTAssertEqual(spotify.calls, ["setPosition(15.0)", "setPosition(20.0)"])
+    }
+
+    func testRestartOrPreviousAfter3sRestarts() async {
+        await playSpotify(at: 5)
+        hub.restartOrPrevious()
+        await hub.lastCommand?.value
+        XCTAssertEqual(spotify.calls, ["setPosition(0.0)"])
+    }
+
+    func testRestartOrPreviousEarlyGoesBack() async {
+        await playSpotify(at: 2)
+        hub.restartOrPrevious()
+        await hub.lastCommand?.value
+        XCTAssertEqual(spotify.calls, ["previous"])
+    }
+
+    func testSeekWithoutTrackDoesNothing() async {
+        music.running = false
+        spotify.set(.stopped)
+        await hub.refresh()
+        hub.seek(by: 5)
+        await hub.lastCommand?.value
+        XCTAssertEqual(spotify.calls, [])
+    }
 }

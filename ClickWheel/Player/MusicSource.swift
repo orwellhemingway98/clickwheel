@@ -18,4 +18,5 @@ protocol MusicSource: AnyObject {
     func next() throws
     func previous() throws
     func setVolume(_ value: Int) throws
+    func setPosition(_ seconds: Double) throws
 }

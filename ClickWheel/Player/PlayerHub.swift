@@ -12,6 +12,10 @@ protocol PlayerControlling: AnyObject {
     func next()
     func previous()
     func adjustVolume(by delta: Int)
+    func seek(by seconds: Double)
+    func setPosition(_ seconds: Double)
+    /// iPod ⏮: restart the track if it's past 3 s, otherwise go to the previous one.
+    func restartOrPrevious()
 }
 
 /// Polls the music apps, decides which one is active and forwards commands to it.
@@ -33,6 +37,9 @@ final class PlayerHub: ObservableObject, PlayerControlling {
     /// Volume we've asked for but not yet seen confirmed by a poll, so fast
     /// wheel spins accumulate instead of all starting from the same value.
     private var pendingVolume: Int?
+    /// Position we've asked for but not yet seen confirmed, so repeated seeks
+    /// (fast-forward, scrubbing) build on each other.
+    private var pendingPosition: Double?
     private var pendingCommands = 0
 
     init(sources: [MusicSource], settings: AppSettings) {
@@ -93,6 +100,23 @@ final class PlayerHub: ObservableObject, PlayerControlling {
         command { try $0.setVolume(target) }
     }
 
+    func seek(by seconds: Double) {
+        guard let track = snapshot?.track else { return }
+        setPosition((pendingPosition ?? track.position) + seconds)
+    }
+
+    func setPosition(_ seconds: Double) {
+        guard let track = snapshot?.track else { return }
+        let target = min(max(0, seconds), track.duration)
+        pendingPosition = target
+        command { try $0.setPosition(target) }
+    }
+
+    func restartOrPrevious() {
+        guard let track = snapshot?.track else { return }
+        if (pendingPosition ?? track.position) > 3 { setPosition(0) } else { previous() }
+    }
+
     // MARK: - Private
 
     private func candidates() -> [MusicSource] {
@@ -133,7 +157,10 @@ final class PlayerHub: ObservableObject, PlayerControlling {
         activeSource = chosen
         snapshot = chosen.flatMap { snapshots[$0] }
         status = newStatus
-        if pendingCommands == 0 { pendingVolume = nil }
+        if pendingCommands == 0 {
+            pendingVolume = nil
+            pendingPosition = nil
+        }
     }
 
     private func command(_ action: @escaping (MusicSource) throws -> Void) {
