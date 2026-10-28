@@ -48,4 +48,51 @@ final class IPodGeometryTests: XCTestCase {
         XCTAssertEqual(g.bodySize.width / g.pointsPerMM, 61.8, accuracy: 0.001)
         XCTAssertEqual(g.pointsPerMM, 4.288, accuracy: 0.001)
     }
+
+    // MARK: - Models
+
+    func testFirstGenGeometryAtTen() {
+        let g = IPodGeometry(model: .firstGen, pointsPerMM: 10)
+        XCTAssertEqual(g.bodySize, CGSize(width: 618, height: 1020))
+        XCTAssertEqual(g.cornerRadius, 57, accuracy: 0.01)
+        XCTAssertEqual(g.ringDiameter, 521, accuracy: 0.01)
+        XCTAssertEqual(g.wheelDiameter, 411, accuracy: 0.01)
+        XCTAssertEqual(g.buttonDiameter, 207, accuracy: 0.01)
+        XCTAssertEqual(g.controlCenterY, 697, accuracy: 0.01)
+        XCTAssertEqual(g.windowSize.width, 430, accuracy: 0.01)
+        XCTAssertEqual(g.windowSize.height, 356, accuracy: 0.01)
+        XCTAssertEqual(g.windowTop, 46, accuracy: 0.01)
+        XCTAssertEqual(g.lcdSize.width, 396.8, accuracy: 0.01)
+        XCTAssertEqual(g.lcdSize.height, 317.44, accuracy: 0.01)
+        XCTAssertEqual(g.designSize, CGSize(width: 160, height: 128))
+    }
+
+    func testFifthGenControlCenterIsWheelCenter() {
+        let g = IPodGeometry(model: .fifthGen, pointsPerMM: 10)
+        XCTAssertEqual(g.controlCenterY, g.wheelCenterY)
+        XCTAssertEqual(g.ringDiameter, g.wheelDiameter)
+        XCTAssertEqual(g.designSize, IPodGeometry.lcdDesignSize)
+    }
+
+    func testPixelCrispOnUsersDisplay() {
+        let g = IPodGeometry.lifeSize(model: .firstGen, screenWidthPoints: 1512, physicalWidthMM: 301)
+        XCTAssertEqual(g.lcdPixel, 1.25, accuracy: 0.0001)
+        XCTAssertEqual(g.pointsPerMM, 1.25 / 0.248, accuracy: 0.0001)
+        XCTAssertEqual(g.lcdScale, 1.25, accuracy: 0.0001)
+    }
+
+    func testPixelCrispRounding() {
+        func pixel(_ density: CGFloat) -> CGFloat {
+            IPodGeometry.lifeSize(model: .firstGen, screenWidthPoints: density * 300, physicalWidthMM: 300).lcdPixel
+        }
+        XCTAssertEqual(pixel(3.6), 1.0, accuracy: 0.0001)
+        XCTAssertEqual(pixel(3.2), 0.75, accuracy: 0.0001)
+        XCTAssertEqual(pixel(2.0), 0.75, accuracy: 0.0001)
+        XCTAssertEqual(pixel(7.0), 1.75, accuracy: 0.0001)
+    }
+
+    func testFifthGenLifeSizeUnchangedThroughModelAPI() {
+        let g = IPodGeometry.lifeSize(model: .fifthGen, screenWidthPoints: 1512, physicalWidthMM: 301)
+        XCTAssertEqual(g.pointsPerMM, 1512 / 301, accuracy: 0.0001)
+    }
 }
