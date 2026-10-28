@@ -114,4 +114,18 @@ final class LibraryMenusTests: XCTestCase {
             XCTFail("expected an error")
         } catch {}
     }
+
+    func testShuffleQueuesHundredRandomLibrarySongs() async throws {
+        library.allTracksResult = (0..<150).map { track("id\($0)", "Song \($0)") }
+        try await LibraryMenus.shuffleAction(library: library, runner: BackgroundRunner(label: "test"))()
+        guard case .queue(let ids, let start) = library.played.first else { return XCTFail("expected a queue") }
+        XCTAssertEqual(ids.count, 100)
+        XCTAssertEqual(Set(ids).count, 100)
+        XCTAssertTrue(Set(ids).isSubset(of: Set(library.allTracksResult.map(\.id))))
+        XCTAssertEqual(start, 0)
+    }
+
+    func testSongsArtistsAlbumsUseQuickScroll() {
+        XCTAssertEqual(music.items.map(\.quickScrollList), [false, true, true, true])
+    }
 }

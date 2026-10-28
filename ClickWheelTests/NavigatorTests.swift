@@ -14,7 +14,7 @@ final class NavigatorTests: XCTestCase {
         spy = SpyPlayerControls()
         settings = AppSettings(defaults: UserDefaults(suiteName: suiteName)!)
         stepCount = 0
-        nav = Navigator(player: spy, settings: settings, onScrollStep: { [unowned self] in self.stepCount += 1 })
+        nav = Navigator(player: spy, settings: settings, onRowsMoved: { [unowned self] in self.stepCount += $0 })
     }
 
     override func tearDown() async throws {
@@ -33,7 +33,7 @@ final class NavigatorTests: XCTestCase {
 
     func testStartsAtRootWithFirstItemSelected() {
         XCTAssertEqual(menu?.title, "ClickWheel")
-        XCTAssertEqual(menu?.items.map(\.label), ["Now Playing", "Settings"])
+        XCTAssertEqual(menu?.items.map(\.label), ["Extras", "Settings"])
         XCTAssertEqual(menu?.selectedIndex, 0)
     }
 
@@ -63,15 +63,22 @@ final class NavigatorTests: XCTestCase {
         XCTAssertEqual(nav.stack.count, 1)
     }
 
-    func testCenterOnNowPlayingShowsNowPlaying() {
+    private func openNowPlaying() {
+        nav.setTrack(NowPlayingInfo(trackID: "t", title: "T", artist: "A", album: "B", duration: 100,
+                                    position: 10, index: nil, count: nil, source: .appleMusic))
+        nav.handle(.scroll(steps: 5))
         nav.handle(.center)
+    }
+
+    func testCenterOnNowPlayingShowsNowPlaying() {
+        openNowPlaying()
         XCTAssertTrue(isNowPlaying)
         nav.handle(.menu)
         XCTAssertEqual(menu?.title, "ClickWheel")
     }
 
     func testScrollOnNowPlayingAdjustsVolume() {
-        nav.handle(.center)
+        openNowPlaying()
         nav.handle(.scroll(steps: 2))
         XCTAssertEqual(spy.calls, ["adjustVolume(6)"])
     }
@@ -80,7 +87,7 @@ final class NavigatorTests: XCTestCase {
         nav.handle(.playPause)
         nav.handle(.next)
         nav.handle(.previous)
-        XCTAssertEqual(spy.calls, ["playPause", "next", "previous"])
+        XCTAssertEqual(spy.calls, ["playPause", "next", "restartOrPrevious"])
     }
 
     func testSourceCycles() {

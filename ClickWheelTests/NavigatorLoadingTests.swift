@@ -46,7 +46,7 @@ final class NavigatorLoadingTests: XCTestCase {
         let nav = Navigator(player: spy, settings: settings,
                             musicMenu: { MenuScreen(title: "Music", items: items) },
                             onPlayed: { [unowned self] in self.played += 1 },
-                            onScrollStep: { [unowned self] in self.steps += 1 })
+                            onRowsMoved: { [unowned self] in self.steps += $0 })
         nav.handle(.center) // root row 0 is Music
         steps = 0
         return nav
@@ -61,7 +61,7 @@ final class NavigatorLoadingTests: XCTestCase {
 
     func testMusicRootWhenProvided() {
         let nav = Navigator(player: spy, settings: settings, musicMenu: { MenuScreen(title: "Music", items: []) })
-        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Music", "Now Playing", "Settings"])
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Music", "Extras", "Settings"])
     }
 
     func testLoadShowsLoadingThenItems() async {

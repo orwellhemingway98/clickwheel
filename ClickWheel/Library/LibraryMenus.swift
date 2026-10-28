@@ -19,10 +19,25 @@ enum LibraryMenus {
         let menus = Builder(library: library, runner: runner)
         return MenuScreen(title: "Music", items: [
             MenuItem("Playlists", action: .load(title: "Playlists", empty: "No playlists", loader: menus.playlists)),
-            MenuItem("Artists", action: .load(title: "Artists", empty: "No artists", loader: menus.artists)),
-            MenuItem("Albums", action: .load(title: "Albums", empty: "No albums", loader: menus.albums)),
-            MenuItem("Songs", action: .load(title: "Songs", empty: "No songs", loader: menus.songs)),
+            MenuItem("Artists", quickScrollList: true,
+                     action: .load(title: "Artists", empty: "No artists", loader: menus.artists)),
+            MenuItem("Albums", quickScrollList: true,
+                     action: .load(title: "Albums", empty: "No albums", loader: menus.albums)),
+            MenuItem("Songs", quickScrollList: true,
+                     action: .load(title: "Songs", empty: "No songs", loader: menus.songs)),
         ])
+    }
+
+    /// Shuffle Songs: queue up to `maxQueueLength` random songs from the library.
+    static func shuffleAction(library: MusicLibrary, runner: BackgroundRunner) -> () async throws -> Void {
+        {
+            try await runner.run {
+                try library.prepare()
+                let ids = try library.allTracks().map(\.id).shuffled().prefix(maxQueueLength)
+                guard !ids.isEmpty else { return }
+                try library.play(.queue(trackIDs: Array(ids), startIndex: 0))
+            }
+        }
     }
 
     private struct Builder {

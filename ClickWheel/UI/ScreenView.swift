@@ -22,6 +22,8 @@ struct ScreenView: View {
         switch navigator.current {
         case .menu(let screen): return screen.title
         case .nowPlaying: return "Now Playing"
+        case .clock: return "Clock"
+        case .stopwatch: return "Stopwatch"
         }
     }
 
@@ -45,6 +47,7 @@ struct ScreenView: View {
         switch navigator.current {
         case .menu(let screen): MenuListView(screen: screen)
         case .nowPlaying: NowPlayingView()
+        case .clock, .stopwatch: EmptyView()
         }
     }
 }

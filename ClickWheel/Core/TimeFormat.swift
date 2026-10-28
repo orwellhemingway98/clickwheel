@@ -15,6 +15,12 @@ enum TimeFormat {
         return "-" + elapsed(max(0, left))
     }
 
+    /// Stopwatch display, "mm:ss.t" (tenths truncated).
+    static func stopwatch(_ seconds: TimeInterval) -> String {
+        let tenths = seconds.isFinite ? max(0, Int(seconds * 10)) : 0
+        return String(format: "%02d:%02d.%d", tenths / 600, (tenths / 10) % 60, tenths % 10)
+    }
+
     static func progress(position: Double, duration: Double) -> Double {
         guard duration.isFinite, position.isFinite, duration > 0 else { return 0 }
         return min(1, max(0, position / duration))

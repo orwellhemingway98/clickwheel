@@ -1,3 +1,4 @@
+import Combine
 import AppKit
 import SwiftUI
 
@@ -17,6 +18,7 @@ final class AppModel {
     let library = AppleMusicLibrary()
     let libraryRunner = BackgroundRunner(label: "ClickWheel.Library")
     let display = DisplayGeometry()
+    private var trackObserver: AnyCancellable?
 
     init() {
         hub = PlayerHub(sources: [AppleMusicSource(), SpotifySource()], settings: settings)
@@ -28,8 +30,13 @@ final class AppModel {
         navigator = Navigator(
             player: hub, settings: settings,
             musicMenu: { LibraryMenus.musicMenu(library: library, runner: libraryRunner) },
+            shuffle: LibraryMenus.shuffleAction(library: library, runner: libraryRunner),
             onPlayed: { Task { await hub.refresh() } },
-            onScrollStep: { if settings.clickerEnabled { clickSound.play() } })
+            onRowsMoved: { _ in if settings.clickerEnabled { clickSound.play() } })
+        let navigator = navigator
+        trackObserver = hub.$snapshot
+            .map { $0?.track }
+            .sink { track in navigator.setTrack(track) }
         hub.startPolling()
     }
 
@@ -54,7 +61,9 @@ final class AppModel {
         let keys = args.firstIndex(of: "--keys").flatMap { args.indices.contains($0 + 1) ? args[$0 + 1] : nil }
         Task {
             if args.contains("--now-playing") {
-                navigator.handle(.scroll(steps: 1))
+                // Wait for the first poll so the Now Playing row exists (it's last).
+                try? await Task.sleep(for: .seconds(2))
+                navigator.handle(.scroll(steps: 20))
                 navigator.handle(.center)
             }
             for key in (keys ?? "").split(separator: ",") {
@@ -63,6 +72,7 @@ final class AppModel {
                 case "d": navigator.handle(.scroll(steps: 1))
                 case "u": navigator.handle(.scroll(steps: -1))
                 case "m": navigator.handle(.menu)
+                case "w": break
                 default: break
                 }
                 try? await Task.sleep(for: .seconds(1.5))

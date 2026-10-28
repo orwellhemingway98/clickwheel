@@ -1,13 +1,24 @@
 import Foundation
 import os
 
-/// The iPod's menu stack. Scroll moves the selection (or volume on Now Playing),
-/// center opens the selected item, menu goes back one level.
+/// The iPod's menu stack and screen modes. Scroll moves the selection (or
+/// volume / scrub position on Now Playing), center opens the selected item,
+/// menu goes back one level. Timeouts and repeats run off `.tick(now:)`.
 @MainActor
 final class Navigator: ObservableObject {
     static let volumePerStep = 3
+    static let volumeOverlayDuration: TimeInterval = 2
+    static let scrubIdleTimeout: TimeInterval = 3
+    static let scrubSecondsPerStep: Double = 2
+    static let quickScrollFade: TimeInterval = 1
+    static let seekRepeatInterval: TimeInterval = 0.25
+    static let seekSeconds: Double = 5
 
     @Published private(set) var stack: [Screen] = []
+    @Published private(set) var nowPlayingMode: NowPlayingMode = .normal
+    @Published private(set) var quickScrollLetter: String?
+    @Published private(set) var lastNavigation: NavigationDirection = .forward
+    @Published private(set) var stopwatch = Stopwatch()
 
     /// The most recent load or play, so callers (and tests) can await it.
     private(set) var lastTask: Task<Void, Never>?
@@ -15,19 +26,30 @@ final class Navigator: ObservableObject {
     private let player: PlayerControlling
     private let settings: AppSettings
     private let musicMenu: (() -> MenuScreen)?
+    private let shuffle: (() async throws -> Void)?
+    private let now: () -> TimeInterval
     private let onPlayed: () -> Void
-    private let onScrollStep: () -> Void
+    private let onRowsMoved: (Int) -> Void
     private let log = Logger(subsystem: "com.mfelouro.ClickWheel", category: "Navigator")
+
+    private var accelerator = ScrollAccelerator()
+    private var track: NowPlayingInfo?
+    private var lastQuickScroll: TimeInterval?
+    private var seeking: (direction: Double, nextAt: TimeInterval)?
 
     init(player: PlayerControlling, settings: AppSettings,
          musicMenu: (() -> MenuScreen)? = nil,
+         shuffle: (() async throws -> Void)? = nil,
+         now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
          onPlayed: @escaping () -> Void = {},
-         onScrollStep: @escaping () -> Void = {}) {
+         onRowsMoved: @escaping (Int) -> Void = { _ in }) {
         self.player = player
         self.settings = settings
         self.musicMenu = musicMenu
+        self.shuffle = shuffle
+        self.now = now
         self.onPlayed = onPlayed
-        self.onScrollStep = onScrollStep
+        self.onRowsMoved = onRowsMoved
         stack = [.menu(rootMenu())]
     }
 
@@ -36,44 +58,169 @@ final class Navigator: ObservableObject {
     func handle(_ event: WheelEvent) {
         switch event {
         case .scroll(let steps): scroll(steps)
-        case .center: select()
-        case .menu: if stack.count > 1 { stack.removeLast() }
-        case .playPause: player.playPause()
+        case .center: center()
+        case .menu: back()
+        case .menuHold: popToRoot()
+        case .playPause:
+            if case .stopwatch = current { stopwatch.reset() } else { player.playPause() }
         case .next: player.next()
-        case .previous: player.previous()
-        case .menuHold, .seekForward, .seekBackward, .tick: break
+        case .previous: player.restartOrPrevious()
+        case .seekForward(let active): setSeeking(active ? 1 : nil)
+        case .seekBackward(let active): setSeeking(active ? -1 : nil)
+        case .tick(let time): tick(time)
         }
     }
 
-    // MARK: - Private
+    /// The track now loaded (or nil). Adds or removes the root's Now Playing row
+    /// and ends scrubbing when the track changes.
+    func setTrack(_ newTrack: NowPlayingInfo?) {
+        if newTrack?.trackID != track?.trackID, case .scrubbing = nowPlayingMode {
+            nowPlayingMode = .normal
+        }
+        let hadTrack = track != nil
+        track = newTrack
+        guard hadTrack != (newTrack != nil), case .menu(var root) = stack[0] else { return }
+        let selectedLabel = root.items.indices.contains(root.selectedIndex) ? root.items[root.selectedIndex].label : nil
+        let fresh = rootMenu()
+        root.items = fresh.items
+        if let label = selectedLabel, let index = root.items.firstIndex(where: { $0.label == label }) {
+            root.selectedIndex = index
+        } else {
+            root.selectedIndex = max(0, root.items.count - 1)
+        }
+        root.windowStart = MenuWindow.start(previous: 0, selected: root.selectedIndex,
+                                            visible: MenuWindow.visibleRows, count: root.items.count)
+        stack[0] = .menu(root)
+    }
+
+    /// The Quick Scroll index letter for a row label: A–Z ignoring accents, else "#".
+    nonisolated static func indexLetter(for label: String) -> String {
+        guard let first = label.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: nil).first,
+              first.isASCII, first.isLetter else { return "#" }
+        return String(first).uppercased()
+    }
+
+    // MARK: - Input
 
     private func scroll(_ steps: Int) {
         guard steps != 0 else { return }
+        let time = now()
         switch current {
         case .nowPlaying:
-            player.adjustVolume(by: steps * Self.volumePerStep)
-            onScrollStep()
+            if case .scrubbing(let position, _) = nowPlayingMode {
+                let multiplier = accelerator.multiplier(forStep: steps, now: time)
+                let duration = track?.duration ?? 0
+                let target = min(max(0, position + Double(steps * multiplier) * Self.scrubSecondsPerStep), duration)
+                nowPlayingMode = .scrubbing(position: target, until: time + Self.scrubIdleTimeout)
+                player.setPosition(target)
+            } else {
+                // Volume is never accelerated.
+                player.adjustVolume(by: steps * Self.volumePerStep)
+                nowPlayingMode = .volume(until: time + Self.volumeOverlayDuration)
+                onRowsMoved(abs(steps))
+            }
         case .menu(var screen):
+            let multiplier = accelerator.multiplier(forStep: steps, now: time)
             let selectable = screen.items.indices.filter { screen.items[$0].isSelectable }
             guard let position = selectable.firstIndex(of: screen.selectedIndex) else { return }
-            let target = selectable[min(max(position + steps, 0), selectable.count - 1)]
+            let targetPosition = min(max(position + steps * multiplier, 0), selectable.count - 1)
+            let target = selectable[targetPosition]
             guard target != screen.selectedIndex else { return }
             screen.selectedIndex = target
             screen.windowStart = MenuWindow.start(previous: screen.windowStart, selected: target,
                                                   visible: MenuWindow.visibleRows, count: screen.items.count)
             stack[stack.count - 1] = .menu(screen)
-            onScrollStep()
+            if screen.quickScroll && multiplier >= 2 {
+                quickScrollLetter = Self.indexLetter(for: screen.items[target].label)
+                lastQuickScroll = time
+            }
+            onRowsMoved(abs(targetPosition - position))
+        case .clock, .stopwatch:
+            break
         }
     }
 
-    private func select() {
-        guard case .menu(let screen) = current, screen.items.indices.contains(screen.selectedIndex) else { return }
+    private func center() {
+        switch current {
+        case .nowPlaying:
+            if case .scrubbing = nowPlayingMode {
+                nowPlayingMode = .normal
+            } else if let track {
+                nowPlayingMode = .scrubbing(position: track.position, until: now() + Self.scrubIdleTimeout)
+            }
+        case .stopwatch:
+            stopwatch.toggle(now: now())
+        case .clock:
+            break
+        case .menu(let screen):
+            select(in: screen)
+        }
+    }
+
+    private func back() {
+        if case .nowPlaying = current, nowPlayingMode != .normal {
+            nowPlayingMode = .normal
+            return
+        }
+        guard stack.count > 1 else { return }
+        stack.removeLast()
+        leftScreen()
+    }
+
+    private func popToRoot() {
+        guard stack.count > 1 else { return }
+        stack.removeSubrange(1...)
+        leftScreen()
+    }
+
+    private func leftScreen() {
+        lastNavigation = .back
+        nowPlayingMode = .normal
+        quickScrollLetter = nil
+        accelerator.reset()
+    }
+
+    private func push(_ screen: Screen) {
+        lastNavigation = .forward
+        quickScrollLetter = nil
+        accelerator.reset()
+        stack.append(screen)
+    }
+
+    private func setSeeking(_ direction: Double?) {
+        seeking = direction.map { ($0, now() + Self.seekRepeatInterval) }
+    }
+
+    private func tick(_ time: TimeInterval) {
+        switch nowPlayingMode {
+        case .volume(let until) where time >= until: nowPlayingMode = .normal
+        case .scrubbing(_, let until) where time >= until: nowPlayingMode = .normal
+        default: break
+        }
+        if let last = lastQuickScroll, time - last >= Self.quickScrollFade {
+            quickScrollLetter = nil
+            lastQuickScroll = nil
+        }
+        // Fire every repeat that's due, but only once per tick if ticks were missed.
+        if var seek = seeking, time >= seek.nextAt {
+            player.seek(by: seek.direction * Self.seekSeconds)
+            seek.nextAt = max(seek.nextAt + Self.seekRepeatInterval, time + Self.seekRepeatInterval / 2)
+            seeking = seek
+        }
+    }
+
+    // MARK: - Menus
+
+    private func select(in screen: MenuScreen) {
+        guard screen.items.indices.contains(screen.selectedIndex) else { return }
         let item = screen.items[screen.selectedIndex]
         guard item.isSelectable else { return }
         switch item.action {
-        case .push(let build): stack.append(.menu(build()))
-        case .load(let title, let empty, let loader): load(title: title, empty: empty, loader: loader)
-        case .showNowPlaying: stack.append(.nowPlaying)
+        case .push(let build): push(.menu(build()))
+        case .load(let title, let empty, let loader):
+            load(title: title, empty: empty, quickScroll: item.quickScrollList, loader: loader)
+        case .showNowPlaying: push(.nowPlaying)
+        case .open(let screen): push(screen)
         case .run(let action):
             action()
             // Re-publish so rows showing a detail value refresh.
@@ -82,9 +229,10 @@ final class Navigator: ObservableObject {
         }
     }
 
-    private func load(title: String, empty: String, loader: @escaping () async throws -> [MenuItem]) {
-        let screen = MenuScreen(title: title, items: [.placeholder("Loading…")])
-        stack.append(.menu(screen))
+    private func load(title: String, empty: String, quickScroll: Bool, loader: @escaping () async throws -> [MenuItem]) {
+        var screen = MenuScreen(title: title, items: [.placeholder("Loading…")])
+        screen.quickScroll = quickScroll
+        push(.menu(screen))
         lastTask = Task {
             let items: [MenuItem]
             do {
@@ -115,7 +263,7 @@ final class Navigator: ObservableObject {
             do {
                 try await start()
                 // Only jump to Now Playing if the user is still where they picked the song.
-                if stack.count == origin { stack.append(.nowPlaying) }
+                if stack.count == origin { push(.nowPlaying) }
                 onPlayed()
             } catch {
                 log.error("Play failed: \(error.localizedDescription, privacy: .public)")
@@ -128,8 +276,17 @@ final class Navigator: ObservableObject {
         if let musicMenu {
             items.append(MenuItem("Music", action: .push(musicMenu)))
         }
-        items.append(MenuItem("Now Playing", action: .showNowPlaying))
+        items.append(MenuItem("Extras", action: .push { MenuScreen(title: "Extras", items: [
+            MenuItem("Clock", action: .open(.clock)),
+            MenuItem("Stopwatch", action: .open(.stopwatch)),
+        ]) }))
         items.append(MenuItem("Settings", action: .push { [unowned self] in self.settingsMenu() }))
+        if let shuffle {
+            items.append(MenuItem("Shuffle Songs", action: .play(shuffle)))
+        }
+        if track != nil {
+            items.append(MenuItem("Now Playing", action: .showNowPlaying))
+        }
         return MenuScreen(title: "ClickWheel", items: items)
     }
 
