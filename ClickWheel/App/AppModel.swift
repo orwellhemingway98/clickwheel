@@ -83,7 +83,8 @@ final class AppModel {
                 }
                 try? await Task.sleep(for: .seconds(1.5))
             }
-            try? await Task.sleep(for: .seconds(2.5))
+            // Short final wait after keys, so timed overlays (volume, scrubber) are still up.
+            try? await Task.sleep(for: .seconds(keys == nil ? 2.5 : 0.3))
             let renderer = ImageRenderer(content: rootView(includesWindowControls: false).padding(20))
             renderer.scale = 2
             if let image = renderer.nsImage, let tiff = image.tiffRepresentation,

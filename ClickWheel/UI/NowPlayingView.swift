@@ -1,7 +1,11 @@
 import SwiftUI
 
+/// Now Playing, laid out like the 5G: "x of y", album art with its frame
+/// shading, three lines of track info, and a glossy bar that shows progress,
+/// volume (while adjusting) or the scrubber (after Center).
 struct NowPlayingView: View {
     @EnvironmentObject private var hub: PlayerHub
+    @EnvironmentObject private var navigator: Navigator
     @EnvironmentObject private var artwork: ArtworkCache
     @State private var image: NSImage?
 
@@ -17,68 +21,99 @@ struct NowPlayingView: View {
             PermissionMessage(source: id)
         } else {
             Text("Nothing playing")
-                .font(Theme.font(14))
+                .font(ScreenTheme.font(ScreenTheme.rowTextSize))
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 
+    /// Positions are LCD design points; this view starts below the header.
+    private func y(_ lcdY: CGFloat) -> CGFloat { lcdY - ScreenTheme.headerHeight }
+
     private func playing(_ track: NowPlayingInfo) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let bar = ScreenTheme.barFrame
+        return ZStack(alignment: .topLeading) {
             if let index = track.index, let count = track.count {
-                Text("\(index) of \(count)").font(Theme.font(11))
+                Text("\(index) of \(count)")
+                    .font(ScreenTheme.font(ScreenTheme.counterSize))
+                    .offset(x: ScreenTheme.counterOrigin.x, y: y(ScreenTheme.counterOrigin.y))
             }
-            HStack(alignment: .top, spacing: 8) {
-                artworkView
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(track.title).font(Theme.font(13, semibold: true))
-                    if !track.artist.isEmpty { Text(track.artist).font(Theme.font(12)) }
-                    if !track.album.isEmpty { Text(track.album).font(Theme.font(12)).opacity(0.75) }
-                }
-                .lineLimit(1)
-                .truncationMode(.tail)
+            artworkView
+                .offset(x: ScreenTheme.artFrame.minX, y: y(ScreenTheme.artFrame.minY))
+            VStack(alignment: .leading, spacing: ScreenTheme.infoLineSpacing - ScreenTheme.titleTextSize) {
+                Text(track.title).font(ScreenTheme.font(ScreenTheme.titleTextSize, semibold: true))
+                Text(track.artist).font(ScreenTheme.font(ScreenTheme.subtitleTextSize))
+                Text(track.album).font(ScreenTheme.font(ScreenTheme.subtitleTextSize))
             }
-            Spacer(minLength: 0)
-            ProgressBar(fraction: TimeFormat.progress(position: track.position, duration: track.duration))
-            HStack {
-                Text(TimeFormat.elapsed(track.position))
-                Spacer()
-                Text(TimeFormat.remaining(position: track.position, duration: track.duration))
-            }
-            .font(Theme.font(11))
-            .monospacedDigit()
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .frame(width: ScreenTheme.infoWidth, alignment: .leading)
+            .offset(x: ScreenTheme.infoOrigin.x, y: y(ScreenTheme.infoOrigin.y) - ScreenTheme.titleTextSize / 2)
+            barArea(track)
+                .frame(width: bar.width)
+                .offset(x: bar.minX, y: y(bar.minY))
         }
-        .padding(8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
-    @ViewBuilder private var artworkView: some View {
-        Group {
+    @ViewBuilder private func barArea(_ track: NowPlayingInfo) -> some View {
+        let bar = ScreenTheme.barFrame
+        switch navigator.nowPlayingMode {
+        case .volume:
+            HStack(spacing: 0) {
+                Text("🔈").font(.system(size: 9)).frame(width: ScreenTheme.volumeInset)
+                GlossBar(fraction: Double(hub.snapshot?.volume ?? 0) / 100, style: .volume)
+                Text("🔊").font(.system(size: 9)).frame(width: ScreenTheme.volumeInset)
+            }
+            .frame(height: bar.height)
+        case .scrubbing(let position, _):
+            timedBar(position: position, duration: track.duration, style: .scrub)
+        case .normal:
+            timedBar(position: track.position, duration: track.duration, style: .progress)
+        }
+    }
+
+    private func timedBar(position: Double, duration: Double, style: GlossBar.Style) -> some View {
+        VStack(spacing: ScreenTheme.timeGap) {
+            GlossBar(fraction: TimeFormat.progress(position: position, duration: duration), style: style)
+                .frame(height: ScreenTheme.barFrame.height)
+            HStack {
+                Text(TimeFormat.elapsed(position))
+                Spacer()
+                Text(TimeFormat.remaining(position: position, duration: duration))
+            }
+            .font(ScreenTheme.font(ScreenTheme.timeSize))
+            .monospacedDigit()
+        }
+    }
+
+    /// Album art with the 5G's side shading and a soft shadow underneath.
+    private var artworkView: some View {
+        let frame = ScreenTheme.artFrame
+        return Group {
             if let image {
                 Image(nsImage: image).resizable().aspectRatio(contentMode: .fill)
             } else {
                 ZStack {
                     LinearGradient(colors: [Color(hex: 0xB9C2CB), Color(hex: 0x8E99A4)], startPoint: .top, endPoint: .bottom)
-                    Text("♪").font(Theme.font(34, semibold: true)).foregroundStyle(.white.opacity(0.9))
+                    Text("♪").font(ScreenTheme.font(30, semibold: true)).foregroundStyle(.white.opacity(0.9))
                 }
             }
         }
-        .frame(width: 80, height: 80)
-        .clipShape(RoundedRectangle(cornerRadius: 3))
-        .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
-    }
-}
-
-private struct ProgressBar: View {
-    let fraction: Double
-
-    var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 2).stroke(Theme.lcdText.opacity(0.6), lineWidth: 1)
-                RoundedRectangle(cornerRadius: 2).fill(Theme.selection)
-                    .frame(width: max(0, geo.size.width * fraction))
-            }
+        .frame(width: frame.width, height: frame.height)
+        .clipped()
+        .overlay(alignment: .leading) {
+            LinearGradient(colors: [.black.opacity(0.18), .clear], startPoint: .leading, endPoint: .trailing)
+                .frame(width: ScreenTheme.artSideShade)
         }
-        .frame(height: 7)
+        .overlay(alignment: .trailing) {
+            LinearGradient(colors: [.clear, .black.opacity(0.18)], startPoint: .leading, endPoint: .trailing)
+                .frame(width: ScreenTheme.artSideShade)
+        }
+        .background(alignment: .bottom) {
+            LinearGradient(colors: [Color(hex: 0xC9C6C9), .white], startPoint: .top, endPoint: .bottom)
+                .frame(height: ScreenTheme.artShadow)
+                .offset(y: ScreenTheme.artShadow)
+        }
     }
 }
 

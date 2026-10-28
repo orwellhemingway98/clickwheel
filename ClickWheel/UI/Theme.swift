@@ -8,14 +8,6 @@ enum Theme {
     // Screen
     /// LCD corners, in LCD design points (the panel is nearly square-cornered).
     static let screenCornerRadius: CGFloat = 2
-    static let lcdGradient = LinearGradient(colors: [Color(hex: 0xC9D3DC), Color(hex: 0xE8EDF1)],
-                                            startPoint: .top, endPoint: .bottom)
-    static let lcdBorder = Color(hex: 0x3A3F45)
-    static let lcdText = Color(hex: 0x1C2024)
-    static let headerHeight: CGFloat = 20
-    static let rowHeight: CGFloat = 22
-    static let selection = LinearGradient(colors: [Color(hex: 0x5EA0E6), Color(hex: 0x2D6FC4)],
-                                          startPoint: .top, endPoint: .bottom)
 
     // Skeuomorphic materials
     static let chrome = LinearGradient(
