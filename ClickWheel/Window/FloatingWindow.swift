@@ -23,6 +23,11 @@ final class FloatingWindow: NSWindow {
         guard frame.size != size else { return }
         let topLeft = NSPoint(x: frame.minX, y: frame.maxY)
         setFrame(NSRect(x: topLeft.x, y: topLeft.y - size.height, width: size.width, height: size.height), display: true)
+        // Make sure the new content is laid out and drawn now, not on the next input.
+        contentView?.needsLayout = true
+        contentView?.needsDisplay = true
+        contentView?.layoutSubtreeIfNeeded()
+        displayIfNeeded()
     }
 
     override var canBecomeKey: Bool { true }

@@ -23,6 +23,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Stay life size: re-measure whenever the window lands on another display.
         model.display.update(for: window.screen)
         model.display.$geometry
+            // Resize after SwiftUI finishes the update that changed the model;
+            // resizing inside it left the window showing the previous model.
+            .receive(on: DispatchQueue.main)
             .sink { [weak self, weak window] geometry in
                 guard let self, let window else { return }
                 window.resizeKeepingTopLeft(to: self.windowSize(for: geometry))
