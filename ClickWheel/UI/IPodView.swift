@@ -39,8 +39,8 @@ struct IPodView: View {
             gloss
                 .padding(g.rimWidth)
                 .allowsHitTesting(false)
-            ClickWheelView()
-                .position(x: g.bodySize.width / 2, y: g.wheelCenterY)
+            controls
+                .position(x: g.bodySize.width / 2, y: g.controlCenterY)
         }
         .frame(width: g.bodySize.width, height: g.bodySize.height)
         .compositingGroup()
@@ -52,7 +52,7 @@ struct IPodView: View {
     /// meets the chrome and a faint line where the white begins.
     private var face: some View {
         faceShape
-            .fill(Theme.acrylic)
+            .fill(g.model == .firstGen ? Theme.firstGenFace : Theme.acrylic)
             .overlay {
                 faceShape
                     .stroke(Color.black.opacity(0.18), lineWidth: 2)
@@ -65,6 +65,13 @@ struct IPodView: View {
             }
             .clipShape(faceShape)
             .overlay(faceShape.stroke(Color.white.opacity(0.7), lineWidth: 0.5))
+    }
+
+    @ViewBuilder private var controls: some View {
+        switch g.model.spec.controls.kind {
+        case .clickWheel: ClickWheelView()
+        case .scrollWheel: ScrollWheelView()
+        }
     }
 
     /// The clear front's gloss: a soft diagonal sheen, drawn over the white and

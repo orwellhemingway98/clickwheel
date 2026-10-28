@@ -28,6 +28,15 @@ enum Theme {
     static let engravedLabel = Color(hex: 0xADADB1)
     static let buttonGloss = LinearGradient(colors: [Color(hex: 0xFFFFFF), Color(hex: 0xF6F6F4), Color(hex: 0xE4E4E2)],
                                             startPoint: .top, endPoint: .bottom)
+    // iPod (1st generation)
+    static let firstGenFace = LinearGradient(colors: [Color(hex: 0xFBFBFA), Color(hex: 0xF2F2F0), Color(hex: 0xE8E8E6)],
+                                             startPoint: .top, endPoint: .bottom)
+    static let firstGenRing = RadialGradient(colors: [Color(hex: 0xF1F1F1), Color(hex: 0xEDEDED), Color(hex: 0xE2E2E2)],
+                                             center: .center, startRadius: 60, endRadius: 140)
+    static let firstGenWheel = RadialGradient(colors: [Color(hex: 0xEAEAE8), Color(hex: 0xE4E4E2)],
+                                              center: .center, startRadius: 20, endRadius: 110)
+    static let firstGenLabel = Color(hex: 0x9A9A9E)
+
     static let buttonRim = LinearGradient(colors: [Color.white, Color(hex: 0xA9AEB5)],
                                           startPoint: .top, endPoint: .bottom)
 
