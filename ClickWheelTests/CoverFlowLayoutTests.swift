@@ -35,6 +35,15 @@ final class CoverFlowLayoutTests: XCTestCase {
         }
     }
 
+    func testTheAlbumTextIsDrawnAboveTheCovers() {
+        let l = CoverFlowLayout(canvas: CGSize(width: 240, height: 180))
+        XCTAssertGreaterThan(CoverFlowLayout.textZ, l.transform(offset: 0).z)
+    }
+
+    func testCoversWaitForTheWheelToSettleBeforeLoading() {
+        XCTAssertEqual(CoverFlowLayout.loadDelay, .milliseconds(150))
+    }
+
     func testOnlyNearbyCoversAreDrawnAndLoaded() {
         XCTAssertEqual(CoverFlowLayout.drawn, 4)
         XCTAssertEqual(CoverFlowLayout.loaded, 3)

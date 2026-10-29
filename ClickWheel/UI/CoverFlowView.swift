@@ -6,6 +6,11 @@ struct CoverFlowLayout: Equatable {
     static let drawn = 4
     /// Covers on each side whose artwork is fetched.
     static let loaded = 3
+    /// A cover only asks for its art once the wheel has paused this long, so
+    /// covers flying past during a fast spin are never fetched.
+    static let loadDelay: Duration = .milliseconds(150)
+    /// The album text sits above every cover and its reflection.
+    static let textZ = Double(drawn + 2)
 
     let side: CGFloat
     let centre: CGPoint
@@ -57,17 +62,19 @@ struct CoverFlowView: View {
                         .lineLimit(1)
                         .frame(width: g.designSize.width - 16)
                         .position(x: g.designSize.width / 2, y: layout.titleY)
+                        .zIndex(CoverFlowLayout.textZ)
                     Text(album.artist)
                         .font(ScreenTheme.font(11))
                         .foregroundStyle(Color(hex: 0xA0A4AA))
                         .lineLimit(1)
                         .frame(width: g.designSize.width - 16)
                         .position(x: g.designSize.width / 2, y: layout.artistY)
+                        .zIndex(CoverFlowLayout.textZ)
                     if state.flipped {
                         CoverBack(album: album, state: state, side: layout.card)
                             .position(layout.centre)
                             .transition(.flip)
-                            .zIndex(Double(CoverFlowLayout.drawn + 2))
+                            .zIndex(CoverFlowLayout.textZ + 1)
                     }
                 }
             }
@@ -118,6 +125,8 @@ private struct CoverImage: View {
         .offset(y: side * 0.175)
         .task(id: load ? album.artworkTrackID : nil) {
             guard load, let id = album.artworkTrackID, image == nil else { return }
+            try? await Task.sleep(for: CoverFlowLayout.loadDelay)
+            guard !Task.isCancelled else { return }
             loaded = await coverArt.image(trackID: id)
         }
     }

@@ -5,7 +5,8 @@ private final class FakeCoverFlow: CoverFlowSource {
     var result: [CoverFlowAlbum] = []
     private(set) var played: [(ids: [String], start: Int)] = []
 
-    func albums() async throws -> [CoverFlowAlbum] { result }
+    private(set) var albumLoads = 0
+    func albums() async throws -> [CoverFlowAlbum] { albumLoads += 1; return result }
     func play(trackIDs: [String], startIndex: Int) async throws { played.append((trackIDs, startIndex)) }
 }
 
@@ -94,5 +95,28 @@ final class NavigatorCoverFlowTests: XCTestCase {
         XCTAssertEqual(coverFlow(nav)?.flipped, false)
         nav.handle(.menu)
         XCTAssertEqual(menu(nav)?.title, "Music")
+    }
+
+    func testReopeningIsAFreshScreenWithTheAlbumsRemembered() async {
+        let nav = navigator(.classic)
+        await openCoverFlow(nav)
+        let firstID = coverFlow(nav)?.id
+        nav.handle(.scroll(steps: 1))
+        nav.handle(.menu)
+        XCTAssertEqual(menu(nav)?.title, "Music")
+        nav.handle(.center)
+        await nav.lastTask?.value
+        XCTAssertNotEqual(coverFlow(nav)?.id, firstID, "each opening gets its own screen")
+        XCTAssertEqual(coverFlow(nav)?.loading, false, "the albums are remembered")
+        XCTAssertEqual(source.albumLoads, 1)
+    }
+
+    func testALateLoadDoesNotResetAScreenThatIsAlreadyFilled() async {
+        let nav = navigator(.classic)
+        await openCoverFlow(nav)
+        nav.handle(.scroll(steps: 1))
+        nav.handle(.center)
+        XCTAssertEqual(coverFlow(nav)?.flipped, true)
+        XCTAssertEqual(coverFlow(nav)?.index, 1)
     }
 }

@@ -37,6 +37,8 @@ final class Navigator: ObservableObject {
     private let browse: (() -> MenuScreen)?
     private let playlists: (() -> MenuItem)?
     private let coverFlow: CoverFlowSource?
+    /// The library's albums, once Cover Flow has fetched them.
+    private var coverFlowAlbums: [CoverFlowAlbum]?
     private let now: () -> TimeInterval
     private let onPlayed: () -> Void
     private let onRowsMoved: (Int) -> Void
@@ -310,9 +312,7 @@ final class Navigator: ObservableObject {
         case .load(let title, let empty, let loader):
             load(title: title, empty: empty, quickScroll: item.quickScrollList, loader: loader)
         case .showNowPlaying: push(.nowPlaying)
-        case .open(let screen):
-            push(screen)
-            if case .coverFlow(let state) = screen, state.loading { loadCoverFlow(id: state.id) }
+        case .open(let screen): push(screen)
         case .run(let action):
             action()
             // Re-publish so rows showing a detail value refresh — but only if the
@@ -352,18 +352,30 @@ final class Navigator: ObservableObject {
         }
     }
 
-    /// Fills the Cover Flow screen just opened, if it's still the one on top.
+    /// Opens a fresh Cover Flow; the albums are fetched once and remembered.
+    private func openCoverFlow() {
+        if let albums = coverFlowAlbums {
+            push(.coverFlow(CoverFlowState(albums: albums, loading: false)))
+            return
+        }
+        let state = CoverFlowState(albums: [], loading: true)
+        push(.coverFlow(state))
+        loadCoverFlow(id: state.id)
+    }
+
+    /// Fills the Cover Flow screen just opened, if it's still on top and still loading.
     private func loadCoverFlow(id: UUID) {
         guard let coverFlow else { return }
         lastTask = Task {
             let albums: [CoverFlowAlbum]
             do {
                 albums = try await coverFlow.albums()
+                coverFlowAlbums = albums
             } catch {
                 log.error("Cover Flow load failed: \(error.localizedDescription, privacy: .public)")
                 albums = []
             }
-            if case .coverFlow(var state) = current, state.id == id {
+            if case .coverFlow(var state) = current, state.id == id, state.loading {
                 state.loaded(albums)
                 stack[stack.count - 1] = .coverFlow(state)
             }
@@ -395,7 +407,7 @@ final class Navigator: ObservableObject {
                 items.append(MenuItem("Music", action: .push {
                     var music = musicMenu()
                     if coverFlowRow {
-                        let row = MenuItem("Cover Flow", action: .open(.coverFlow(CoverFlowState(albums: [], loading: true))))
+                        let row = MenuItem("Cover Flow", action: .run { [unowned self] in self.openCoverFlow() })
                         music = MenuScreen(title: music.title, items: [row] + music.items)
                     }
                     return music

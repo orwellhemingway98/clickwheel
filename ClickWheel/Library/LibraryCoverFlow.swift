@@ -4,10 +4,15 @@ import Foundation
 final class LibraryCoverFlow: CoverFlowSource {
     private let library: MusicLibrary
     private let runner: BackgroundRunner
+    /// Covers load on their own queue, so a pile of them never holds up play
+    /// or a menu loading on the library's queue.
+    private let artworkRunner: BackgroundRunner
 
-    init(library: MusicLibrary, runner: BackgroundRunner) {
+    init(library: MusicLibrary, runner: BackgroundRunner,
+         artworkRunner: BackgroundRunner = BackgroundRunner(label: "ClickWheel.CoverArt")) {
         self.library = library
         self.runner = runner
+        self.artworkRunner = artworkRunner
     }
 
     func albums() async throws -> [CoverFlowAlbum] {
@@ -29,6 +34,6 @@ final class LibraryCoverFlow: CoverFlowSource {
     /// A cover's image data, or nil (including when the lookup fails).
     func artwork(trackID: String) async -> Data? {
         let library = self.library
-        return try? await runner.run { try library.artwork(trackID: trackID) }
+        return try? await artworkRunner.run { try library.artwork(trackID: trackID) }
     }
 }
