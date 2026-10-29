@@ -36,6 +36,7 @@ final class Navigator: ObservableObject {
     private let shuffle: (() async throws -> Void)?
     private let browse: (() -> MenuScreen)?
     private let playlists: (() -> MenuItem)?
+    private let coverFlow: CoverFlowSource?
     private let now: () -> TimeInterval
     private let onPlayed: () -> Void
     private let onRowsMoved: (Int) -> Void
@@ -50,6 +51,7 @@ final class Navigator: ObservableObject {
          musicMenu: (() -> MenuScreen)? = nil,
          shuffle: (() async throws -> Void)? = nil,
          profile: FirmwareProfile = IPodModel.fifthGen.spec.firmware,
+         coverFlow: CoverFlowSource? = nil,
          browse: (() -> MenuScreen)? = nil,
          playlists: (() -> MenuItem)? = nil,
          now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
@@ -62,6 +64,7 @@ final class Navigator: ObservableObject {
         self.profile = profile
         self.browse = browse
         self.playlists = playlists
+        self.coverFlow = coverFlow
         self.now = now
         self.onPlayed = onPlayed
         self.onRowsMoved = onRowsMoved
@@ -197,6 +200,11 @@ final class Navigator: ObservableObject {
                 lastQuickScroll = time
             }
             onRowsMoved(abs(targetPosition - position))
+        case .coverFlow(var state):
+            let before = state
+            state.scroll(steps * accelerator.multiplier(forStep: steps, now: time))
+            stack[stack.count - 1] = .coverFlow(state)
+            if state != before { onRowsMoved(abs(steps)) }
         case .clock, .stopwatch:
             break
         }
@@ -216,6 +224,12 @@ final class Navigator: ObservableObject {
             break
         case .menu(let screen):
             select(in: screen)
+        case .coverFlow(var state):
+            let action = state.center()
+            stack[stack.count - 1] = .coverFlow(state)
+            if case .play(let ids, let start) = action, let coverFlow {
+                play { try await coverFlow.play(trackIDs: ids, startIndex: start) }
+            }
         }
     }
 
@@ -223,6 +237,11 @@ final class Navigator: ObservableObject {
         // MENU leaves the scrubber first; the volume bar doesn't hold MENU back.
         if case .nowPlaying = current, case .scrubbing = nowPlayingMode {
             nowPlayingMode = .normal
+            return
+        }
+        // MENU turns a flipped cover back over before it leaves Cover Flow.
+        if case .coverFlow(var state) = current, state.menu() {
+            stack[stack.count - 1] = .coverFlow(state)
             return
         }
         guard stack.count > 1 else { return }
@@ -291,7 +310,9 @@ final class Navigator: ObservableObject {
         case .load(let title, let empty, let loader):
             load(title: title, empty: empty, quickScroll: item.quickScrollList, loader: loader)
         case .showNowPlaying: push(.nowPlaying)
-        case .open(let screen): push(screen)
+        case .open(let screen):
+            push(screen)
+            if case .coverFlow(let state) = screen, state.loading { loadCoverFlow(id: state.id) }
         case .run(let action):
             action()
             // Re-publish so rows showing a detail value refresh — but only if the
@@ -331,6 +352,24 @@ final class Navigator: ObservableObject {
         }
     }
 
+    /// Fills the Cover Flow screen just opened, if it's still the one on top.
+    private func loadCoverFlow(id: UUID) {
+        guard let coverFlow else { return }
+        lastTask = Task {
+            let albums: [CoverFlowAlbum]
+            do {
+                albums = try await coverFlow.albums()
+            } catch {
+                log.error("Cover Flow load failed: \(error.localizedDescription, privacy: .public)")
+                albums = []
+            }
+            if case .coverFlow(var state) = current, state.id == id {
+                state.loaded(albums)
+                stack[stack.count - 1] = .coverFlow(state)
+            }
+        }
+    }
+
     private func play(_ start: @escaping () async throws -> Void) {
         let origin = stack.count
         lastTask = Task {
@@ -352,7 +391,15 @@ final class Navigator: ObservableObject {
         case .fifthGen, .classic:
             title = profile.menuStyle == .classic ? "iPod" : "ClickWheel"
             if let musicMenu {
-                items.append(MenuItem("Music", action: .push(musicMenu)))
+                let coverFlowRow = profile.menuStyle == .classic && coverFlow != nil
+                items.append(MenuItem("Music", action: .push {
+                    var music = musicMenu()
+                    if coverFlowRow {
+                        let row = MenuItem("Cover Flow", action: .open(.coverFlow(CoverFlowState(albums: [], loading: true))))
+                        music = MenuScreen(title: music.title, items: [row] + music.items)
+                    }
+                    return music
+                }))
             }
             items.append(MenuItem("Extras", action: .push { MenuScreen(title: "Extras", items: [
                 MenuItem("Clock", action: .open(.clock)),

@@ -37,6 +37,7 @@ struct GrayScreenView: View {
         case .nowPlaying: return "Now Playing"
         case .clock: return "Clock"
         case .stopwatch: return "Stopwatch"
+        case .coverFlow: return "Cover Flow"
         }
     }
 
@@ -62,6 +63,7 @@ struct GrayScreenView: View {
         case .menu(let screen): GrayMenuList(screen: screen, colors: colors, rows: layout.rows)
         case .nowPlaying: GrayNowPlaying(colors: colors, layout: layout)
         case .clock, .stopwatch: GrayClock(layout: layout)
+        case .coverFlow: EmptyView()   // gray screens never offer it
         }
     }
 }

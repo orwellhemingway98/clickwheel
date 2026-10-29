@@ -29,6 +29,8 @@ final class AppModel {
     private let clicks = ClickThrottle()
     let library = AppleMusicLibrary()
     let libraryRunner = BackgroundRunner(label: "ClickWheel.Library")
+    let coverFlow: LibraryCoverFlow
+    let coverArt: CoverArtCache
     let display: DisplayGeometry
     private var trackObserver: AnyCancellable?
     private var modelObserver: AnyCancellable?
@@ -46,11 +48,15 @@ final class AppModel {
         let hub = hub
         let library = library
         let libraryRunner = libraryRunner
+        let coverFlow = LibraryCoverFlow(library: library, runner: libraryRunner)
+        self.coverFlow = coverFlow
+        coverArt = CoverArtCache { await coverFlow.artwork(trackID: $0) }
         navigator = Navigator(
             player: hub, settings: settings,
             musicMenu: { LibraryMenus.musicMenu(library: library, runner: libraryRunner) },
             shuffle: LibraryMenus.shuffleAction(library: library, runner: libraryRunner),
             profile: settings.model.spec.firmware,
+            coverFlow: coverFlow,
             browse: { LibraryMenus.browseMenu(library: library, runner: libraryRunner) },
             playlists: { LibraryMenus.playlistsItem(library: library, runner: libraryRunner) },
             onPlayed: { Task { await hub.refresh() } },
@@ -88,6 +94,7 @@ final class AppModel {
         .environmentObject(hub)
         .environmentObject(navigator)
         .environmentObject(artwork)
+        .environmentObject(coverArt)
         .environmentObject(input)
     }
 

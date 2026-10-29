@@ -55,6 +55,7 @@ struct ScreenView: View {
         case .nowPlaying: return "Now Playing"
         case .clock: return "Clock"
         case .stopwatch: return "Stopwatch"
+        case .coverFlow: return "Cover Flow"
         }
     }
 
@@ -109,6 +110,7 @@ struct ScreenView: View {
         case .nowPlaying: NowPlayingView()
         case .clock: ClockView()
         case .stopwatch: StopwatchView()
+        case .coverFlow: Color.black
         }
     }
 }

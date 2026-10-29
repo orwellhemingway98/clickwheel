@@ -39,6 +39,24 @@ enum LibraryIndex {
             }
     }
 
+    /// Every album with its songs, as `albums(in:)` and `tracks(in:album:)` give
+    /// them, but grouped in one pass (Cover Flow lists the whole library).
+    static func albumsWithTracks(in tracks: [LibraryTrack]) -> [(album: LibraryAlbum, tracks: [LibraryTrack])] {
+        func key(_ name: String, _ artist: String) -> String { "\(name.lowercased())\u{1F}\(artist.lowercased())" }
+        var byKey: [String: [LibraryTrack]] = [:]
+        for track in tracks {
+            byKey[key(albumName(of: track), artistName(of: track)), default: []].append(track)
+        }
+        return albums(in: tracks).map { album in
+            let albumTracks = (byKey[key(album.name, album.artist)] ?? []).sorted {
+                if $0.discNumber != $1.discNumber { return $0.discNumber < $1.discNumber }
+                if $0.trackNumber != $1.trackNumber { return $0.trackNumber < $1.trackNumber }
+                return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+            return (album, albumTracks)
+        }
+    }
+
     static func sortedSongs(_ tracks: [LibraryTrack]) -> [LibraryTrack] {
         tracks.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }

@@ -77,6 +77,8 @@ enum Screen {
     case nowPlaying
     case clock
     case stopwatch
+    /// Albums as covers (the classic and nanos 3G–5G).
+    case coverFlow(CoverFlowState)
 }
 
 /// What Now Playing shows under the track info.
