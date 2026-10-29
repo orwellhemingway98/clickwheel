@@ -402,4 +402,21 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertEqual(settings.colour(in: IPodModel.photo.spec.firmware.colours!).id, "u2")
         XCTAssertEqual(settings.colour(in: .fourthGen).id, "white")
     }
+
+    func testPhotoHoldMenuTogglesTheBacklight() {
+        let nav = navigator(.photo)
+        open(nav, "Settings")
+        let before = nav.backlight.isOn
+        nav.handle(.menuHold)
+        XCTAssertEqual(menu(nav)?.title, "Settings", "hold MENU toggles the backlight, it doesn't go home")
+        XCTAssertNotEqual(nav.backlight.isOn, before)
+        nav.handle(.menuHold)
+        XCTAssertEqual(nav.backlight.isOn, before)
+    }
+
+    func testSwitchingToThePhotoLightsItsScreen() {
+        let nav = navigator(.fifthGen)
+        nav.setProfile(IPodModel.photo.spec.firmware)
+        XCTAssertTrue(nav.backlight.isOn, "a colour screen must not come back dimmed")
+    }
 }
