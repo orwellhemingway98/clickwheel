@@ -35,6 +35,8 @@ struct ScrollWheelView: View {
             guard !isTouching, touch != nil else { return }
             finish(cancelled: true)
         }
+        // Switching models removes this wheel mid-press: don't leave the press held.
+        .onDisappear { if touch != nil { finish(cancelled: true) } }
     }
 
     // MARK: - Drawing

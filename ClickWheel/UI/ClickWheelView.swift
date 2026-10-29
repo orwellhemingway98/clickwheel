@@ -49,6 +49,10 @@ struct ClickWheelView: View {
             centerPressed = false
             input.cancel()
         }
+        // Switching models removes this wheel mid-press: don't leave the press held.
+        .onDisappear {
+            if dragging || centerPressed { input.cancel() }
+        }
     }
 
     // MARK: - Drawing

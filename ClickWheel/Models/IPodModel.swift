@@ -59,8 +59,8 @@ struct ModelSpec: Equatable {
     let controls: ControlSpec
     let firmware: FirmwareProfile
     var material: Material = .whitePlastic
-    /// Offered in several colours (Settings › Colour).
-    var hasColours = false
+    /// Offered in several colours (Settings › Colour); the firmware profile says so.
+    var hasColours: Bool { firmware.colours }
 }
 
 /// The iPod mini's five anodized colours (estimated; no published values).
@@ -273,5 +273,5 @@ extension ModelSpec {
                               buttonDiameter: 12.50, centerFromBottom: 28.75, sectorsPerStep: 6),
         firmware: FirmwareProfile(menuStyle: .thirdGenLate, holdMenu: .toggleBacklight, quickScroll: false,
                                   backlight: true, visibleRows: 5, colours: true),
-        material: .aluminium, hasColours: true)
+        material: .aluminium)
 }

@@ -129,4 +129,14 @@ final class IPodModelTests: XCTestCase {
         XCTAssertEqual(MiniColor.silver.body, 0xC8CACD)
         XCTAssertEqual(MiniColor.pink.wheel, 0xF2DBE2)
     }
+
+    func testHasColoursFollowsTheFirmwareProfile() {
+        let base = IPodModel.mini.spec
+        let spec = ModelSpec(name: "x", year: 2004, body: base.body, display: base.display,
+                             controls: base.controls, firmware: base.firmware)
+        XCTAssertTrue(spec.hasColours)
+        for model in IPodModel.allCases {
+            XCTAssertEqual(model.spec.hasColours, model.spec.firmware.colours)
+        }
+    }
 }
