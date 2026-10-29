@@ -37,9 +37,12 @@ struct NowPlayingView: View {
         let bar = layout.bar
         return ZStack(alignment: .topLeading) {
             if let index = track.index, let count = track.count {
-                Text("\(index) of \(count)")
-                    .font(ScreenTheme.font(ScreenTheme.counterSize))
-                    .offset(x: ScreenTheme.counterOrigin.x, y: y(ScreenTheme.counterOrigin.y))
+                let counter = Text("\(index) of \(count)").font(ScreenTheme.font(ScreenTheme.counterSize))
+                if layout.centred {
+                    counter.frame(width: g.designSize.width).offset(y: y(layout.counter.y))
+                } else {
+                    counter.offset(x: layout.counter.x, y: y(layout.counter.y))
+                }
             }
             artworkView
                 .offset(x: layout.art.minX, y: y(layout.art.minY))

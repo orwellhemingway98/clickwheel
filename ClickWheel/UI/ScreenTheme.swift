@@ -114,6 +114,9 @@ enum ScreenTheme {
 /// Where Now Playing puts things on a colour canvas: the 5G's layout on a
 /// landscape screen, and art stacked over centred text on a portrait one.
 struct NowPlayingLayout: Equatable {
+    /// Top of the "x of y" line: top-left on a landscape screen; on a
+    /// portrait one, centred across the screen (x is unused).
+    let counter: CGPoint
     let art: CGRect
     let infoOrigin: CGPoint
     let infoWidth: CGFloat
@@ -123,19 +126,22 @@ struct NowPlayingLayout: Equatable {
 
     init(canvas: CGSize) {
         if canvas.width > canvas.height {
+            counter = ScreenTheme.counterOrigin
             art = ScreenTheme.artFrame
             infoOrigin = ScreenTheme.infoOrigin
             infoWidth = ScreenTheme.infoWidth(canvasWidth: canvas.width)
             centred = false
             bar = ScreenTheme.barFrame(canvasWidth: canvas.width)
         } else {
-            // Three 22-point lines must fit between the art's shadow and the bar.
-            let side: CGFloat = 92
-            art = CGRect(x: (canvas.width - side) / 2, y: 26, width: side, height: side)
-            infoOrigin = CGPoint(x: 8, y: 134)
+            // Top to bottom: the counter's row, the art, three lines of text,
+            // then the bar and its times, each clear of the next.
+            let side: CGFloat = 80
+            counter = CGPoint(x: 0, y: 22)
+            art = CGRect(x: (canvas.width - side) / 2, y: 42, width: side, height: side)
+            infoOrigin = CGPoint(x: 8, y: 140)
             infoWidth = canvas.width - 16
             centred = true
-            bar = CGRect(x: 15, y: 196, width: canvas.width - 30, height: 11)
+            bar = CGRect(x: 15, y: 206, width: canvas.width - 30, height: 11)
         }
     }
 }

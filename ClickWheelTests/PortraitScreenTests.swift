@@ -22,19 +22,24 @@ final class PortraitScreenTests: XCTestCase {
         XCTAssertEqual(l.infoWidth, 142)
         XCTAssertFalse(l.centred)
         XCTAssertEqual(l.bar, ScreenTheme.barFrame(canvasWidth: 240))
+        XCTAssertEqual(l.counter, ScreenTheme.counterOrigin)
         XCTAssertEqual(NowPlayingLayout(canvas: CGSize(width: 225, height: 180)).infoWidth, 127)
     }
 
-    func testPortraitNowPlayingStacksArtOverCentredText() {
+    func testPortraitNowPlayingStacksCounterArtTextAndBar() {
         let l = NowPlayingLayout(canvas: CGSize(width: 180, height: 240))
-        XCTAssertEqual(l.art, CGRect(x: 44, y: 26, width: 92, height: 92))
-        XCTAssertEqual(l.infoOrigin, CGPoint(x: 8, y: 134))
-        XCTAssertEqual(l.infoWidth, 164)
         XCTAssertTrue(l.centred)
-        XCTAssertEqual(l.bar, CGRect(x: 15, y: 196, width: 150, height: 11))
-        // The third line (album) ends clear of the bar.
-        let lastLine = l.infoOrigin.y + 2 * ScreenTheme.infoLineSpacing + ScreenTheme.subtitleTextSize / 2
-        XCTAssertLessThan(lastLine, l.bar.minY)
-        XCTAssertGreaterThan(l.infoOrigin.y - ScreenTheme.titleTextSize / 2, l.art.maxY + ScreenTheme.artShadow)
+        XCTAssertEqual(l.counter, CGPoint(x: 0, y: 22), "centred on its own row")
+        XCTAssertEqual(l.art, CGRect(x: 50, y: 42, width: 80, height: 80))
+        XCTAssertEqual(l.infoOrigin, CGPoint(x: 8, y: 140))
+        XCTAssertEqual(l.infoWidth, 164)
+        XCTAssertEqual(l.bar, CGRect(x: 15, y: 206, width: 150, height: 11))
+        // Measured line heights of the Source Sans 3 stack (title 17.9, two
+        // subtitles 15.9, 8.5 apart); the counter's line is about 16.
+        let stackTop = l.infoOrigin.y - ScreenTheme.titleTextSize / 2
+        XCTAssertLessThan(l.counter.y + 16, l.art.minY, "the counter clears the art")
+        XCTAssertGreaterThan(stackTop, l.art.maxY + ScreenTheme.artShadow, "the text clears the art's shadow")
+        XCTAssertLessThan(stackTop + 17.9 + 8.5 + 15.9 + 8.5 + 15.9, l.bar.minY, "the album line clears the bar")
+        XCTAssertLessThan(l.bar.maxY + ScreenTheme.timeGap + 14, 240, "the times stay on screen")
     }
 }
