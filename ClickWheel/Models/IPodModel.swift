@@ -15,6 +15,7 @@ enum IPodModel: String, CaseIterable {
     case nanoSecondGen
     case classic
     case nanoThirdGen
+    case nanoFourthGen
 
     var shortName: String {
         switch self {
@@ -29,6 +30,7 @@ enum IPodModel: String, CaseIterable {
         case .nanoSecondGen: return "nano 2G"
         case .classic: return "classic"
         case .nanoThirdGen: return "nano 3G"
+        case .nanoFourthGen: return "nano 4G"
         case .fifthGen: return "5th gen"
         }
     }
@@ -47,6 +49,7 @@ enum IPodModel: String, CaseIterable {
         case .nanoSecondGen: return "iPod nano (2nd gen)"
         case .classic: return "iPod classic"
         case .nanoThirdGen: return "iPod nano (3rd gen)"
+        case .nanoFourthGen: return "iPod nano (4th gen)"
         case .fifthGen: return "5th generation"
         }
     }
@@ -64,6 +67,7 @@ enum IPodModel: String, CaseIterable {
         case .nanoSecondGen: return .nanoSecondGen
         case .classic: return .classic
         case .nanoThirdGen: return .nanoThirdGen
+        case .nanoFourthGen: return .nanoFourthGen
         case .fifthGen: return .fifthGen
         }
     }
@@ -171,6 +175,16 @@ struct ColourChoice: Equatable {
         BodyColour(id: "pink", label: "Pink", body: 0xEDB3C8, wheel: 0xF2F2F0, button: 0xF2F2F0, labels: 0x8E9399),
         BodyColour(id: "red", label: "(PRODUCT) RED", body: 0xC8202F, wheel: 0xF2F2F0, button: 0xF2F2F0, labels: 0x8E9399),
     ])
+
+    /// The nano 4G's nine "nano-chromatic" colours; a white wheel on all but black.
+    static let nanoFourthGen = ColourChoice(key: "nanoFourthGen", options: ([
+        ("silver", "Silver", 0xC9CBCE), ("black", "Black", 0x1F2022), ("purple", "Purple", 0x9A7FC0),
+        ("blue", "Blue", 0x6FA8DC), ("green", "Green", 0x9CCB6B), ("yellow", "Yellow", 0xF1D46A),
+        ("orange", "Orange", 0xF3A25A), ("pink", "Pink", 0xEE9FC0), ("red", "(PRODUCT) RED", 0xC8202F),
+    ] as [(String, String, UInt32)]).map { id, label, body in
+        let wheel: UInt32 = id == "black" ? 0x18181A : 0xF2F2F0
+        return BodyColour(id: id, label: label, body: body, wheel: wheel, button: wheel, labels: 0x8E9399)
+    })
 
     /// The mini 2G: brighter pink, blue and green, silver unchanged, no gold; the
     /// wheel lettering matches the body (a shade deeper, to read on the wheel).
@@ -480,5 +494,22 @@ extension ModelSpec {
                               buttonDiameter: 13.2, centerFromBottom: 17.6, sectorsPerStep: 6),
         firmware: FirmwareProfile(menuStyle: .classic, holdMenu: .toggleBacklight, quickScroll: false,
                                   backlight: true, visibleRows: 9, colours: .nanoThirdGen),
+        material: .aluminium)
+
+    /// iPod nano (4th generation), 2008: tall, curved aluminium with a portrait
+    /// screen. Apple's drawing (docs/reference/ipod-nano-4g-dimensions.md).
+    static let nanoFourthGen = ModelSpec(
+        name: "iPod nano (4th generation)", year: 2008,
+        body: BodySpec(width: 38.7, height: 90.7, cornerRadius: 1.0, rimWidth: 0, edgeBand: 5.0),
+        display: DisplaySpec(kind: .color,
+                             windowSize: CGSize(width: 29.9, height: 39.8),
+                             windowTop: 24.3 - 39.8 / 2,
+                             windowCornerRadius: 0.6,
+                             pixels: CGSize(width: 240, height: 320), pixelPitch: 0.124,
+                             designSize: CGSize(width: 180, height: 240)),
+        controls: ControlSpec(kind: .clickWheel, outerDiameter: 28.5, wheelDiameter: 28.5,
+                              buttonDiameter: 13.2, centerFromBottom: 23.3, sectorsPerStep: 6),
+        firmware: FirmwareProfile(menuStyle: .classic, holdMenu: .toggleBacklight, quickScroll: false,
+                                  backlight: true, visibleRows: 12, colours: .nanoFourthGen),
         material: .aluminium)
 }
