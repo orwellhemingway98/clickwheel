@@ -62,8 +62,9 @@ Choose the iPod from the list in **Settings › Model** (the current one is tick
 | **iPod classic** | 2007 | A silver or black aluminium face in a steel shell. Its own split-screen interface: the menu on the left, your current album art slowly panning on the right, with a glossier blue selection. |
 | **iPod nano (3rd generation)** | 2007 | The short, wide nano: an aluminium face in silver, black, blue, green, pink or (PRODUCT) RED, running the classic's split-screen interface. |
 | **iPod nano (4th generation)** | 2008 | Tall, curved aluminium in nine colours (Settings › Colour), with a portrait screen: full-width lists of 12 rows and a Now Playing with the album art on top. |
+| **iPod nano (5th generation)** | 2009 | The 4G's outline in polished, glossy aluminium and nine deeper colours, with a taller 240 × 376 screen (14 rows, bigger album art). |
 
-More models are coming: nano 5G.
+That completes the click-wheel timeline, from the 2001 original to the 2009 nano.
 
 ## Build
 
