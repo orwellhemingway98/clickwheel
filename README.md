@@ -4,7 +4,7 @@ A tiny floating click-wheel music player for your Mac. It doesn't play music
 itself: it's a remote for **Apple Music** and **Spotify**, and it follows
 whichever one is playing.
 
-<img src="docs/screenshot.png" width="320" alt="ClickWheel">
+<img src="docs/screenshot.png" width="100%" alt="ClickWheel: the iPod 1st generation, mini, 4th generation U2, 5th generation, classic in Cover Flow and nano 5th generation, side by side at true relative size">
 
 > A fan homage to classic click-wheel music players. Not affiliated with or
 > endorsed by Apple. All artwork is drawn in code; no Apple software, fonts,

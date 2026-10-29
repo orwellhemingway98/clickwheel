@@ -29,7 +29,7 @@ final class AppModel {
     private let clicks = ClickThrottle()
     let library = AppleMusicLibrary()
     let libraryRunner = BackgroundRunner(label: "ClickWheel.Library")
-    let coverFlow: LibraryCoverFlow
+    let coverFlow: CoverFlowSource
     let coverArt: CoverArtCache
     let display: DisplayGeometry
     private var trackObserver: AnyCancellable?
@@ -42,15 +42,25 @@ final class AppModel {
             settings.model = requested.flatMap(IPodModel.init) ?? .fifthGen
         }
         display = DisplayGeometry(model: settings.model)
-        hub = PlayerHub(sources: [AppleMusicSource(), SpotifySource()], settings: settings)
+        // `--snapshot … --demo`: nothing playing and made-up albums, for images
+        // that get published.
+        let demo = CommandLine.arguments.contains("--snapshot") && CommandLine.arguments.contains("--demo")
+        hub = PlayerHub(sources: demo ? [] : [AppleMusicSource(), SpotifySource()], settings: settings)
         let settings = settings
         let clickSound = clickSound
         let hub = hub
         let library = library
         let libraryRunner = libraryRunner
-        let coverFlow = LibraryCoverFlow(library: library, runner: libraryRunner)
-        self.coverFlow = coverFlow
-        coverArt = CoverArtCache { await coverFlow.artwork(trackID: $0) }
+        if demo {
+            let coverFlow = DemoCoverFlow()
+            self.coverFlow = coverFlow
+            coverArt = CoverArtCache { await coverFlow.artwork(trackID: $0) }
+        } else {
+            let coverFlow = LibraryCoverFlow(library: library, runner: libraryRunner)
+            self.coverFlow = coverFlow
+            coverArt = CoverArtCache { await coverFlow.artwork(trackID: $0) }
+        }
+        let coverFlow = self.coverFlow
         navigator = Navigator(
             player: hub, settings: settings,
             musicMenu: { LibraryMenus.musicMenu(library: library, runner: libraryRunner) },
@@ -98,7 +108,7 @@ final class AppModel {
         .environmentObject(input)
     }
 
-    /// Development aid: `ClickWheel --snapshot out.png [--now-playing] [--keys c,d,m]`
+    /// Development aid: `ClickWheel --snapshot out.png [--now-playing] [--keys c,d,m] [--demo]`
     /// renders the iPod to a PNG after the first poll, then quits. `--keys` presses
     /// c(enter) d(own) u(p) m(enu) with a pause after each, so loads can finish.
     func renderSnapshotIfRequested() {
