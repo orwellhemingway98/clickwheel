@@ -58,8 +58,9 @@ Choose the iPod from the list in **Settings › Model** (the current one is tick
 | **iPod mini (2nd generation)** | 2005 | The mini in brighter pink, blue and green (silver unchanged, no gold), with wheel lettering that matches the body. |
 | **iPod nano** | 2005 | Pencil-thin, in white or black (Settings › Colour), with a 176 × 132 colour screen running the 5G-style menus, Stopwatch included. The screen dims with the backlight. |
 | **iPod (5th generation)** | 2005 | Click wheel and colour screen (see Features). |
+| **iPod nano (2nd generation)** | 2006 | The nano in an anodized aluminium tube: silver, pink, green, blue, black or (PRODUCT) RED (Settings › Colour). |
 
-More models are coming, in release order: nano 2G, classic, nano 3G–5G.
+More models are coming, in release order: classic, nano 3G–5G.
 
 ## Build
 
