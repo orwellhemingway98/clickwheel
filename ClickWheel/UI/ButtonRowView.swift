@@ -8,7 +8,7 @@ struct ButtonRowView: View {
     @EnvironmentObject private var navigator: Navigator
     @Environment(\.ipodGeometry) private var g
 
-    @State private var pressed: WheelButton?
+    @State private var touch = ButtonRowPress()
     @GestureState private var touching = false
 
     private var layout: ButtonRowLayout {
@@ -25,19 +25,19 @@ struct ButtonRowView: View {
             }
         }
         .frame(width: width, height: g.rowButtonDiameter)
-        .contentShape(Rectangle())
+        // Only the buttons take touches; the gaps still drag the window.
+        .contentShape(ButtonRowShape(layout: layout))
         .gesture(gesture)
         .onChange(of: touching) { _, isTouching in
             // A cancelled gesture never calls onEnded: drop any press.
-            guard !isTouching, pressed != nil else { return }
-            pressed = nil
-            input.cancel()
+            guard !isTouching else { return }
+            perform(touch.interrupted())
         }
     }
 
     private func key(_ button: WheelButton) -> some View {
         let lit = navigator.backlight.isOn
-        let isPressed = pressed == button
+        let isPressed = touch.pressed == button
         return ZStack {
             Circle()
                 .fill(Theme.buttonGloss)
@@ -69,22 +69,36 @@ struct ButtonRowView: View {
         DragGesture(minimumDistance: 0)
             .updating($touching) { _, state, _ in state = true }
             .onChanged { value in
-                if pressed == nil, value.translation == .zero,
-                   let button = layout.button(at: relative(value.startLocation)) {
-                    pressed = button
-                    input.press(button)
-                } else if pressed != nil, hypot(value.translation.width, value.translation.height) >= 6 {
-                    pressed = nil
-                    input.cancel()
-                }
+                perform(touch.changed(start: relative(value.startLocation), location: relative(value.location),
+                                      layout: layout))
             }
-            .onEnded { _ in
-                if let button = pressed { input.release(button) }
-                pressed = nil
-            }
+            .onEnded { _ in perform(touch.ended()) }
+    }
+
+    private func perform(_ action: ButtonRowPress.Action?) {
+        switch action {
+        case .press(let button): input.press(button)
+        case .cancel: input.cancel()
+        case .release(let button): input.release(button)
+        case nil: break
+        }
     }
 
     private func relative(_ location: CGPoint) -> CGPoint {
         CGPoint(x: location.x - width / 2, y: location.y - g.rowButtonDiameter / 2)
+    }
+}
+
+/// The four buttons' circles, as the row's touch area.
+private struct ButtonRowShape: Shape {
+    let layout: ButtonRowLayout
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        for center in layout.centers {
+            let d = layout.diameter
+            path.addEllipse(in: CGRect(x: rect.midX + center.x - d / 2, y: rect.midY - d / 2, width: d, height: d))
+        }
+        return path
     }
 }
