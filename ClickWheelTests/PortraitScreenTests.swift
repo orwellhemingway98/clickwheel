@@ -54,4 +54,13 @@ final class PortraitScreenTests: XCTestCase {
         XCTAssertLessThan(stackTop + 17.9 + 8.5 + 15.9 + 8.5 + 15.9, l.bar.minY)
         XCTAssertLessThan(l.bar.maxY + ScreenTheme.timeGap + 14, 282)
     }
+
+    func testPortraitArtStaysOnScreenAtAnyHeight() {
+        let tall = NowPlayingLayout(canvas: CGSize(width: 180, height: 400))
+        XCTAssertEqual(tall.art.width, 164, "no wider than the screen less 8 each side")
+        XCTAssertGreaterThanOrEqual(tall.art.minX, 8)
+        XCTAssertLessThan(tall.infoOrigin.y + 2 * ScreenTheme.infoLineSpacing + 16, tall.bar.minY)
+        let short = NowPlayingLayout(canvas: CGSize(width: 180, height: 150))
+        XCTAssertEqual(short.art.width, 0, "never a negative size")
+    }
 }

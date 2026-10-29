@@ -136,7 +136,8 @@ struct NowPlayingLayout: Equatable {
             // Top to bottom: the counter's row, the art, three lines of text,
             // then the bar and its times, each clear of the next. The art takes
             // whatever height the rest leaves (80 on the nano 4G, 122 on the 5G).
-            let side = canvas.height - 160
+            // Never negative, never wider than the screen less 8 each side.
+            let side = min(max(canvas.height - 160, 0), canvas.width - 16)
             counter = CGPoint(x: 0, y: 22)
             art = CGRect(x: (canvas.width - side) / 2, y: 42, width: side, height: side)
             infoOrigin = CGPoint(x: 8, y: art.maxY + 18)
