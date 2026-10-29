@@ -60,7 +60,7 @@ final class PortraitScreenTests: XCTestCase {
         XCTAssertEqual(tall.art.width, 164, "no wider than the screen less 8 each side")
         XCTAssertGreaterThanOrEqual(tall.art.minX, 8)
         XCTAssertLessThan(tall.infoOrigin.y + 2 * ScreenTheme.infoLineSpacing + 16, tall.bar.minY)
-        let short = NowPlayingLayout(canvas: CGSize(width: 180, height: 150))
+        let short = NowPlayingLayout(canvas: CGSize(width: 140, height: 150))
         XCTAssertEqual(short.art.width, 0, "never a negative size")
     }
 }
