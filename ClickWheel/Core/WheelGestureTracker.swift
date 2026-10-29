@@ -17,6 +17,11 @@ struct WheelGestureTracker {
     private var carry = 0
     private var liftedAt: TimeInterval?
 
+    /// A tracker turning at the model's wheel rate (sectors per step).
+    init(model: IPodModel) {
+        self.init(sectorsPerStep: model.spec.controls.sectorsPerStep)
+    }
+
     init(sectors: Int = 96, sectorsPerStep: Int = 4, deadZoneRadius: Double = 12, liftTolerance: TimeInterval = 0.15) {
         self.sectors = sectors
         self.sectorsPerStep = sectorsPerStep

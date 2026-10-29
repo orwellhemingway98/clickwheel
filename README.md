@@ -52,6 +52,7 @@ Choose the iPod from the list in **Settings › Model** (the current one is tick
 | **iPod (1st generation)** | 2001 | A wheel that really turns (its texture follows your finger), inside a ring of four buttons. Black-and-white Chicago screen: grey-green, lighting up pale blue when you touch anything (hold MENU toggles the light; Settings › Backlight Timer). Firmware 1.3.1 menus: Playlists, Browse, Extras, Settings, Backlight. |
 | **iPod (2nd generation)** | 2002 | The same front as the 1st gen, with a touch-sensitive wheel that stays still (smooth, no grooves). |
 | **iPod (3rd generation)** | 2003 | Thinner, with rounded edges. Four round touch buttons in a row (⏮ · MENU · ▶❚❚ · ⏭) whose labels glow red with the backlight, above a smooth touch wheel. Green LCD that lights up pale blue. Firmware 2.3 menus: Music, Extras, Settings, Shuffle Songs, Backlight. |
+| **iPod mini** | 2004 | Anodized aluminium in silver, gold, pink, blue or green (Settings › Colour). The first click wheel, with grey labels. A smaller 138 × 110 gray LCD that lights up blue-white, five rows, in a clean sans. Exact life size. |
 | **iPod (5th generation)** | 2005 | Click wheel and colour screen (see Features). |
 
 More models are coming, in release order: mini, 4G, photo, mini 2G, nano 1G,

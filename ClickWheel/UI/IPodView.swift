@@ -11,6 +11,8 @@ struct IPodView: View {
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var hub: PlayerHub
 
+    private var material: Material { g.model.spec.material }
+
     private var faceShape: RoundedRectangle {
         RoundedRectangle(cornerRadius: g.cornerRadius - g.rimWidth)
     }
@@ -34,10 +36,14 @@ struct IPodView: View {
             .position(x: g.bodySize.width / 2, y: g.windowTop + g.windowSize.height / 2)
             // One clear layer covers the white and the screen alike, so its gloss
             // runs across both. The wheel is a separate part on top.
-            gloss
-                .padding(g.rimWidth)
-                .allowsHitTesting(false)
+            if material != .aluminium {
+                gloss
+                    .padding(g.rimWidth)
+                    .allowsHitTesting(false)
+            }
             controls
+                // A fresh wheel (and tracker) for each model.
+                .id(g.model)
                 .position(x: g.bodySize.width / 2, y: g.controlCenterY)
             if g.model.spec.controls.kind == .buttonRow {
                 ButtonRowView()
@@ -52,7 +58,37 @@ struct IPodView: View {
 
     /// The white layer under the clear front, with a shadowed edge where it
     /// meets the chrome and a faint line where the white begins.
-    private var face: some View {
+    @ViewBuilder private var face: some View {
+        if material == .aluminium { aluminiumFace } else { plasticFace }
+    }
+
+    /// The mini's anodized tube: the chosen colour, a fine lengthwise grain, and
+    /// the sides curving away across the edge bands (dark at the very edge, a
+    /// soft highlight where the curve begins).
+    private var aluminiumFace: some View {
+        faceShape
+            .fill(MiniFinish(colour: settings.miniColor).body)
+            .overlay { BrushedTexture() }
+            .overlay {
+                HStack(spacing: 0) {
+                    sideBand(leading: true)
+                    Spacer(minLength: 0)
+                    sideBand(leading: false)
+                }
+            }
+            .clipShape(faceShape)
+    }
+
+    private func sideBand(leading: Bool) -> some View {
+        LinearGradient(stops: [.init(color: .black.opacity(0.20), location: 0),
+                               .init(color: .black.opacity(0.06), location: 0.35),
+                               .init(color: .white.opacity(0.10), location: 0.8),
+                               .init(color: .clear, location: 1)],
+                       startPoint: leading ? .leading : .trailing, endPoint: leading ? .trailing : .leading)
+            .frame(width: g.edgeBand)
+    }
+
+    private var plasticFace: some View {
         faceShape
             .fill(g.model.spec.controls.kind == .clickWheel ? Theme.acrylic : Theme.firstGenFace)
             .overlay { if g.edgeBand > 0 { roundedEdges } }
@@ -72,8 +108,8 @@ struct IPodView: View {
 
     @ViewBuilder private var controls: some View {
         switch g.model.spec.controls.kind {
-        case .clickWheel: ClickWheelView()
-        case .scrollWheel, .buttonRow: ScrollWheelView()
+        case .clickWheel: ClickWheelView(model: g.model)
+        case .scrollWheel, .buttonRow: ScrollWheelView(model: g.model)
         }
     }
 

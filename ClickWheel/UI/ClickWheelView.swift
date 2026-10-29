@@ -5,8 +5,9 @@ import SwiftUI
 /// `WheelInput`, which decides tap vs hold; a press that turns into a spin is cancelled.
 struct ClickWheelView: View {
     @EnvironmentObject private var input: WheelInput
+    @EnvironmentObject private var settings: AppSettings
 
-    @State private var tracker = WheelGestureTracker()
+    @State private var tracker: WheelGestureTracker
     @State private var dragging = false
     @State private var rotated = false
     @State private var pressedButton: WheelButton?
@@ -16,6 +17,13 @@ struct ClickWheelView: View {
     @GestureState private var ringTouched = false
     @GestureState private var centerTouched = false
     @Environment(\.ipodGeometry) private var g
+
+    init(model: IPodModel) { _tracker = State(initialValue: WheelGestureTracker(model: model)) }
+
+    /// The mini's coloured aluminium, or nil for the 5G's white.
+    private var finish: MiniFinish? {
+        g.model.spec.material == .aluminium ? MiniFinish(colour: settings.miniColor) : nil
+    }
 
     private var size: CGFloat { g.wheelDiameter }
     private var button: CGFloat { g.buttonDiameter }
@@ -49,7 +57,7 @@ struct ClickWheelView: View {
     /// (dark on top, light catch at the bottom) and a flash on the tapped quadrant.
     private var ring: some View {
         Circle()
-            .fill(Theme.wheelSurface)
+            .fill(finish.map { AnyShapeStyle($0.wheel(diameter: size)) } ?? AnyShapeStyle(Theme.wheelSurface))
             .overlay { quadrantFlash }
             .overlay(Circle().strokeBorder(Theme.wheelRecess, lineWidth: 1.5))
             .overlay(Circle().stroke(Color.black.opacity(0.12), lineWidth: 2).blur(radius: 2).clipShape(Circle()))
@@ -74,21 +82,17 @@ struct ClickWheelView: View {
             Text("▶❚❚").offset(y: offset)
         }
         .font(Theme.font(g.wheelLabelSize, semibold: true))
-        .foregroundStyle(Theme.engravedLabel)
-        // Engraved: a light edge just below each stroke.
-        .shadow(color: .white.opacity(0.95), radius: 0, y: 1)
+        .foregroundStyle(finish == nil ? Theme.engravedLabel : MiniFinish.label)
+        // Engraved: a light edge just below each stroke (the mini's are printed).
+        .shadow(color: .white.opacity(finish == nil ? 0.95 : 0.35), radius: 0, y: 1)
     }
 
     /// Glossy, convex, and it visibly presses in.
     private var centerButton: some View {
         Circle()
-            .fill(Theme.buttonGloss)
+            .fill(finish.map { AnyShapeStyle($0.button) } ?? AnyShapeStyle(Theme.buttonGloss))
             .overlay {
-                Ellipse()
-                    .fill(LinearGradient(colors: [.white.opacity(0.7), .white.opacity(0)], startPoint: .top, endPoint: .bottom))
-                    .frame(width: button * 0.8, height: button * 0.45)
-                    .offset(y: -button * 0.18)
-                    .blur(radius: 3)
+                if finish == nil { buttonSheen }
             }
             .overlay(Circle().fill(Color.black.opacity(centerPressed ? 0.08 : 0)))
             .overlay(Circle().strokeBorder(Theme.buttonRim, lineWidth: 1))
@@ -97,6 +101,15 @@ struct ClickWheelView: View {
             .shadow(color: .black.opacity(centerPressed ? 0.1 : 0.22), radius: centerPressed ? 0.5 : 2, y: centerPressed ? 0.5 : 1.5)
             .contentShape(Circle())
             .gesture(centerGesture)
+    }
+
+    /// The 5G's glossy highlight on the convex button.
+    private var buttonSheen: some View {
+                Ellipse()
+                    .fill(LinearGradient(colors: [.white.opacity(0.7), .white.opacity(0)], startPoint: .top, endPoint: .bottom))
+                    .frame(width: button * 0.8, height: button * 0.45)
+                    .offset(y: -button * 0.18)
+                    .blur(radius: 3)
     }
 
     // MARK: - Input

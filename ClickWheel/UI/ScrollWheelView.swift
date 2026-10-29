@@ -7,7 +7,9 @@ struct ScrollWheelView: View {
     @EnvironmentObject private var input: WheelInput
     @Environment(\.ipodGeometry) private var g
 
-    @State private var tracker = WheelGestureTracker(sectorsPerStep: IPodModel.firstGen.spec.controls.sectorsPerStep)
+    @State private var tracker: WheelGestureTracker
+
+    init(model: IPodModel) { _tracker = State(initialValue: WheelGestureTracker(model: model)) }
     @State private var touch: ScrollWheelRegion?
     @State private var pressedButton: WheelButton?
     @State private var selectPressed = false

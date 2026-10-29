@@ -96,4 +96,11 @@ final class WheelGestureTrackerTests: XCTestCase {
         t.begin(at: p(0))
         XCTAssertEqual(t.move(to: p(90)), 4)
     }
+
+    func testTrackerTakesItsStepFromTheModel() {
+        XCTAssertEqual(WheelGestureTracker(model: .mini).sectorsPerStep, 6)
+        XCTAssertEqual(WheelGestureTracker(model: .thirdGen).sectorsPerStep, 6)
+        XCTAssertEqual(WheelGestureTracker(model: .fifthGen).sectorsPerStep,
+                       IPodModel.fifthGen.spec.controls.sectorsPerStep)
+    }
 }
