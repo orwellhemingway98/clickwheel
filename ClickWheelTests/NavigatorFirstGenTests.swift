@@ -81,8 +81,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertTrue(menu(nav)?.items.first?.opensSubmenu == true)
         nav.handle(.center)
         XCTAssertEqual(menu(nav)?.title, "Model")
-        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "iPod photo", "iPod mini (2nd gen)", "5th generation"])
-        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2004", "2005", "2005"])
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "iPod photo", "iPod mini (2nd gen)", "iPod nano", "5th generation"])
+        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2004", "2005", "2005", "2005"])
         XCTAssertEqual(menu(nav)?.selectedIndex, 0)
     }
 
@@ -431,5 +431,19 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertEqual(menu(nav)?.title, "Settings")
         XCTAssertEqual(settings.colour(in: .miniSecondGen).id, "blue")
         XCTAssertEqual(settings.colour(in: .mini).id, "silver")
+    }
+
+    // MARK: - iPod nano
+
+    func testNanoMenus() {
+        let nav = navigator(.nano)
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Music", "Extras", "Settings", "Shuffle Songs"])
+        open(nav, "Extras")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Clock", "Stopwatch"])
+        nav.handle(.menu)
+        open(nav, "Settings")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Model", "Colour", "Source", "Backlight Timer", "Clicker"])
+        nav.handle(.menuHold)
+        XCTAssertEqual(menu(nav)?.title, "Settings", "hold MENU toggles the backlight, it doesn't go home")
     }
 }

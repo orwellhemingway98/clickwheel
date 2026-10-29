@@ -10,6 +10,7 @@ enum IPodModel: String, CaseIterable {
     case fourthGen
     case photo
     case miniSecondGen
+    case nano
     case fifthGen
 
     var shortName: String {
@@ -21,6 +22,7 @@ enum IPodModel: String, CaseIterable {
         case .fourthGen: return "4th gen"
         case .photo: return "photo"
         case .miniSecondGen: return "mini 2G"
+        case .nano: return "nano"
         case .fifthGen: return "5th gen"
         }
     }
@@ -35,6 +37,7 @@ enum IPodModel: String, CaseIterable {
         case .fourthGen: return "4th generation"
         case .photo: return "iPod photo"
         case .miniSecondGen: return "iPod mini (2nd gen)"
+        case .nano: return "iPod nano"
         case .fifthGen: return "5th generation"
         }
     }
@@ -48,6 +51,7 @@ enum IPodModel: String, CaseIterable {
         case .fourthGen: return .fourthGen
         case .photo: return .photo
         case .miniSecondGen: return .miniSecondGen
+        case .nano: return .nano
         case .fifthGen: return .fifthGen
         }
     }
@@ -117,6 +121,12 @@ struct ColourChoice: Equatable {
 
     /// The iPod photo: the 4G's two colours, remembered on their own.
     static let photo = ColourChoice(key: "photo", options: fourthGen.options)
+
+    /// The nano: white, or black with a dark grey wheel.
+    static let nano = ColourChoice(key: "nano", options: [
+        BodyColour(id: "white", label: "White", body: 0xF4F4F2, wheel: 0xEEEEEC, button: 0xF6F6F4, labels: 0x8E9399),
+        BodyColour(id: "black", label: "Black", body: 0x161618, wheel: 0x2B2B2E, button: 0x2B2B2E, labels: 0x9A9A9E),
+    ])
 
     /// The mini 2G: brighter pink, blue and green, silver unchanged, no gold; the
     /// wheel lettering matches the body (a shade deeper, to read on the wheel).
@@ -355,4 +365,22 @@ extension ModelSpec {
                                   quickScroll: mini.firmware.quickScroll, backlight: mini.firmware.backlight,
                                   visibleRows: mini.firmware.visibleRows, colours: .miniSecondGen),
         material: .aluminium)
+
+    /// iPod nano (1st generation), 2005. Apple's drawing
+    /// (docs/reference/ipod-nano-dimensions.md); firmware 1.x. The 176 × 132 panel
+    /// is the 5G's 4:3, so the colour interface uses the 5G's canvas.
+    static let nano = ModelSpec(
+        name: "iPod nano", year: 2005,
+        body: BodySpec(width: 40.00, height: 90.00, cornerRadius: 3.0, rimWidth: 0.6),
+        display: DisplaySpec(kind: .color,
+                             windowSize: CGSize(width: 29.57, height: 22.18),
+                             windowTop: 90 - 73.64 - 22.18 / 2,
+                             windowCornerRadius: 0.5,
+                             pixels: CGSize(width: 176, height: 132), pixelPitch: 0.16,
+                             designSize: CGSize(width: 240, height: 180)),
+        controls: ControlSpec(kind: .clickWheel, outerDiameter: 30.23, wheelDiameter: 30.23,
+                              buttonDiameter: 13.0, centerFromBottom: 31.79, sectorsPerStep: 6),
+        firmware: FirmwareProfile(menuStyle: .fifthGen, holdMenu: .toggleBacklight, quickScroll: false,
+                                  backlight: true, visibleRows: 9, colours: .nano),
+        material: .chromeAcrylic)
 }
