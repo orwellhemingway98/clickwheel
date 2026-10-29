@@ -35,4 +35,19 @@ final class ClassicLayoutTests: XCTestCase {
         XCTAssertEqual(ScreenTheme.classicSelectionColours, [0x5FAEF5, 0x2577D9])
         XCTAssertEqual(ScreenTheme.classicHeaderColours, [0xFBFBFB, 0xDADDE1])
     }
+
+    func testThePanPhaseFollowsTheClockBackAndForth() {
+        XCTAssertEqual(ClassicLayout.phase(elapsed: 0), 0, accuracy: 0.0001)
+        XCTAssertEqual(ClassicLayout.phase(elapsed: 7), 0.5, accuracy: 0.0001, "eased, so halfway in time is halfway")
+        XCTAssertEqual(ClassicLayout.phase(elapsed: 14), 1, accuracy: 0.0001)
+        XCTAssertEqual(ClassicLayout.phase(elapsed: 21), 0.5, accuracy: 0.0001)
+        XCTAssertEqual(ClassicLayout.phase(elapsed: 28), 0, accuracy: 0.0001)
+        XCTAssertLessThan(ClassicLayout.phase(elapsed: 1), 1.0 / 14, "it eases out of rest")
+    }
+
+    func testThePanOnlyRunsWithArtAndLight() {
+        XCTAssertFalse(ClassicLayout.panPaused(hasArt: true, lit: true))
+        XCTAssertTrue(ClassicLayout.panPaused(hasArt: false, lit: true))
+        XCTAssertTrue(ClassicLayout.panPaused(hasArt: true, lit: false))
+    }
 }

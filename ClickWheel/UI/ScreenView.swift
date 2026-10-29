@@ -23,6 +23,14 @@ struct ScreenView: View {
                     .transition(.iPodPush(navigator.slideDirection, width: g.designSize.width))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            // The classic's art stays put while its list slides.
+            .overlay(alignment: .trailing) {
+                if classicSplit {
+                    ClassicArtPanel()
+                        .frame(width: g.designSize.width - ClassicLayout.listWidth(canvasWidth: g.designSize.width))
+                        .transition(.opacity)
+                }
+            }
             .clipped()
             .overlay { QuickScrollOverlay(letter: navigator.quickScrollLetter) }
         }
@@ -83,11 +91,16 @@ struct ScreenView: View {
         }
     }
 
+    /// The classic's main and Music menus split the screen with album art.
+    private var classicSplit: Bool {
+        guard g.model.spec.firmware.menuStyle == .classic, case .menu(let screen) = navigator.current else { return false }
+        return ClassicLayout.isSplit(depth: navigator.stack.count, title: screen.title)
+    }
+
     @ViewBuilder private var content: some View {
         switch navigator.current {
         case .menu(let screen):
-            if g.model.spec.firmware.menuStyle == .classic,
-               ClassicLayout.isSplit(depth: navigator.stack.count, title: screen.title) {
+            if classicSplit {
                 ClassicMenuView(screen: screen)
             } else {
                 MenuListView(screen: screen)

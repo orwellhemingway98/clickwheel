@@ -486,4 +486,15 @@ final class NavigatorFirstGenTests: XCTestCase {
         nav.handle(.menuHold)
         XCTAssertEqual(menu(nav)?.title, "Settings", "hold MENU toggles the backlight, it doesn't go home")
     }
+
+    func testClassicSplitsTheRootAndMusicButNotSettings() {
+        let nav = navigator(.classic)
+        func split() -> Bool { ClassicLayout.isSplit(depth: nav.stack.count, title: menu(nav)?.title ?? "") }
+        XCTAssertTrue(split())
+        open(nav, "Music")
+        XCTAssertTrue(split())
+        nav.handle(.menu)
+        open(nav, "Settings")
+        XCTAssertFalse(split())
+    }
 }
