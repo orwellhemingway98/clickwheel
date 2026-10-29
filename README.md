@@ -55,6 +55,7 @@ Choose the iPod from the list in **Settings › Model** (the current one is tick
 | **iPod mini** | 2004 | Anodized aluminium in silver, gold, pink, blue or green (Settings › Colour). The first click wheel, with grey labels. A smaller 138 × 110 gray LCD that lights up blue-white, five rows, in a clean sans. Exact life size. |
 | **iPod (4th generation)** | 2004 | The click wheel comes to the full-size iPod: white, or the U2 Special Edition in black with a red wheel (Settings › Colour). The last Chicago screen, grey with a white backlight. |
 | **iPod photo** | 2004 | The 4G's front (white or U2) with the first colour screen, 220 × 176: the 5G-style interface with album art. Its screen dims when the backlight goes off. |
+| **iPod mini (2nd generation)** | 2005 | The mini in brighter pink, blue and green (silver unchanged, no gold), with wheel lettering that matches the body. |
 | **iPod (5th generation)** | 2005 | Click wheel and colour screen (see Features). |
 
 More models are coming, in release order: mini, 4G, photo, mini 2G, nano 1G,
