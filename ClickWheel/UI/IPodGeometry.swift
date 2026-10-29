@@ -66,6 +66,15 @@ struct IPodGeometry: Equatable {
     /// Distance from the body's top edge to the controls' center.
     var controlCenterY: CGFloat { pt(spec.body.height - spec.controls.centerFromBottom) }
     var wheelCenterY: CGFloat { controlCenterY }
+    /// Rounded-edge band at each side, and the flat face's insets (3G).
+    var edgeBand: CGFloat { pt(spec.body.edgeBand) }
+    var faceInsetTop: CGFloat { pt(spec.body.faceInsetTop) }
+    var faceInsetBottom: CGFloat { pt(spec.body.faceInsetBottom) }
+    var faceCornerRadius: CGFloat { pt(spec.body.faceCornerRadius) }
+    /// The 3G's row of touch buttons.
+    var rowButtonDiameter: CGFloat { pt(spec.controls.rowButtonDiameter) }
+    var rowCenterY: CGFloat { pt(spec.controls.rowCenterFromTop) }
+    var rowSpacing: CGFloat { pt(spec.controls.rowSpacing) }
     /// Wheel label size, proportional to the wheel (12 pt on a 180 pt wheel).
     var wheelLabelSize: CGFloat { wheelDiameter * 12 / 180 }
 }

@@ -371,6 +371,15 @@ final class Navigator: ObservableObject {
             ]) }))
             items.append(MenuItem("Settings", action: .push { [unowned self] in self.settingsMenu() }))
             items.append(MenuItem("Backlight", action: .run { [unowned self] in self.toggleBacklight() }))
+        case .thirdGenLate:
+            title = "iPod"
+            if let musicMenu { items.append(MenuItem("Music", action: .push(musicMenu))) }
+            items.append(MenuItem("Extras", action: .push { MenuScreen(title: "Extras", items: [
+                MenuItem("Clock", action: .open(.clock)),
+            ]) }))
+            items.append(MenuItem("Settings", action: .push { [unowned self] in self.settingsMenu() }))
+            if let shuffle { items.append(MenuItem("Shuffle Songs", action: .play(shuffle))) }
+            items.append(MenuItem("Backlight", action: .run { [unowned self] in self.toggleBacklight() }))
         }
         if track != nil {
             items.append(MenuItem("Now Playing", action: .showNowPlaying))

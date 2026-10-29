@@ -95,4 +95,17 @@ final class IPodGeometryTests: XCTestCase {
         let g = IPodGeometry.lifeSize(model: .fifthGen, screenWidthPoints: 1512, physicalWidthMM: 301)
         XCTAssertEqual(g.pointsPerMM, 1512 / 301, accuracy: 0.0001)
     }
+
+    func testThirdGenGeometryAtTen() {
+        let g = IPodGeometry(model: .thirdGen, pointsPerMM: 10)
+        XCTAssertEqual(g.bodySize.height, 1034.9, accuracy: 0.01)
+        XCTAssertEqual(g.windowSize.width, 402.9, accuracy: 0.01)
+        XCTAssertEqual(g.windowTop, 72.35, accuracy: 0.01)
+        XCTAssertEqual(g.rowCenterY, 499.1, accuracy: 0.01)
+        XCTAssertEqual(g.rowSpacing, 133, accuracy: 0.01)
+        XCTAssertEqual(g.rowButtonDiameter, 109, accuracy: 0.01)
+        XCTAssertEqual(g.wheelDiameter, 387, accuracy: 0.01)
+        XCTAssertEqual(g.controlCenterY, 770.8, accuracy: 0.01)
+        XCTAssertEqual(g.edgeBand, 59, accuracy: 0.01)
+    }
 }

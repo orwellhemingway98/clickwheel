@@ -68,7 +68,7 @@ struct IPodView: View {
     @ViewBuilder private var controls: some View {
         switch g.model.spec.controls.kind {
         case .clickWheel: ClickWheelView()
-        case .scrollWheel: ScrollWheelView()
+        case .scrollWheel, .buttonRow: ScrollWheelView()
         }
     }
 

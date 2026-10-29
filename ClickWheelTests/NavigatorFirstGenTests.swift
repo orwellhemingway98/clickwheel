@@ -81,8 +81,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertTrue(menu(nav)?.items.first?.opensSubmenu == true)
         nav.handle(.center)
         XCTAssertEqual(menu(nav)?.title, "Model")
-        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "5th generation"])
-        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2005"])
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "5th generation"])
+        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2005"])
         XCTAssertEqual(menu(nav)?.selectedIndex, 0)
     }
 
@@ -287,7 +287,24 @@ final class NavigatorFirstGenTests: XCTestCase {
         let nav = navigator(.secondGen)
         open(nav, "Settings")
         nav.handle(.center)
-        nav.choose(row: 2)
+        nav.choose(row: 3)
         XCTAssertEqual(settings.model, .fifthGen)
+    }
+
+    // MARK: - 3rd generation (firmware 2.3)
+
+    func testThirdGenRoot() {
+        let nav = navigator(.thirdGen)
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Music", "Extras", "Settings", "Shuffle Songs", "Backlight"])
+        nav.setTrack(track)
+        XCTAssertEqual(menu(nav)?.items.last?.label, "Now Playing")
+    }
+
+    func testThirdGenSettingsAndHoldMenu() {
+        let nav = navigator(.thirdGen)
+        open(nav, "Settings")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Model", "Source", "Backlight Timer", "Clicker"])
+        nav.handle(.menuHold)
+        XCTAssertEqual(menu(nav)?.title, "Settings", "hold MENU toggles the backlight, it doesn't go home")
     }
 }

@@ -44,7 +44,7 @@ final class IPodModelTests: XCTestCase {
 
     func testModelsAreInReleaseOrder() {
         XCTAssertEqual(IPodModel.allCases.map(\.spec.year), IPodModel.allCases.map(\.spec.year).sorted())
-        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "5th gen"])
+        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "5th gen"])
     }
 
     func testSecondGenIsTheFirstGenWithATouchWheel() {
@@ -58,5 +58,33 @@ final class IPodModelTests: XCTestCase {
         XCTAssertEqual(second.controls.sectorsPerStep, 6)
         XCTAssertTrue(first.controls.wheelTurns, "the 1G wheel physically turns")
         XCTAssertFalse(second.controls.wheelTurns, "the 2G touch wheel stays still")
+    }
+
+    func testThirdGenSpecFollowsApplesDrawing() {
+        let s = IPodModel.thirdGen.spec
+        XCTAssertEqual(s.name, "iPod (3rd generation)")
+        XCTAssertEqual(s.year, 2003)
+        XCTAssertEqual(s.body.width, 61.80); XCTAssertEqual(s.body.height, 103.49)
+        XCTAssertEqual(s.body.edgeBand, 5.9)
+        XCTAssertEqual(s.display.windowSize, CGSize(width: 40.29, height: 32.61))
+        XCTAssertEqual(s.display.windowTop, 23.54 - 32.61 / 2, accuracy: 0.0001)
+        XCTAssertEqual(s.display.pixels, CGSize(width: 160, height: 128))
+        XCTAssertEqual(s.controls.kind, .buttonRow)
+        XCTAssertEqual(s.controls.wheelDiameter, 38.70)
+        XCTAssertEqual(s.controls.outerDiameter, 38.70)
+        XCTAssertEqual(s.controls.buttonDiameter, 14.50)
+        XCTAssertEqual(s.controls.centerFromBottom, 103.49 - 77.08, accuracy: 0.0001)
+        XCTAssertEqual(s.controls.rowButtonDiameter, 10.90)
+        XCTAssertEqual(s.controls.rowCenterFromTop, 49.91)
+        XCTAssertEqual(s.controls.rowSpacing, 13.3)
+        XCTAssertEqual(s.controls.sectorsPerStep, 6)
+        XCTAssertFalse(s.controls.wheelTurns)
+        XCTAssertEqual(s.firmware.menuStyle, .thirdGenLate)
+        XCTAssertEqual(s.firmware.holdMenu, .toggleBacklight)
+        XCTAssertTrue(s.firmware.backlight)
+        XCTAssertFalse(s.firmware.quickScroll)
+        guard case .gray(let palette) = s.display.kind else { return XCTFail("3G has a gray LCD") }
+        XCTAssertEqual(palette.unlitTop, 0x5A915A)
+        XCTAssertEqual(palette.litTop, 0xADD8E6)
     }
 }

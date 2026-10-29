@@ -5,12 +5,14 @@ import CoreGraphics
 enum IPodModel: String, CaseIterable {
     case firstGen
     case secondGen
+    case thirdGen
     case fifthGen
 
     var shortName: String {
         switch self {
         case .firstGen: return "1st gen"
         case .secondGen: return "2nd gen"
+        case .thirdGen: return "3rd gen"
         case .fifthGen: return "5th gen"
         }
     }
@@ -20,6 +22,7 @@ enum IPodModel: String, CaseIterable {
         switch self {
         case .firstGen: return "1st generation"
         case .secondGen: return "2nd generation"
+        case .thirdGen: return "3rd generation"
         case .fifthGen: return "5th generation"
         }
     }
@@ -28,6 +31,7 @@ enum IPodModel: String, CaseIterable {
         switch self {
         case .firstGen: return .firstGen
         case .secondGen: return .secondGen
+        case .thirdGen: return .thirdGen
         case .fifthGen: return .fifthGen
         }
     }
@@ -48,6 +52,12 @@ struct BodySpec: Equatable {
     let height: CGFloat
     let cornerRadius: CGFloat
     let rimWidth: CGFloat
+    /// Width of the rounded edge at each side (3G); 0 for flat-faced models.
+    var edgeBand: CGFloat = 0
+    /// Insets of the flat face from the top and bottom, and its corner (3G).
+    var faceInsetTop: CGFloat = 0
+    var faceInsetBottom: CGFloat = 0
+    var faceCornerRadius: CGFloat = 0
 }
 
 /// The four greys of a monochrome LCD, unlit and backlit (hex RGB).
@@ -79,8 +89,10 @@ struct DisplaySpec: Equatable {
 enum ControlKind: Equatable {
     /// One touch-sensitive wheel with four press points and a center button (4G–5G).
     case clickWheel
-    /// A rotating wheel inside a ring of four separate buttons (1G).
+    /// A rotating wheel inside a ring of four separate buttons (1G); touch on the 2G.
     case scrollWheel
+    /// A row of four touch buttons above a touch wheel (3G).
+    case buttonRow
 }
 
 /// Controls, in millimetres. For a click wheel the outer and wheel diameters match.
@@ -94,12 +106,18 @@ struct ControlSpec: Equatable {
     let sectorsPerStep: Int
     /// The wheel physically rotates (1G); touch wheels stay still (2G on).
     var wheelTurns: Bool = false
+    /// The 3G's row of touch buttons: diameter, row centre from the top, centre spacing.
+    var rowButtonDiameter: CGFloat = 0
+    var rowCenterFromTop: CGFloat = 0
+    var rowSpacing: CGFloat = 0
 }
 
 enum MenuStyle: Equatable {
     case fifthGen
     /// Firmware 1.3.1: Playlists, Browse, Extras, Settings, Backlight.
     case firstGenLate
+    /// Firmware 2.3 (3G): Music, Extras, Settings, Shuffle Songs, Backlight.
+    case thirdGenLate
 }
 
 enum HoldMenuAction: Equatable {
@@ -158,4 +176,23 @@ extension ModelSpec {
         controls: ControlSpec(kind: .scrollWheel, outerDiameter: 52.1, wheelDiameter: 41.1,
                               buttonDiameter: 20.7, centerFromBottom: 32.3, sectorsPerStep: 6, wheelTurns: false),
         firmware: firstGen.firmware)
+
+    /// iPod (3rd generation), 2003. Apple's Accessory Design Guidelines drawing
+    /// (docs/reference/ipod-3g-dimensions.md); firmware 2.3.
+    static let thirdGen = ModelSpec(
+        name: "iPod (3rd generation)", year: 2003,
+        body: BodySpec(width: 61.80, height: 103.49, cornerRadius: 6.0, rimWidth: 0.4,
+                       edgeBand: 5.9, faceInsetTop: 5.2, faceInsetBottom: 7.2, faceCornerRadius: 3.4),
+        display: DisplaySpec(kind: .gray(LCDPalette(unlitTop: 0x5A915A, unlitBottom: 0x66A066, unlitInk: 0x0E1A0E,
+                                                    litTop: 0xADD8E6, litBottom: 0xC4E4EE, litInk: 0x102028)),
+                             windowSize: CGSize(width: 40.29, height: 32.61),
+                             windowTop: 23.54 - 32.61 / 2,
+                             windowCornerRadius: 1.0,
+                             pixels: CGSize(width: 160, height: 128), pixelPitch: 0.248,
+                             designSize: CGSize(width: 160, height: 128)),
+        controls: ControlSpec(kind: .buttonRow, outerDiameter: 38.70, wheelDiameter: 38.70,
+                              buttonDiameter: 14.50, centerFromBottom: 103.49 - 77.08, sectorsPerStep: 6,
+                              wheelTurns: false, rowButtonDiameter: 10.90, rowCenterFromTop: 49.91, rowSpacing: 13.3),
+        firmware: FirmwareProfile(menuStyle: .thirdGenLate, holdMenu: .toggleBacklight, quickScroll: false,
+                                  backlight: true, visibleRows: 6))
 }
