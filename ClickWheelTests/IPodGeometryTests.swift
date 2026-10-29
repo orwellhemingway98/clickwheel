@@ -108,4 +108,20 @@ final class IPodGeometryTests: XCTestCase {
         XCTAssertEqual(g.controlCenterY, 770.8, accuracy: 0.01)
         XCTAssertEqual(g.edgeBand, 59, accuracy: 0.01)
     }
+
+    func testMiniGeometryAtTen() {
+        let g = IPodGeometry(model: .mini, pointsPerMM: 10)
+        XCTAssertEqual(g.bodySize.width, 514.5, accuracy: 0.01)
+        XCTAssertEqual(g.bodySize.height, 916.6, accuracy: 0.01)
+        XCTAssertEqual(g.windowTop, 62.75, accuracy: 0.01)
+        XCTAssertEqual(g.controlCenterY, 629.1, accuracy: 0.01)
+        XCTAssertEqual(g.lcdSize.width, 303.6, accuracy: 0.01)
+        XCTAssertEqual(g.lcdSize.height, 242.0, accuracy: 0.01)
+        XCTAssertEqual(g.designSize, CGSize(width: 138, height: 110))
+    }
+
+    func testMiniIsExactLifeSize() {
+        let g = IPodGeometry.lifeSize(model: .mini, screenWidthPoints: 1512, physicalWidthMM: 301)
+        XCTAssertEqual(g.pointsPerMM, 1512 / 301, accuracy: 0.0001, "no pixel snapping for the mini")
+    }
 }

@@ -81,8 +81,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertTrue(menu(nav)?.items.first?.opensSubmenu == true)
         nav.handle(.center)
         XCTAssertEqual(menu(nav)?.title, "Model")
-        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "5th generation"])
-        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2005"])
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "5th generation"])
+        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2005"])
         XCTAssertEqual(menu(nav)?.selectedIndex, 0)
     }
 
@@ -287,7 +287,7 @@ final class NavigatorFirstGenTests: XCTestCase {
         let nav = navigator(.secondGen)
         open(nav, "Settings")
         nav.handle(.center)
-        nav.choose(row: 3)
+        nav.choose(row: 4)
         XCTAssertEqual(settings.model, .fifthGen)
     }
 
@@ -306,5 +306,43 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertEqual(menu(nav)?.items.map(\.label), ["Model", "Source", "Backlight Timer", "Clicker"])
         nav.handle(.menuHold)
         XCTAssertEqual(menu(nav)?.title, "Settings", "hold MENU toggles the backlight, it doesn't go home")
+    }
+
+    // MARK: - iPod mini
+
+    func testMiniSettingsHaveColour() {
+        let nav = navigator(.mini)
+        open(nav, "Settings")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Model", "Colour", "Source", "Backlight Timer", "Clicker"])
+        XCTAssertEqual(menu(nav)?.items[1].detail(), "Silver")
+    }
+
+    func testChoosingAColourPersistsAndGoesBack() {
+        let nav = navigator(.mini)
+        open(nav, "Settings")
+        open(nav, "Colour")
+        XCTAssertEqual(menu(nav)?.title, "Colour")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Silver", "Gold", "Pink", "Blue", "Green"])
+        XCTAssertEqual(menu(nav)?.items.first?.detail(), "✓")
+        XCTAssertEqual(menu(nav)?.selectedIndex, 0)
+        nav.choose(row: 2)
+        XCTAssertEqual(settings.miniColor, .pink)
+        XCTAssertEqual(menu(nav)?.title, "Settings")
+        XCTAssertEqual(AppSettings(defaults: UserDefaults(suiteName: suiteName)!).miniColor, .pink)
+    }
+
+    func testOtherModelsHaveNoColourRow() {
+        let nav = navigator(.thirdGen)
+        open(nav, "Settings")
+        XCTAssertFalse(menu(nav)!.items.map(\.label).contains("Colour"))
+    }
+
+    func testMiniShowsFiveRows() {
+        let rows = (0..<20).map { MenuItem("Row \($0)", action: .run {}) }
+        let nav = Navigator(player: spy, settings: settings, musicMenu: { MenuScreen(title: "Music", items: rows) },
+                            profile: IPodModel.mini.spec.firmware, now: { [unowned self] in self.clock })
+        open(nav, "Music")
+        nav.handle(.scroll(steps: 6))
+        XCTAssertEqual(menu(nav)?.windowStart, 2)
     }
 }

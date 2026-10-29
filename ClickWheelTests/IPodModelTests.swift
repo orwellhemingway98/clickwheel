@@ -44,7 +44,7 @@ final class IPodModelTests: XCTestCase {
 
     func testModelsAreInReleaseOrder() {
         XCTAssertEqual(IPodModel.allCases.map(\.spec.year), IPodModel.allCases.map(\.spec.year).sorted())
-        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "5th gen"])
+        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "5th gen"])
     }
 
     func testSecondGenIsTheFirstGenWithATouchWheel() {
@@ -86,5 +86,47 @@ final class IPodModelTests: XCTestCase {
         guard case .gray(let palette) = s.display.kind else { return XCTFail("3G has a gray LCD") }
         XCTAssertEqual(palette.unlitTop, 0x5A915A)
         XCTAssertEqual(palette.litTop, 0xADD8E6)
+    }
+
+    func testMiniSpecFollowsApplesDrawing() {
+        let s = IPodModel.mini.spec
+        XCTAssertEqual(s.name, "iPod mini")
+        XCTAssertEqual(s.year, 2004)
+        XCTAssertEqual(s.material, .aluminium)
+        XCTAssertTrue(s.hasColours)
+        XCTAssertEqual(s.body.width, 51.45); XCTAssertEqual(s.body.height, 91.66)
+        XCTAssertEqual(s.body.rimWidth, 0)
+        XCTAssertEqual(s.body.edgeBand, 8.3)
+        XCTAssertEqual(s.display.windowSize, CGSize(width: 33.85, height: 26.19))
+        XCTAssertEqual(s.display.windowTop, 91.66 - 72.29 - 26.19 / 2, accuracy: 0.0001)
+        XCTAssertEqual(s.display.pixels, CGSize(width: 138, height: 110))
+        XCTAssertEqual(s.display.pixelPitch, 0.22)
+        XCTAssertFalse(s.display.pixelCrisp)
+        XCTAssertEqual(s.display.font, .sans)
+        XCTAssertEqual(s.display.nowPlayingLines, 2)
+        XCTAssertEqual(s.controls.kind, .clickWheel)
+        XCTAssertEqual(s.controls.wheelDiameter, 37.95)
+        XCTAssertEqual(s.controls.buttonDiameter, 12.50)
+        XCTAssertEqual(s.controls.centerFromBottom, 28.75)
+        XCTAssertEqual(s.controls.sectorsPerStep, 6)
+        XCTAssertEqual(s.firmware.menuStyle, .thirdGenLate)
+        XCTAssertEqual(s.firmware.visibleRows, 5)
+        XCTAssertEqual(s.firmware.holdMenu, .toggleBacklight)
+    }
+
+    func testOtherModelsKeepTheirLook() {
+        XCTAssertEqual(IPodModel.fifthGen.spec.material, .chromeAcrylic)
+        XCTAssertEqual(IPodModel.firstGen.spec.material, .whitePlastic)
+        XCTAssertEqual(IPodModel.thirdGen.spec.material, .whitePlastic)
+        XCTAssertTrue(IPodModel.firstGen.spec.display.pixelCrisp)
+        XCTAssertEqual(IPodModel.firstGen.spec.display.font, .chicago)
+        XCTAssertEqual(IPodModel.firstGen.spec.display.nowPlayingLines, 3)
+        XCTAssertFalse(IPodModel.thirdGen.spec.hasColours)
+    }
+
+    func testMiniColours() {
+        XCTAssertEqual(MiniColor.allCases.map(\.label), ["Silver", "Gold", "Pink", "Blue", "Green"])
+        XCTAssertEqual(MiniColor.silver.body, 0xC8CACD)
+        XCTAssertEqual(MiniColor.pink.wheel, 0xF2DBE2)
     }
 }

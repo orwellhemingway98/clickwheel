@@ -17,6 +17,9 @@ final class AppSettings: ObservableObject {
     @Published var model: IPodModel {
         didSet { defaults.set(model.rawValue, forKey: Keys.model) }
     }
+    @Published var miniColor: MiniColor {
+        didSet { defaults.set(miniColor.rawValue, forKey: Keys.miniColor) }
+    }
     @Published var backlightTimer: BacklightTimer {
         didSet { defaults.set(backlightTimer.rawValue, forKey: Keys.backlightTimer) }
     }
@@ -31,6 +34,7 @@ final class AppSettings: ObservableObject {
         keepOnTop = defaults.object(forKey: Keys.keepOnTop) as? Bool ?? true
         model = defaults.string(forKey: Keys.model).flatMap(IPodModel.init) ?? .fifthGen
         backlightTimer = defaults.string(forKey: Keys.backlightTimer).flatMap(BacklightTimer.init) ?? .ten
+        miniColor = defaults.string(forKey: Keys.miniColor).flatMap(MiniColor.init) ?? .silver
     }
 
     private enum Keys {
@@ -39,5 +43,6 @@ final class AppSettings: ObservableObject {
         static let keepOnTop = "keepOnTop"
         static let model = "model"
         static let backlightTimer = "backlightTimer"
+        static let miniColor = "miniColor"
     }
 }

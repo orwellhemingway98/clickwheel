@@ -31,7 +31,7 @@ struct IPodGeometry: Equatable {
             // Real Mac displays land roughly between 2.5 (large low-res) and 9 pt/mm.
             if (2...10).contains(measured) { density = measured }
         }
-        if case .gray = model.spec.display.kind {
+        if case .gray = model.spec.display.kind, model.spec.display.pixelCrisp {
             let pitch = model.spec.display.pixelPitch
             let pixel = max(0.75, (pitch * density * 4).rounded() / 4)
             density = pixel / pitch

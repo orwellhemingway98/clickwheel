@@ -6,6 +6,7 @@ enum IPodModel: String, CaseIterable {
     case firstGen
     case secondGen
     case thirdGen
+    case mini
     case fifthGen
 
     var shortName: String {
@@ -13,6 +14,7 @@ enum IPodModel: String, CaseIterable {
         case .firstGen: return "1st gen"
         case .secondGen: return "2nd gen"
         case .thirdGen: return "3rd gen"
+        case .mini: return "mini"
         case .fifthGen: return "5th gen"
         }
     }
@@ -23,6 +25,7 @@ enum IPodModel: String, CaseIterable {
         case .firstGen: return "1st generation"
         case .secondGen: return "2nd generation"
         case .thirdGen: return "3rd generation"
+        case .mini: return "iPod mini"
         case .fifthGen: return "5th generation"
         }
     }
@@ -32,9 +35,20 @@ enum IPodModel: String, CaseIterable {
         case .firstGen: return .firstGen
         case .secondGen: return .secondGen
         case .thirdGen: return .thirdGen
+        case .mini: return .mini
         case .fifthGen: return .fifthGen
         }
     }
+}
+
+/// What the front is made of, which decides how it's drawn.
+enum Material: Equatable {
+    /// Clear acrylic over white, chrome rim (5G).
+    case chromeAcrylic
+    /// "iBook white" plastic (1G–3G).
+    case whitePlastic
+    /// Anodized aluminium in a chosen colour (mini).
+    case aluminium
 }
 
 struct ModelSpec: Equatable {
@@ -44,6 +58,37 @@ struct ModelSpec: Equatable {
     let display: DisplaySpec
     let controls: ControlSpec
     let firmware: FirmwareProfile
+    var material: Material = .whitePlastic
+    /// Offered in several colours (Settings › Colour).
+    var hasColours = false
+}
+
+/// The iPod mini's five anodized colours (estimated; no published values).
+enum MiniColor: String, CaseIterable {
+    case silver, gold, pink, blue, green
+
+    var label: String { rawValue.prefix(1).uppercased() + rawValue.dropFirst() }
+
+    var body: UInt32 {
+        switch self {
+        case .silver: return 0xC8CACD
+        case .gold: return 0xD8C79F
+        case .pink: return 0xE4B7C6
+        case .blue: return 0x9DB6D3
+        case .green: return 0xB3C99A
+        }
+    }
+
+    /// The click wheel: a lighter tint of the body.
+    var wheel: UInt32 {
+        switch self {
+        case .silver: return 0xE4E5E7
+        case .gold: return 0xECE3CC
+        case .pink: return 0xF2DBE2
+        case .blue: return 0xCFDCEA
+        case .green: return 0xDBE5CF
+        }
+    }
 }
 
 /// Front face, in millimetres.
@@ -66,6 +111,13 @@ struct LCDPalette: Equatable {
     let litTop: UInt32, litBottom: UInt32, litInk: UInt32
 }
 
+enum ScreenFont: Equatable {
+    /// Chicago (ChicagoFLF): 1G–3G.
+    case chicago
+    /// A clean sans (Source Sans 3), standing in for the mini's Espy Sans.
+    case sans
+}
+
 enum DisplayKind: Equatable {
     case color
     case gray(LCDPalette)
@@ -82,6 +134,11 @@ struct DisplaySpec: Equatable {
     let pixelPitch: CGFloat
     /// Size the screen's views are laid out at (design points or LCD pixels).
     let designSize: CGSize
+    /// Snap the scale so LCD pixels land on whole quarter points (1G–3G).
+    var pixelCrisp = true
+    var font: ScreenFont = .chicago
+    /// Lines of track info on the gray Now Playing screen.
+    var nowPlayingLines = 3
 
     var lcdSize: CGSize { CGSize(width: pixels.width * pixelPitch, height: pixels.height * pixelPitch) }
 }
@@ -132,6 +189,8 @@ struct FirmwareProfile: Equatable {
     /// The screen is unlit until input lights it.
     let backlight: Bool
     let visibleRows: Int
+    /// Settings has a Colour row (models sold in several colours).
+    var colours = false
 }
 
 extension ModelSpec {
@@ -148,7 +207,8 @@ extension ModelSpec {
         controls: ControlSpec(kind: .clickWheel, outerDiameter: 38.10, wheelDiameter: 38.10,
                               buttonDiameter: 13.7, centerFromBottom: 30.44, sectorsPerStep: 4),
         firmware: FirmwareProfile(menuStyle: .fifthGen, holdMenu: .home, quickScroll: true,
-                                  backlight: false, visibleRows: 9))
+                                  backlight: false, visibleRows: 9),
+        material: .chromeAcrylic)
 
     /// iPod (1st generation), 2001. Apple's body size; front layout measured from
     /// Apple's own recreation (docs/reference/ipod-1g-front-values.md).
@@ -195,4 +255,23 @@ extension ModelSpec {
                               wheelTurns: false, rowButtonDiameter: 10.90, rowCenterFromTop: 49.91, rowSpacing: 13.3),
         firmware: FirmwareProfile(menuStyle: .thirdGenLate, holdMenu: .toggleBacklight, quickScroll: false,
                                   backlight: true, visibleRows: 6))
+
+    /// iPod mini (1st generation), 2004. Apple's drawing
+    /// (docs/reference/ipod-mini-dimensions.md); firmware 1.4.
+    static let mini = ModelSpec(
+        name: "iPod mini", year: 2004,
+        body: BodySpec(width: 51.45, height: 91.66, cornerRadius: 0.6, rimWidth: 0, edgeBand: 8.3),
+        display: DisplaySpec(kind: .gray(LCDPalette(unlitTop: 0x9AA592, unlitBottom: 0xAAB4A2, unlitInk: 0x1C2219,
+                                                    litTop: 0xD3DEF0, litBottom: 0xE6EDF8, litInk: 0x1A2030)),
+                             windowSize: CGSize(width: 33.85, height: 26.19),
+                             windowTop: 91.66 - 72.29 - 26.19 / 2,
+                             windowCornerRadius: 0.5,
+                             pixels: CGSize(width: 138, height: 110), pixelPitch: 0.22,
+                             designSize: CGSize(width: 138, height: 110),
+                             pixelCrisp: false, font: .sans, nowPlayingLines: 2),
+        controls: ControlSpec(kind: .clickWheel, outerDiameter: 37.95, wheelDiameter: 37.95,
+                              buttonDiameter: 12.50, centerFromBottom: 28.75, sectorsPerStep: 6),
+        firmware: FirmwareProfile(menuStyle: .thirdGenLate, holdMenu: .toggleBacklight, quickScroll: false,
+                                  backlight: true, visibleRows: 5, colours: true),
+        material: .aluminium, hasColours: true)
 }

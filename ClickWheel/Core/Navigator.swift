@@ -392,6 +392,12 @@ final class Navigator: ObservableObject {
         var items = [
             MenuItem("Model", detail: { settings.model.shortName },
                      action: .push { [unowned self] in self.modelMenu() }),
+        ]
+        if profile.colours {
+            items.append(MenuItem("Colour", detail: { settings.miniColor.label },
+                                  action: .push { [unowned self] in self.colourMenu() }))
+        }
+        items += [
             MenuItem("Source", detail: { Self.label(for: settings.sourceMode) }, action: .run {
                 let all = SourceMode.allCases
                 let index = all.firstIndex(of: settings.sourceMode) ?? 0
@@ -422,6 +428,19 @@ final class Navigator: ObservableObject {
                      detail: { (settings.model == model ? "✓ " : "") + String(model.spec.year) },
                      action: .run { [unowned self] in
                          if settings.model == model { self.back() } else { settings.model = model }
+                     })
+        })
+    }
+
+    /// Settings › Colour (models that come in colours): opens at the top, the
+    /// current colour ticked; choosing one sets it and goes back.
+    private func colourMenu() -> MenuScreen {
+        let settings = self.settings
+        return MenuScreen(title: "Colour", items: MiniColor.allCases.map { colour in
+            MenuItem(colour.label, detail: { settings.miniColor == colour ? "✓" : nil },
+                     action: .run { [unowned self] in
+                         settings.miniColor = colour
+                         self.back()
                      })
         })
     }
