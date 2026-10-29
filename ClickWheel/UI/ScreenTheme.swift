@@ -5,6 +5,12 @@ import SwiftUI
 /// 320 × 240 panel). Values from docs/reference/ipod-5g-screen-values.md; every
 /// colour, size and duration the screen uses lives here.
 enum ScreenTheme {
+    /// How dark a colour screen goes while its backlight is off (iPod photo);
+    /// models without a backlight (5G) never dim.
+    static func dimming(lit: Bool, backlight: Bool) -> Double {
+        backlight && !lit ? 0.6 : 0
+    }
+
     // Global
     static let background = Color.white
     static let text = Color.black
@@ -46,11 +52,15 @@ enum ScreenTheme {
     static let artSideShade: CGFloat = 3
     static let artShadow: CGFloat = 6
     static let infoOrigin = CGPoint(x: 90, y: 52)
-    static let infoWidth: CGFloat = 142
+    /// The track info runs to 8 points from the right edge (142 on the 5G).
+    static func infoWidth(canvasWidth: CGFloat) -> CGFloat { canvasWidth - infoOrigin.x - 8 }
     static let infoLineSpacing: CGFloat = 22
     static let titleTextSize: CGFloat = 13.5
     static let subtitleTextSize: CGFloat = 12
-    static let barFrame = CGRect(x: 15, y: 137, width: 210, height: 11)
+    /// The progress bar, 15 points in from each side (210 wide on the 5G).
+    static func barFrame(canvasWidth: CGFloat) -> CGRect {
+        CGRect(x: 15, y: 137, width: canvasWidth - 30, height: 11)
+    }
     static let timeSize: CGFloat = 10.5
     static let timeGap: CGFloat = 4
     static let volumeInset: CGFloat = 22

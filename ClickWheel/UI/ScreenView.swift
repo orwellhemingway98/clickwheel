@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The 5G colour LCD: the gradient header, then the current screen, sliding
+/// The colour LCD (5G, photo): the gradient header, then the current screen, sliding
 /// in from the right when entering and back when leaving.
 struct ScreenView: View {
     @EnvironmentObject private var navigator: Navigator
@@ -20,7 +20,7 @@ struct ScreenView: View {
             ZStack {
                 content
                     .id(navigator.stack.count)
-                    .transition(.iPodPush(navigator.slideDirection, width: IPodGeometry.lcdDesignSize.width))
+                    .transition(.iPodPush(navigator.slideDirection, width: g.designSize.width))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .clipped()
@@ -29,7 +29,15 @@ struct ScreenView: View {
         .animation(ScreenTheme.transition, value: navigator.stack.count)
         .foregroundStyle(ScreenTheme.text)
         .background(ScreenTheme.background)
-        .frame(width: IPodGeometry.lcdDesignSize.width, height: IPodGeometry.lcdDesignSize.height)
+        .overlay {
+            Color.black
+                .opacity(ScreenTheme.dimming(lit: navigator.backlight.isOn,
+                                             backlight: g.model.spec.firmware.backlight))
+                .allowsHitTesting(false)
+        }
+        .animation(GrayScreenTheme.backlightFade, value: navigator.backlight.isOn)
+        // The 5G's 240 × 180 canvas; the photo's is narrower at the same height.
+        .frame(width: g.designSize.width, height: g.designSize.height)
         .clipShape(RoundedRectangle(cornerRadius: Theme.screenCornerRadius))
     }
 

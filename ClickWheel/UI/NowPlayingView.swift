@@ -7,6 +7,7 @@ struct NowPlayingView: View {
     @EnvironmentObject private var hub: PlayerHub
     @EnvironmentObject private var navigator: Navigator
     @EnvironmentObject private var artwork: ArtworkCache
+    @Environment(\.ipodGeometry) private var g
     @State private var image: NSImage?
 
     var body: some View {
@@ -30,7 +31,7 @@ struct NowPlayingView: View {
     private func y(_ lcdY: CGFloat) -> CGFloat { lcdY - ScreenTheme.headerHeight }
 
     private func playing(_ track: NowPlayingInfo) -> some View {
-        let bar = ScreenTheme.barFrame
+        let bar = ScreenTheme.barFrame(canvasWidth: g.designSize.width)
         return ZStack(alignment: .topLeading) {
             if let index = track.index, let count = track.count {
                 Text("\(index) of \(count)")
@@ -46,7 +47,7 @@ struct NowPlayingView: View {
             }
             .lineLimit(1)
             .truncationMode(.tail)
-            .frame(width: ScreenTheme.infoWidth, alignment: .leading)
+            .frame(width: ScreenTheme.infoWidth(canvasWidth: g.designSize.width), alignment: .leading)
             .offset(x: ScreenTheme.infoOrigin.x, y: y(ScreenTheme.infoOrigin.y) - ScreenTheme.titleTextSize / 2)
             barArea(track)
                 .frame(width: bar.width)
@@ -56,7 +57,7 @@ struct NowPlayingView: View {
     }
 
     @ViewBuilder private func barArea(_ track: NowPlayingInfo) -> some View {
-        let bar = ScreenTheme.barFrame
+        let bar = ScreenTheme.barFrame(canvasWidth: g.designSize.width)
         switch navigator.nowPlayingMode {
         case .volume:
             HStack(spacing: 0) {
@@ -75,7 +76,7 @@ struct NowPlayingView: View {
     private func timedBar(position: Double, duration: Double, style: GlossBar.Style) -> some View {
         VStack(spacing: ScreenTheme.timeGap) {
             GlossBar(fraction: TimeFormat.progress(position: position, duration: duration), style: style)
-                .frame(height: ScreenTheme.barFrame.height)
+                .frame(height: ScreenTheme.barFrame(canvasWidth: g.designSize.width).height)
             HStack {
                 Text(TimeFormat.elapsed(position))
                 Spacer()
