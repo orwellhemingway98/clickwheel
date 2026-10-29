@@ -129,9 +129,10 @@ struct NowPlayingLayout: Equatable {
             centred = false
             bar = ScreenTheme.barFrame(canvasWidth: canvas.width)
         } else {
-            let side: CGFloat = 96
-            art = CGRect(x: (canvas.width - side) / 2, y: 30, width: side, height: side)
-            infoOrigin = CGPoint(x: 8, y: 146)
+            // Three 22-point lines must fit between the art's shadow and the bar.
+            let side: CGFloat = 92
+            art = CGRect(x: (canvas.width - side) / 2, y: 26, width: side, height: side)
+            infoOrigin = CGPoint(x: 8, y: 134)
             infoWidth = canvas.width - 16
             centred = true
             bar = CGRect(x: 15, y: 196, width: canvas.width - 30, height: 11)
