@@ -311,4 +311,12 @@ final class IPodModelTests: XCTestCase {
             XCTAssertEqual([colour.wheel, colour.button, colour.labels], [0xF2F2F0, 0xF2F2F0, 0x8E9399], colour.label)
         }
     }
+
+    func testWheelEdgesFollowTheWheelNotTheFront() {
+        XCTAssertFalse(ColourChoice.nanoSecondGen.option("red")!.hasDarkWheel, "RED's wheel is white")
+        XCTAssertTrue(ColourChoice.nanoSecondGen.option("black")!.hasDarkWheel)
+        XCTAssertTrue(ColourChoice.nano.option("black")!.hasDarkWheel)
+        XCTAssertTrue(ColourChoice.fourthGen.option("u2")!.hasDarkWheel, "the U2's red wheel keeps its look")
+        XCTAssertFalse(ColourChoice.mini.options.contains { $0.hasDarkWheel })
+    }
 }

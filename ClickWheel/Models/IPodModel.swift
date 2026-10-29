@@ -93,10 +93,16 @@ struct BodyColour: Equatable, Identifiable {
     let button: UInt32
     let labels: UInt32
 
-    /// A dark front (the U2 edition) wants subtler edge highlights.
-    var isDark: Bool {
-        let r = Double((body >> 16) & 0xFF), g = Double((body >> 8) & 0xFF), b = Double(body & 0xFF)
-        return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.35
+    /// A dark front (U2, black nanos).
+    var isDark: Bool { Self.luminance(body) < 0.35 }
+
+    /// A dark wheel (the U2's red, the black nanos') wants subtler edges than
+    /// a light one: the recess and the button rim follow the wheel, not the front.
+    var hasDarkWheel: Bool { Self.luminance(wheel) < 0.35 }
+
+    private static func luminance(_ hex: UInt32) -> Double {
+        let r = Double((hex >> 16) & 0xFF), g = Double((hex >> 8) & 0xFF), b = Double(hex & 0xFF)
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255
     }
 }
 
