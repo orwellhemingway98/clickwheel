@@ -26,6 +26,12 @@ enum Theme {
     static let wheelRecess = LinearGradient(colors: [Color.black.opacity(0.22), Color.white.opacity(0.95)],
                                             startPoint: .top, endPoint: .bottom)
     static let engravedLabel = Color(hex: 0xADADB1)
+    /// On a dark front (U2): the recess catches only a faint light, and the
+    /// button's rim is a shade of its own colour.
+    static let darkWheelRecess = LinearGradient(colors: [Color.black.opacity(0.5), Color.white.opacity(0.18)],
+                                                startPoint: .top, endPoint: .bottom)
+    static let darkButtonRim = LinearGradient(colors: [Color.white.opacity(0.18), Color.black.opacity(0.3)],
+                                              startPoint: .top, endPoint: .bottom)
     static let buttonGloss = LinearGradient(colors: [Color(hex: 0xFFFFFF), Color(hex: 0xF6F6F4), Color(hex: 0xE4E4E2)],
                                             startPoint: .top, endPoint: .bottom)
     // iPod (1st generation)

@@ -76,6 +76,12 @@ struct BodyColour: Equatable, Identifiable {
     let wheel: UInt32
     let button: UInt32
     let labels: UInt32
+
+    /// A dark front (the U2 edition) wants subtler edge highlights.
+    var isDark: Bool {
+        let r = Double((body >> 16) & 0xFF), g = Double((body >> 8) & 0xFF), b = Double(body & 0xFF)
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255 < 0.35
+    }
 }
 
 /// The colours one model offers in Settings › Colour; `key` is where the

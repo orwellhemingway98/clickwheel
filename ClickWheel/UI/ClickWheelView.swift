@@ -63,7 +63,8 @@ struct ClickWheelView: View {
         Circle()
             .fill(finish.map { AnyShapeStyle($0.wheel(diameter: size)) } ?? AnyShapeStyle(Theme.wheelSurface))
             .overlay { quadrantFlash }
-            .overlay(Circle().strokeBorder(Theme.wheelRecess, lineWidth: 1.5))
+            .overlay(Circle().strokeBorder(finish?.colour.isDark == true ? Theme.darkWheelRecess : Theme.wheelRecess,
+                                           lineWidth: 1.5))
             .overlay(Circle().stroke(Color.black.opacity(0.12), lineWidth: 2).blur(radius: 2).clipShape(Circle()))
             .contentShape(Circle())
             .gesture(ringGesture)
@@ -99,7 +100,8 @@ struct ClickWheelView: View {
                 if finish == nil { buttonSheen }
             }
             .overlay(Circle().fill(Color.black.opacity(centerPressed ? 0.08 : 0)))
-            .overlay(Circle().strokeBorder(Theme.buttonRim, lineWidth: 1))
+            .overlay(Circle().strokeBorder(finish?.colour.isDark == true ? Theme.darkButtonRim : Theme.buttonRim,
+                                           lineWidth: 1))
             .frame(width: button, height: button)
             .scaleEffect(centerPressed ? 0.96 : 1)
             .shadow(color: .black.opacity(centerPressed ? 0.1 : 0.22), radius: centerPressed ? 0.5 : 2, y: centerPressed ? 0.5 : 1.5)

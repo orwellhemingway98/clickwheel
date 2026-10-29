@@ -184,4 +184,10 @@ final class IPodModelTests: XCTestCase {
             XCTAssertEqual(model.spec.hasColours, model.spec.firmware.colours != nil)
         }
     }
+
+    func testOnlyTheU2FrontIsDark() {
+        XCTAssertTrue(ColourChoice.fourthGen.option("u2")!.isDark)
+        XCTAssertFalse(ColourChoice.fourthGen.option("white")!.isDark)
+        XCTAssertFalse(ColourChoice.mini.options.contains { $0.isDark })
+    }
 }
