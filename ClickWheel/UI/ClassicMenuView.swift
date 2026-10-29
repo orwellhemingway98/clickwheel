@@ -9,6 +9,9 @@ enum ClassicLayout {
 
     static func listWidth(canvasWidth: CGFloat) -> CGFloat { canvasWidth / 2 }
 
+    /// Only a landscape screen has room to split (the portrait nano 4G doesn't).
+    static func splits(canvas: CGSize) -> Bool { canvas.width > canvas.height }
+
     /// One leg of the slow pan and zoom, in seconds; it then eases back.
     static let kenBurnsDuration: Double = 14
     private static let maxScale: CGFloat = 1.15

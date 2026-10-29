@@ -30,8 +30,11 @@ struct NowPlayingView: View {
     /// Positions are LCD design points; this view starts below the header.
     private func y(_ lcdY: CGFloat) -> CGFloat { lcdY - ScreenTheme.headerHeight }
 
+    private var layout: NowPlayingLayout { NowPlayingLayout(canvas: g.designSize) }
+
     private func playing(_ track: NowPlayingInfo) -> some View {
-        let bar = ScreenTheme.barFrame(canvasWidth: g.designSize.width)
+        let layout = self.layout
+        let bar = layout.bar
         return ZStack(alignment: .topLeading) {
             if let index = track.index, let count = track.count {
                 Text("\(index) of \(count)")
@@ -39,16 +42,16 @@ struct NowPlayingView: View {
                     .offset(x: ScreenTheme.counterOrigin.x, y: y(ScreenTheme.counterOrigin.y))
             }
             artworkView
-                .offset(x: ScreenTheme.artFrame.minX, y: y(ScreenTheme.artFrame.minY))
-            VStack(alignment: .leading, spacing: ScreenTheme.infoLineSpacing - ScreenTheme.titleTextSize) {
+                .offset(x: layout.art.minX, y: y(layout.art.minY))
+            VStack(alignment: layout.centred ? .center : .leading, spacing: ScreenTheme.infoLineSpacing - ScreenTheme.titleTextSize) {
                 Text(track.title).font(ScreenTheme.font(ScreenTheme.titleTextSize, semibold: true))
                 Text(track.artist).font(ScreenTheme.font(ScreenTheme.subtitleTextSize))
                 Text(track.album).font(ScreenTheme.font(ScreenTheme.subtitleTextSize))
             }
             .lineLimit(1)
             .truncationMode(.tail)
-            .frame(width: ScreenTheme.infoWidth(canvasWidth: g.designSize.width), alignment: .leading)
-            .offset(x: ScreenTheme.infoOrigin.x, y: y(ScreenTheme.infoOrigin.y) - ScreenTheme.titleTextSize / 2)
+            .frame(width: layout.infoWidth, alignment: layout.centred ? .center : .leading)
+            .offset(x: layout.infoOrigin.x, y: y(layout.infoOrigin.y) - ScreenTheme.titleTextSize / 2)
             barArea(track)
                 .frame(width: bar.width)
                 .offset(x: bar.minX, y: y(bar.minY))
@@ -57,7 +60,7 @@ struct NowPlayingView: View {
     }
 
     @ViewBuilder private func barArea(_ track: NowPlayingInfo) -> some View {
-        let bar = ScreenTheme.barFrame(canvasWidth: g.designSize.width)
+        let bar = layout.bar
         switch navigator.nowPlayingMode {
         case .volume:
             HStack(spacing: 0) {
@@ -76,7 +79,7 @@ struct NowPlayingView: View {
     private func timedBar(position: Double, duration: Double, style: GlossBar.Style) -> some View {
         VStack(spacing: ScreenTheme.timeGap) {
             GlossBar(fraction: TimeFormat.progress(position: position, duration: duration), style: style)
-                .frame(height: ScreenTheme.barFrame(canvasWidth: g.designSize.width).height)
+                .frame(height: layout.bar.height)
             HStack {
                 Text(TimeFormat.elapsed(position))
                 Spacer()
@@ -89,7 +92,7 @@ struct NowPlayingView: View {
 
     /// Album art with the 5G's side shading and a soft shadow underneath.
     private var artworkView: some View {
-        let frame = ScreenTheme.artFrame
+        let frame = layout.art
         return Group {
             if let image {
                 Image(nsImage: image).resizable().aspectRatio(contentMode: .fill)

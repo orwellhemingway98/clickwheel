@@ -93,7 +93,8 @@ struct ScreenView: View {
 
     /// The classic's main and Music menus split the screen with album art.
     private var classicSplit: Bool {
-        guard g.model.spec.firmware.menuStyle == .classic, case .menu(let screen) = navigator.current else { return false }
+        guard g.model.spec.firmware.menuStyle == .classic, ClassicLayout.splits(canvas: g.designSize),
+              case .menu(let screen) = navigator.current else { return false }
         return ClassicLayout.isSplit(depth: navigator.stack.count, title: screen.title)
     }
 

@@ -110,3 +110,31 @@ enum ScreenTheme {
         return (text as NSString).size(withAttributes: [.font: font]).width
     }
 }
+
+/// Where Now Playing puts things on a colour canvas: the 5G's layout on a
+/// landscape screen, and art stacked over centred text on a portrait one.
+struct NowPlayingLayout: Equatable {
+    let art: CGRect
+    let infoOrigin: CGPoint
+    let infoWidth: CGFloat
+    /// Centred track info (portrait) rather than left-aligned beside the art.
+    let centred: Bool
+    let bar: CGRect
+
+    init(canvas: CGSize) {
+        if canvas.width > canvas.height {
+            art = ScreenTheme.artFrame
+            infoOrigin = ScreenTheme.infoOrigin
+            infoWidth = ScreenTheme.infoWidth(canvasWidth: canvas.width)
+            centred = false
+            bar = ScreenTheme.barFrame(canvasWidth: canvas.width)
+        } else {
+            let side: CGFloat = 96
+            art = CGRect(x: (canvas.width - side) / 2, y: 30, width: side, height: side)
+            infoOrigin = CGPoint(x: 8, y: 146)
+            infoWidth = canvas.width - 16
+            centred = true
+            bar = CGRect(x: 15, y: 196, width: canvas.width - 30, height: 11)
+        }
+    }
+}

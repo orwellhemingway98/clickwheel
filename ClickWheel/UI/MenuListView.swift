@@ -5,10 +5,11 @@ import SwiftUI
 struct MenuListView: View {
     let screen: MenuScreen
     @EnvironmentObject private var navigator: Navigator
+    @Environment(\.ipodGeometry) private var g
 
     var body: some View {
         let start = screen.windowStart
-        let end = min(start + MenuWindow.visibleRows, screen.items.count)
+        let end = min(start + g.model.spec.firmware.visibleRows, screen.items.count)
         VStack(spacing: 0) {
             ForEach(start..<end, id: \.self) { index in
                 let item = screen.items[index]
