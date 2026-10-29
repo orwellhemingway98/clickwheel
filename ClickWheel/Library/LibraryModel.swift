@@ -35,4 +35,6 @@ protocol MusicLibrary: AnyObject {
     func tracks(inPlaylist id: String) throws -> [LibraryTrack]
     func allTracks() throws -> [LibraryTrack]
     func play(_ request: PlayRequest) throws
+    /// A track's cover art, or nil when it has none (Cover Flow).
+    func artwork(trackID: String) throws -> Data?
 }

@@ -33,4 +33,11 @@ final class FakeMusicLibrary: MusicLibrary {
         if let error { throw error }
         played.append(request)
     }
+
+    var artworkByTrack: [String: Data] = [:]
+
+    func artwork(trackID: String) throws -> Data? {
+        if let error { throw error }
+        return artworkByTrack[trackID]
+    }
 }

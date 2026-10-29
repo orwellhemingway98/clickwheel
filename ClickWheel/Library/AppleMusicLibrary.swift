@@ -51,6 +51,12 @@ final class AppleMusicLibrary: AppleScriptMusicSource, MusicLibrary {
         return tracks
     }
 
+    func artwork(trackID: String) throws -> Data? {
+        let result = try tell(AppleMusicScripts.artwork(trackID: trackID))
+        let data = result.data
+        return data.isEmpty || result.descriptorType == typeUnicodeText ? nil : data
+    }
+
     /// Fast column format first; if a tag contains a separator character the
     /// columns won't line up, so fall back to the slower per-track record format.
     private func fetchTracks(source: String) throws -> [LibraryTrack] {
@@ -96,6 +102,19 @@ enum AppleMusicScripts {
         """
 
     static let librarySource = "library playlist 1"
+
+    /// A library track's first artwork, by persistent ID; "" when it has none.
+    static func artwork(trackID: String) -> String {
+        """
+        with timeout of 10 seconds
+            try
+                return raw data of artwork 1 of (first track of \(librarySource) whose persistent ID is \(quoted(trackID)))
+            on error
+                return ""
+            end try
+        end timeout
+        """
+    }
 
     static func playlistSource(_ id: String) -> String {
         "(first user playlist whose persistent ID is \(quoted(id)))"
