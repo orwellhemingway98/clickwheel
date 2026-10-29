@@ -81,8 +81,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertTrue(menu(nav)?.items.first?.opensSubmenu == true)
         nav.handle(.center)
         XCTAssertEqual(menu(nav)?.title, "Model")
-        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "iPod photo", "iPod mini (2nd gen)", "iPod nano", "5th generation"])
-        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2004", "2005", "2005", "2005"])
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "iPod photo", "iPod mini (2nd gen)", "iPod nano", "5th generation", "iPod nano (2nd gen)"])
+        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2004", "2005", "2005", "2005", "2006"])
         XCTAssertEqual(menu(nav)?.selectedIndex, 0)
     }
 
@@ -93,7 +93,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         nav.handle(.center)
         XCTAssertEqual(menu(nav)?.title, "Model")
         XCTAssertEqual(menu(nav)?.selectedIndex, 0, "like every iPod list, it starts at the top")
-        XCTAssertEqual(menu(nav)?.items.last?.detail(), "✓ 2005", "the tick still marks the current model")
+        XCTAssertEqual(menu(nav)?.items[IPodModel.allCases.firstIndex(of: .fifthGen)!].detail(), "✓ 2005",
+                       "the tick still marks the current model")
         nav.handle(.scroll(steps: 1))
         nav.handle(.center)
         XCTAssertEqual(settings.model, .secondGen, "one step down from the top is the 2nd generation")
@@ -456,5 +457,18 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertFalse(nav.backlight.isOn, "and the timer dims it")
         nav.handle(.menuHold)
         XCTAssertTrue(nav.backlight.isOn, "hold MENU turns it back on")
+    }
+
+    // MARK: - iPod nano 2G
+
+    func testNanoSecondGenColourListAndChoice() {
+        let nav = navigator(.nanoSecondGen)
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Music", "Extras", "Settings", "Shuffle Songs"])
+        open(nav, "Settings")
+        open(nav, "Colour")
+        XCTAssertEqual(menu(nav)?.items.count, 6)
+        nav.choose(row: 5)
+        XCTAssertEqual(settings.colour(in: .nanoSecondGen).id, "red")
+        XCTAssertEqual(settings.colour(in: .nano).id, "white")
     }
 }
