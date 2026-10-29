@@ -16,7 +16,8 @@ struct ScreenView: View {
 
     private var colorScreen: some View {
         VStack(spacing: 0) {
-            header
+            // Cover Flow fills the whole screen.
+            if !onCoverFlow { header }
             ZStack {
                 content
                     .id(navigator.stack.count)
@@ -92,6 +93,11 @@ struct ScreenView: View {
         }
     }
 
+    private var onCoverFlow: Bool {
+        if case .coverFlow = navigator.current { return true }
+        return false
+    }
+
     /// The classic's main and Music menus split the screen with album art.
     private var classicSplit: Bool {
         guard g.model.spec.firmware.menuStyle == .classic, ClassicLayout.splits(canvas: g.designSize),
@@ -110,7 +116,7 @@ struct ScreenView: View {
         case .nowPlaying: NowPlayingView()
         case .clock: ClockView()
         case .stopwatch: StopwatchView()
-        case .coverFlow: Color.black
+        case .coverFlow(let state): CoverFlowView(state: state)
         }
     }
 }
