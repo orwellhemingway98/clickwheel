@@ -25,6 +25,7 @@ struct MenuListView: View {
 private struct MenuRow: View {
     let item: MenuItem
     let selected: Bool
+    @Environment(\.ipodGeometry) private var g
     @State private var selectedAt = Date()
 
     var body: some View {
@@ -44,7 +45,18 @@ private struct MenuRow: View {
         .frame(height: ScreenTheme.rowHeight)
         .foregroundStyle(selected ? ScreenTheme.selectedText : ScreenTheme.text)
         .opacity(item.isSelectable ? 1 : 0.6)
-        .background { if selected { ScreenTheme.selection } }
+        .background {
+            if selected {
+                if ScreenTheme.classicLook(g.model.spec.firmware.menuStyle) {
+                    ScreenTheme.classicSelection
+                        .overlay(alignment: .top) {
+                            ScreenTheme.classicSheen.frame(height: ScreenTheme.rowHeight / 2)
+                        }
+                } else {
+                    ScreenTheme.selection
+                }
+            }
+        }
         .onAppear { selectedAt = Date() }
     }
 

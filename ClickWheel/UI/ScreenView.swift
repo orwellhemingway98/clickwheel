@@ -71,7 +71,13 @@ struct ScreenView: View {
             }
         }
         .frame(height: ScreenTheme.headerHeight)
-        .background(ScreenTheme.headerGradient)
+        .background {
+            if ScreenTheme.classicLook(g.model.spec.firmware.menuStyle) {
+                ScreenTheme.classicHeader
+            } else {
+                ScreenTheme.headerGradient
+            }
+        }
         .overlay(alignment: .bottom) {
             Rectangle().fill(ScreenTheme.headerRule).frame(height: ScreenTheme.headerRuleWidth)
         }

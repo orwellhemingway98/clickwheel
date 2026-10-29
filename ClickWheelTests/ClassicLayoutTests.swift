@@ -26,4 +26,13 @@ final class ClassicLayoutTests: XCTestCase {
         XCTAssertEqual(mid.offset, CGSize(width: -4, height: -2.5))
         XCTAssertEqual(ClassicLayout.kenBurnsDuration, 14)
     }
+
+    func testOnlyTheClassicGetsTheClassicLook() {
+        XCTAssertTrue(ScreenTheme.classicLook(.classic))
+        for style in [MenuStyle.fifthGen, .firstGenLate, .thirdGenLate] {
+            XCTAssertFalse(ScreenTheme.classicLook(style))
+        }
+        XCTAssertEqual(ScreenTheme.classicSelectionColours, [0x5FAEF5, 0x2577D9])
+        XCTAssertEqual(ScreenTheme.classicHeaderColours, [0xFBFBFB, 0xDADDE1])
+    }
 }

@@ -45,6 +45,18 @@ enum ScreenTheme {
                                           startPoint: .top, endPoint: .bottom)
     static let selectedText = Color.white
 
+    // The classic (2007): a brighter, glossier selection and a lighter header.
+    static func classicLook(_ style: MenuStyle) -> Bool { style == .classic }
+    static let classicSelectionColours: [UInt32] = [0x5FAEF5, 0x2577D9]
+    static let classicHeaderColours: [UInt32] = [0xFBFBFB, 0xDADDE1]
+    static let classicSelection = LinearGradient(colors: classicSelectionColours.map { Color(hex: $0) },
+                                                 startPoint: .top, endPoint: .bottom)
+    /// The gloss over the top half of the classic's selection bar.
+    static let classicSheen = LinearGradient(colors: [Color.white.opacity(0.35), Color.white.opacity(0.08)],
+                                             startPoint: .top, endPoint: .bottom)
+    static let classicHeader = LinearGradient(colors: classicHeaderColours.map { Color(hex: $0) },
+                                              startPoint: .top, endPoint: .bottom)
+
     // Now Playing
     static let counterOrigin = CGPoint(x: 11, y: 24)
     static let counterSize: CGFloat = 12
