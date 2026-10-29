@@ -1,13 +1,13 @@
 import SwiftUI
 
-/// 1G menu: six 18 px rows, an inverted (ink) selection bar, `>` on submenu
+/// Gray menu: 18 px rows (six on the 1G–3G, five on the mini), an inverted (ink) selection bar, `>` on submenu
 /// rows, and a scroll bar on the right when the list is longer than the screen.
 struct GrayMenuList: View {
     let screen: MenuScreen
     let colors: GrayColors
+    let rows: Int
     @EnvironmentObject private var navigator: Navigator
 
-    private var rows: Int { 6 }
     private var scrolls: Bool { screen.items.count > rows }
 
     var body: some View {

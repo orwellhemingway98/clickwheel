@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// 1G Now Playing: "x of y", title / artist / album centred, and an outlined
+/// Gray Now Playing: "x of y", title / artist (/ album) centred, and an outlined
 /// bar that shows progress, volume (while adjusting) or the scrubber's diamond.
 struct GrayNowPlaying: View {
     let colors: GrayColors
+    let layout: GrayLayout
     @EnvironmentObject private var hub: PlayerHub
     @EnvironmentObject private var navigator: Navigator
 
@@ -17,12 +18,13 @@ struct GrayNowPlaying: View {
                     Text("\(index) of \(count)")
                         .offset(x: GrayScreenTheme.counterOrigin.x, y: y(GrayScreenTheme.counterOrigin.y))
                 }
-                ForEach(Array([track.title, track.artist, track.album].enumerated()), id: \.offset) { i, text in
+                ForEach(Array([track.title, track.artist, track.album].prefix(layout.infoLinesY.count).enumerated()),
+                        id: \.offset) { i, text in
                     Text(text)
                         .lineLimit(1)
                         .truncationMode(.tail)
-                        .frame(width: GrayScreenTheme.size.width - 2 * GrayScreenTheme.inset)
-                        .offset(x: GrayScreenTheme.inset, y: y(GrayScreenTheme.infoLinesY[i]) - GrayScreenTheme.fontSize / 2)
+                        .frame(width: layout.size.width - 2 * GrayScreenTheme.inset)
+                        .offset(x: GrayScreenTheme.inset, y: y(layout.infoLinesY[i]) - GrayScreenTheme.fontSize / 2)
                 }
                 barArea(track)
             }
@@ -33,7 +35,7 @@ struct GrayNowPlaying: View {
     }
 
     @ViewBuilder private func barArea(_ track: NowPlayingInfo) -> some View {
-        let bar = GrayScreenTheme.barFrame
+        let bar = layout.barFrame
         switch navigator.nowPlayingMode {
         case .volume:
             HStack(spacing: 3) {
@@ -51,7 +53,7 @@ struct GrayNowPlaying: View {
     }
 
     private func timed(position: Double, duration: Double, diamond: Bool) -> some View {
-        let bar = GrayScreenTheme.barFrame
+        let bar = layout.barFrame
         let fraction = TimeFormat.progress(position: position, duration: duration)
         return ZStack(alignment: .topLeading) {
             Group {
@@ -74,7 +76,7 @@ struct GrayNowPlaying: View {
                 Text(TimeFormat.remaining(position: position, duration: duration))
             }
             .frame(width: bar.width)
-            .offset(x: bar.minX, y: y(GrayScreenTheme.timeY))
+            .offset(x: bar.minX, y: y(layout.timeY))
         }
     }
 

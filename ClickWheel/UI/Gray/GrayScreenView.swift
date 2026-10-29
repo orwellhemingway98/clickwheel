@@ -1,11 +1,14 @@
 import SwiftUI
 
-/// The 1G's gray LCD: Chicago title bar with a 1 px rule, then the current
+/// The gray LCD (1G–3G, mini): title bar with a 1 px rule, then the current
 /// screen. Unlit it's grey-green; input lights it pale blue-white.
 struct GrayScreenView: View {
     let palette: LCDPalette
     @EnvironmentObject private var navigator: Navigator
     @EnvironmentObject private var hub: PlayerHub
+    @Environment(\.ipodGeometry) private var g
+
+    private var layout: GrayLayout { GrayLayout(model: g.model) }
 
     var body: some View {
         let colors = GrayColors(palette, lit: navigator.backlight.isOn)
@@ -14,17 +17,17 @@ struct GrayScreenView: View {
             ZStack {
                 content(colors)
                     .id(navigator.stack.count)
-                    .transition(.iPodPush(navigator.slideDirection, width: GrayScreenTheme.size.width))
+                    .transition(.iPodPush(navigator.slideDirection, width: layout.size.width))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .clipped()
         }
         .animation(ScreenTheme.transition, value: navigator.stack.count)
-        .font(GrayScreenTheme.font())
+        .font(layout.typeface())
         .foregroundStyle(colors.ink)
         .background(colors.background)
         .animation(GrayScreenTheme.backlightFade, value: navigator.backlight.isOn)
-        .frame(width: GrayScreenTheme.size.width, height: GrayScreenTheme.size.height)
+        .frame(width: layout.size.width, height: layout.size.height)
         .clipped()
     }
 
@@ -39,7 +42,7 @@ struct GrayScreenView: View {
 
     private func titleBar(_ colors: GrayColors) -> some View {
         ZStack {
-            Text(title).lineLimit(1).padding(.horizontal, 24)
+            Text(title).font(layout.typeface(semibold: true)).lineLimit(1).padding(.horizontal, 24)
             HStack(spacing: 0) {
                 GrayPlayGlyph(playing: hub.snapshot?.state == .playing, ink: colors.ink)
                     .opacity(hub.snapshot?.track == nil ? 0 : 1)
@@ -56,9 +59,9 @@ struct GrayScreenView: View {
 
     @ViewBuilder private func content(_ colors: GrayColors) -> some View {
         switch navigator.current {
-        case .menu(let screen): GrayMenuList(screen: screen, colors: colors)
-        case .nowPlaying: GrayNowPlaying(colors: colors)
-        case .clock, .stopwatch: GrayClock()
+        case .menu(let screen): GrayMenuList(screen: screen, colors: colors, rows: layout.rows)
+        case .nowPlaying: GrayNowPlaying(colors: colors, layout: layout)
+        case .clock, .stopwatch: GrayClock(layout: layout)
         }
     }
 }

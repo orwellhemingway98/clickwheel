@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// The 1G's 160 × 128 gray LCD, in LCD pixels (spec §3.2). The palette comes
-/// from the model; everything else lives here.
+/// The gray LCD's fixed metrics, in LCD pixels (1G spec §3.2). What varies by
+/// model (panel size, rows, font) is in `GrayLayout`.
 enum GrayScreenTheme {
-    static let size = CGSize(width: 160, height: 128)
     static let fontSize: CGFloat = 12
     static let titleHeight: CGFloat = 20
     static let ruleY: CGFloat = 19
@@ -14,13 +13,38 @@ enum GrayScreenTheme {
     static let scrollBarWidth: CGFloat = 5
     static let scrollThumbMin: CGFloat = 6
     static let counterOrigin = CGPoint(x: 4, y: 24)
-    static let infoLinesY: [CGFloat] = [42, 58, 74]
-    static let barFrame = CGRect(x: 8, y: 96, width: 144, height: 6)
-    static let timeY: CGFloat = 106
     static let diamondSize: CGFloat = 7
     static let backlightFade: Animation = .easeOut(duration: 0.15)
+}
 
-    static func font(_ size: CGFloat = fontSize) -> Font { .custom("ChicagoFLF", size: size) }
+/// The gray screen laid out for one model's panel: 160 × 128 with six rows on
+/// the 1G–3G, 138 × 110 with five on the mini. Positions are LCD pixels.
+struct GrayLayout: Equatable {
+    let size: CGSize
+    let rows: Int
+    let font: ScreenFont
+    /// Centre lines of the track info on Now Playing, 16 px apart from y 42.
+    let infoLinesY: [CGFloat]
+    let barFrame: CGRect
+    let timeY: CGFloat
+
+    init(model: IPodModel) {
+        let display = model.spec.display
+        size = display.designSize
+        rows = model.spec.firmware.visibleRows
+        font = display.font
+        infoLinesY = (0..<display.nowPlayingLines).map { 42 + 16 * CGFloat($0) }
+        barFrame = CGRect(x: 8, y: size.height - 32, width: size.width - 16, height: 6)
+        timeY = size.height - 22
+    }
+
+    /// Chicago at 12 px; the sans runs small, so it's set a pixel larger.
+    func typeface(_ size: CGFloat = GrayScreenTheme.fontSize, semibold: Bool = false) -> Font {
+        switch font {
+        case .chicago: return .custom("ChicagoFLF", size: size)
+        case .sans: return Theme.font(size + 1, semibold: semibold)
+        }
+    }
 }
 
 /// The palette currently showing: unlit or backlit.
