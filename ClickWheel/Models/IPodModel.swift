@@ -9,6 +9,7 @@ enum IPodModel: String, CaseIterable {
     case mini
     case fourthGen
     case photo
+    case miniSecondGen
     case fifthGen
 
     var shortName: String {
@@ -19,6 +20,7 @@ enum IPodModel: String, CaseIterable {
         case .mini: return "mini"
         case .fourthGen: return "4th gen"
         case .photo: return "photo"
+        case .miniSecondGen: return "mini 2G"
         case .fifthGen: return "5th gen"
         }
     }
@@ -32,6 +34,7 @@ enum IPodModel: String, CaseIterable {
         case .mini: return "iPod mini"
         case .fourthGen: return "4th generation"
         case .photo: return "iPod photo"
+        case .miniSecondGen: return "iPod mini (2nd gen)"
         case .fifthGen: return "5th generation"
         }
     }
@@ -44,6 +47,7 @@ enum IPodModel: String, CaseIterable {
         case .mini: return .mini
         case .fourthGen: return .fourthGen
         case .photo: return .photo
+        case .miniSecondGen: return .miniSecondGen
         case .fifthGen: return .fifthGen
         }
     }
@@ -113,6 +117,15 @@ struct ColourChoice: Equatable {
 
     /// The iPod photo: the 4G's two colours, remembered on their own.
     static let photo = ColourChoice(key: "photo", options: fourthGen.options)
+
+    /// The mini 2G: brighter pink, blue and green, silver unchanged, no gold; the
+    /// wheel lettering matches the body (a shade deeper, to read on the wheel).
+    static let miniSecondGen = ColourChoice(key: "miniSecondGen", options: [
+        BodyColour(id: "silver", label: "Silver", body: 0xC8CACD, wheel: 0xE4E5E7, button: 0xE4E5E7, labels: 0xA6A9AE),
+        BodyColour(id: "pink", label: "Pink", body: 0xEFA6C2, wheel: 0xF8DDE8, button: 0xF8DDE8, labels: 0xE48AAE),
+        BodyColour(id: "blue", label: "Blue", body: 0x86B6E6, wheel: 0xD6E6F6, button: 0xD6E6F6, labels: 0x6A9FD6),
+        BodyColour(id: "green", label: "Green", body: 0xA2D27E, wheel: 0xDDEFCF, button: 0xDDEFCF, labels: 0x86BF5E),
+    ])
 }
 
 /// Front face, in millimetres.
@@ -333,4 +346,13 @@ extension ModelSpec {
                               buttonDiameter: 13.9, centerFromBottom: 103.50 - 71.05, sectorsPerStep: 6),
         firmware: FirmwareProfile(menuStyle: .thirdGenLate, holdMenu: .toggleBacklight, quickScroll: false,
                                   backlight: true, visibleRows: 9, colours: .photo))
+
+    /// iPod mini (2nd generation), 2005: the mini in brighter colours.
+    static let miniSecondGen = ModelSpec(
+        name: "iPod mini (2nd generation)", year: 2005,
+        body: mini.body, display: mini.display, controls: mini.controls,
+        firmware: FirmwareProfile(menuStyle: mini.firmware.menuStyle, holdMenu: mini.firmware.holdMenu,
+                                  quickScroll: mini.firmware.quickScroll, backlight: mini.firmware.backlight,
+                                  visibleRows: mini.firmware.visibleRows, colours: .miniSecondGen),
+        material: .aluminium)
 }

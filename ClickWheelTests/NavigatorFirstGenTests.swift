@@ -81,8 +81,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertTrue(menu(nav)?.items.first?.opensSubmenu == true)
         nav.handle(.center)
         XCTAssertEqual(menu(nav)?.title, "Model")
-        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "iPod photo", "5th generation"])
-        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2004", "2005"])
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "iPod photo", "iPod mini (2nd gen)", "5th generation"])
+        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2004", "2005", "2005"])
         XCTAssertEqual(menu(nav)?.selectedIndex, 0)
     }
 
@@ -418,5 +418,18 @@ final class NavigatorFirstGenTests: XCTestCase {
         let nav = navigator(.fifthGen)
         nav.setProfile(IPodModel.photo.spec.firmware)
         XCTAssertTrue(nav.backlight.isOn, "a colour screen must not come back dimmed")
+    }
+
+    // MARK: - iPod mini 2G
+
+    func testMiniSecondGenColourIsSeparateFromTheMini() {
+        let nav = navigator(.miniSecondGen)
+        open(nav, "Settings")
+        open(nav, "Colour")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Silver", "Pink", "Blue", "Green"])
+        nav.choose(row: 2)
+        XCTAssertEqual(menu(nav)?.title, "Settings")
+        XCTAssertEqual(settings.colour(in: .miniSecondGen).id, "blue")
+        XCTAssertEqual(settings.colour(in: .mini).id, "silver")
     }
 }

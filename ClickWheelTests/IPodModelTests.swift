@@ -44,7 +44,7 @@ final class IPodModelTests: XCTestCase {
 
     func testModelsAreInReleaseOrder() {
         XCTAssertEqual(IPodModel.allCases.map(\.spec.year), IPodModel.allCases.map(\.spec.year).sorted())
-        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "4th gen", "photo", "5th gen"])
+        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "4th gen", "photo", "mini 2G", "5th gen"])
     }
 
     func testSecondGenIsTheFirstGenWithATouchWheel() {
@@ -214,5 +214,29 @@ final class IPodModelTests: XCTestCase {
         XCTAssertEqual(s.firmware.visibleRows, 9)
         XCTAssertEqual(s.firmware.colours?.key, "photo")
         XCTAssertEqual(s.firmware.colours?.options, ColourChoice.fourthGen.options)
+    }
+
+    func testMiniSecondGenIsTheMiniInBrighterColours() {
+        let s = IPodModel.miniSecondGen.spec, mini = IPodModel.mini.spec
+        XCTAssertEqual(IPodModel.miniSecondGen.generationName, "iPod mini (2nd gen)")
+        XCTAssertEqual(s.year, 2005)
+        XCTAssertEqual(s.material, .aluminium)
+        XCTAssertEqual(s.body, mini.body)
+        XCTAssertEqual(s.display, mini.display)
+        XCTAssertEqual(s.controls, mini.controls)
+        XCTAssertEqual(s.firmware.menuStyle, mini.firmware.menuStyle)
+        XCTAssertEqual(s.firmware.visibleRows, mini.firmware.visibleRows)
+        XCTAssertEqual(s.firmware.colours, .miniSecondGen)
+    }
+
+    func testMiniSecondGenColours() {
+        let choice = ColourChoice.miniSecondGen
+        XCTAssertEqual(choice.key, "miniSecondGen")
+        XCTAssertEqual(choice.options.map(\.label), ["Silver", "Pink", "Blue", "Green"])
+        let rows = choice.options.map { [$0.body, $0.wheel, $0.button, $0.labels] }
+        XCTAssertEqual(rows, [[0xC8CACD, 0xE4E5E7, 0xE4E5E7, 0xA6A9AE],
+                              [0xEFA6C2, 0xF8DDE8, 0xF8DDE8, 0xE48AAE],
+                              [0x86B6E6, 0xD6E6F6, 0xD6E6F6, 0x6A9FD6],
+                              [0xA2D27E, 0xDDEFCF, 0xDDEFCF, 0x86BF5E]])
     }
 }
