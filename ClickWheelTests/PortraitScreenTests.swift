@@ -42,4 +42,16 @@ final class PortraitScreenTests: XCTestCase {
         XCTAssertLessThan(stackTop + 17.9 + 8.5 + 15.9 + 8.5 + 15.9, l.bar.minY, "the album line clears the bar")
         XCTAssertLessThan(l.bar.maxY + ScreenTheme.timeGap + 14, 240, "the times stay on screen")
     }
+
+    func testATallerPortraitScreenGivesTheArtTheExtraRoom() {
+        let l = NowPlayingLayout(canvas: CGSize(width: 180, height: 282))
+        XCTAssertEqual(l.counter, CGPoint(x: 0, y: 22))
+        XCTAssertEqual(l.art, CGRect(x: 29, y: 42, width: 122, height: 122))
+        XCTAssertEqual(l.infoOrigin, CGPoint(x: 8, y: 182))
+        XCTAssertEqual(l.bar, CGRect(x: 15, y: 248, width: 150, height: 11))
+        let stackTop = l.infoOrigin.y - ScreenTheme.titleTextSize / 2
+        XCTAssertGreaterThan(stackTop, l.art.maxY + ScreenTheme.artShadow)
+        XCTAssertLessThan(stackTop + 17.9 + 8.5 + 15.9 + 8.5 + 15.9, l.bar.minY)
+        XCTAssertLessThan(l.bar.maxY + ScreenTheme.timeGap + 14, 282)
+    }
 }

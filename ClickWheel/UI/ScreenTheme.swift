@@ -134,14 +134,15 @@ struct NowPlayingLayout: Equatable {
             bar = ScreenTheme.barFrame(canvasWidth: canvas.width)
         } else {
             // Top to bottom: the counter's row, the art, three lines of text,
-            // then the bar and its times, each clear of the next.
-            let side: CGFloat = 80
+            // then the bar and its times, each clear of the next. The art takes
+            // whatever height the rest leaves (80 on the nano 4G, 122 on the 5G).
+            let side = canvas.height - 160
             counter = CGPoint(x: 0, y: 22)
             art = CGRect(x: (canvas.width - side) / 2, y: 42, width: side, height: side)
-            infoOrigin = CGPoint(x: 8, y: 140)
+            infoOrigin = CGPoint(x: 8, y: art.maxY + 18)
             infoWidth = canvas.width - 16
             centred = true
-            bar = CGRect(x: 15, y: 206, width: canvas.width - 30, height: 11)
+            bar = CGRect(x: 15, y: canvas.height - 34, width: canvas.width - 30, height: 11)
         }
     }
 }
