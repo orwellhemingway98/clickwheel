@@ -44,7 +44,7 @@ final class IPodModelTests: XCTestCase {
 
     func testModelsAreInReleaseOrder() {
         XCTAssertEqual(IPodModel.allCases.map(\.spec.year), IPodModel.allCases.map(\.spec.year).sorted())
-        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "4th gen", "5th gen"])
+        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "4th gen", "photo", "5th gen"])
     }
 
     func testSecondGenIsTheFirstGenWithATouchWheel() {
@@ -189,5 +189,30 @@ final class IPodModelTests: XCTestCase {
         XCTAssertTrue(ColourChoice.fourthGen.option("u2")!.isDark)
         XCTAssertFalse(ColourChoice.fourthGen.option("white")!.isDark)
         XCTAssertFalse(ColourChoice.mini.options.contains { $0.isDark })
+    }
+
+    func testPhotoSpecFollowsApplesDrawing() {
+        let s = IPodModel.photo.spec
+        XCTAssertEqual(IPodModel.photo.generationName, "iPod photo")
+        XCTAssertEqual(s.year, 2004)
+        XCTAssertEqual(s.body, IPodModel.fourthGen.spec.body)
+        XCTAssertEqual(s.material, .whitePlastic)
+        XCTAssertEqual(s.display.kind, .color)
+        XCTAssertEqual(s.display.windowSize, CGSize(width: 41.00, height: 33.08))
+        XCTAssertEqual(s.display.windowTop, 23.59 - 33.08 / 2, accuracy: 0.0001)
+        XCTAssertEqual(s.display.pixels, CGSize(width: 220, height: 176))
+        XCTAssertEqual(s.display.pixelPitch, 0.18)
+        XCTAssertEqual(s.display.designSize, CGSize(width: 225, height: 180))
+        XCTAssertEqual(s.controls.kind, .clickWheel)
+        XCTAssertEqual(s.controls.wheelDiameter, 42.06)
+        XCTAssertEqual(s.controls.buttonDiameter, 13.9)
+        XCTAssertEqual(s.controls.centerFromBottom, 103.50 - 71.05, accuracy: 0.0001)
+        XCTAssertEqual(s.firmware.menuStyle, .thirdGenLate)
+        XCTAssertEqual(s.firmware.holdMenu, .toggleBacklight)
+        XCTAssertTrue(s.firmware.backlight)
+        XCTAssertFalse(s.firmware.quickScroll)
+        XCTAssertEqual(s.firmware.visibleRows, 9)
+        XCTAssertEqual(s.firmware.colours?.key, "photo")
+        XCTAssertEqual(s.firmware.colours?.options, ColourChoice.fourthGen.options)
     }
 }

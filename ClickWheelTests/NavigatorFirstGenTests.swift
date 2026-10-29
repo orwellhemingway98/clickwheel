@@ -81,8 +81,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertTrue(menu(nav)?.items.first?.opensSubmenu == true)
         nav.handle(.center)
         XCTAssertEqual(menu(nav)?.title, "Model")
-        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "5th generation"])
-        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2005"])
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "iPod photo", "5th generation"])
+        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2004", "2005"])
         XCTAssertEqual(menu(nav)?.selectedIndex, 0)
     }
 
@@ -383,5 +383,23 @@ final class NavigatorFirstGenTests: XCTestCase {
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.set("plaid", forKey: "colour.fourthGen")
         XCTAssertEqual(AppSettings(defaults: defaults).colour(in: .fourthGen).id, "white")
+    }
+
+    // MARK: - iPod photo
+
+    func testPhotoRootAndSettings() {
+        let nav = navigator(.photo)
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Music", "Extras", "Settings", "Shuffle Songs", "Backlight"])
+        open(nav, "Settings")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Model", "Colour", "Source", "Backlight Timer", "Clicker"])
+    }
+
+    func testPhotoColourIsSeparateFromTheFourthGen() {
+        let nav = navigator(.photo)
+        open(nav, "Settings")
+        open(nav, "Colour")
+        nav.choose(row: 1)
+        XCTAssertEqual(settings.colour(in: IPodModel.photo.spec.firmware.colours!).id, "u2")
+        XCTAssertEqual(settings.colour(in: .fourthGen).id, "white")
     }
 }

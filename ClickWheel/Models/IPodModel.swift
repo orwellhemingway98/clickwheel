@@ -8,6 +8,7 @@ enum IPodModel: String, CaseIterable {
     case thirdGen
     case mini
     case fourthGen
+    case photo
     case fifthGen
 
     var shortName: String {
@@ -17,6 +18,7 @@ enum IPodModel: String, CaseIterable {
         case .thirdGen: return "3rd gen"
         case .mini: return "mini"
         case .fourthGen: return "4th gen"
+        case .photo: return "photo"
         case .fifthGen: return "5th gen"
         }
     }
@@ -29,6 +31,7 @@ enum IPodModel: String, CaseIterable {
         case .thirdGen: return "3rd generation"
         case .mini: return "iPod mini"
         case .fourthGen: return "4th generation"
+        case .photo: return "iPod photo"
         case .fifthGen: return "5th generation"
         }
     }
@@ -40,6 +43,7 @@ enum IPodModel: String, CaseIterable {
         case .thirdGen: return .thirdGen
         case .mini: return .mini
         case .fourthGen: return .fourthGen
+        case .photo: return .photo
         case .fifthGen: return .fifthGen
         }
     }
@@ -106,6 +110,9 @@ struct ColourChoice: Equatable {
         BodyColour(id: "white", label: "White", body: 0xF4F4F2, wheel: 0xEEEEEC, button: 0xF6F6F4, labels: 0x8E9399),
         BodyColour(id: "u2", label: "U2 Special Edition", body: 0x1B1B1D, wheel: 0xC41E2A, button: 0xC41E2A, labels: 0x1A1A1A),
     ])
+
+    /// The iPod photo: the 4G's two colours, remembered on their own.
+    static let photo = ColourChoice(key: "photo", options: fourthGen.options)
 }
 
 /// Front face, in millimetres.
@@ -309,4 +316,21 @@ extension ModelSpec {
                               buttonDiameter: 13.9, centerFromBottom: 103.50 - 71.04, sectorsPerStep: 6),
         firmware: FirmwareProfile(menuStyle: .thirdGenLate, holdMenu: .toggleBacklight, quickScroll: false,
                                   backlight: true, visibleRows: 6, colours: .fourthGen))
+
+    /// iPod photo, 2004: the 4G's front with a 220 × 176 colour screen. Apple's
+    /// drawing (docs/reference/ipod-photo-dimensions.md); firmware 1.x. The 5G's
+    /// colour interface is laid out at the 5G's height, at the panel's 5:4.
+    static let photo = ModelSpec(
+        name: "iPod photo", year: 2004,
+        body: fourthGen.body,
+        display: DisplaySpec(kind: .color,
+                             windowSize: CGSize(width: 41.00, height: 33.08),
+                             windowTop: 23.59 - 33.08 / 2,
+                             windowCornerRadius: 1.0,
+                             pixels: CGSize(width: 220, height: 176), pixelPitch: 0.18,
+                             designSize: CGSize(width: 225, height: 180)),
+        controls: ControlSpec(kind: .clickWheel, outerDiameter: 42.06, wheelDiameter: 42.06,
+                              buttonDiameter: 13.9, centerFromBottom: 103.50 - 71.05, sectorsPerStep: 6),
+        firmware: FirmwareProfile(menuStyle: .thirdGenLate, holdMenu: .toggleBacklight, quickScroll: false,
+                                  backlight: true, visibleRows: 9, colours: .photo))
 }

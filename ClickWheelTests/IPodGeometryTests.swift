@@ -135,4 +135,15 @@ final class IPodGeometryTests: XCTestCase {
         XCTAssertEqual(g.lcdSize.width, 384, accuracy: 0.01)
         XCTAssertEqual(g.lcdSize.height, 307.2, accuracy: 0.01)
     }
+
+    func testPhotoGeometryAtTen() {
+        let g = IPodGeometry(model: .photo, pointsPerMM: 10)
+        XCTAssertEqual(g.windowSize.width, 410, accuracy: 0.01)
+        XCTAssertEqual(g.windowSize.height, 330.8, accuracy: 0.01)
+        XCTAssertEqual(g.windowTop, 70.5, accuracy: 0.01)
+        XCTAssertEqual(g.controlCenterY, 710.5, accuracy: 0.01)
+        XCTAssertEqual(g.lcdSize.width, 396, accuracy: 0.01)
+        XCTAssertEqual(g.lcdSize.height, 316.8, accuracy: 0.01)
+        XCTAssertEqual(g.lcdScale, 1.76, accuracy: 0.0001)
+    }
 }
