@@ -79,7 +79,13 @@ struct ScreenView: View {
 
     @ViewBuilder private var content: some View {
         switch navigator.current {
-        case .menu(let screen): MenuListView(screen: screen)
+        case .menu(let screen):
+            if g.model.spec.firmware.menuStyle == .classic,
+               ClassicLayout.isSplit(depth: navigator.stack.count, title: screen.title) {
+                ClassicMenuView(screen: screen)
+            } else {
+                MenuListView(screen: screen)
+            }
         case .nowPlaying: NowPlayingView()
         case .clock: ClockView()
         case .stopwatch: StopwatchView()
