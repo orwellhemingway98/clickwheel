@@ -35,6 +35,9 @@ whichever one is playing.
   Now Playing while something plays.
 - **Music** (Apple Music library): Playlists, Artists, Albums and Songs. Picking a
   song plays it in context: the rest of the playlist, album or song list follows.
+- **Cover Flow** (iPod classic and nanos 3G–5G): Music › Cover Flow shows your albums
+  as covers with reflections. Turn the wheel to flip through them; press the centre
+  to turn a cover over to its songs, and again to play one. MENU turns it back.
 - **Settings**: source (Auto / Apple Music / Spotify), clicker on/off.
 - Borderless floating window: drag it anywhere; right-click for **Keep on Top** or **Quit**.
 
@@ -86,6 +89,8 @@ System Settings → Privacy & Security → Automation.
 
 1. ✅ Now Playing and transport controls
 2. ✅ Apple Music library menus (Playlists, Artists, Albums, Songs)
+   - ✅ Every click-wheel iPod, 2001–2009, life size (Settings › Model)
+   - ✅ Cover Flow
 3. Spotify library menus (via the Spotify Web API)
 4. Extras: alternate skins, more settings
 
