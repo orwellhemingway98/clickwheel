@@ -7,6 +7,7 @@ enum IPodModel: String, CaseIterable {
     case secondGen
     case thirdGen
     case mini
+    case fourthGen
     case fifthGen
 
     var shortName: String {
@@ -15,6 +16,7 @@ enum IPodModel: String, CaseIterable {
         case .secondGen: return "2nd gen"
         case .thirdGen: return "3rd gen"
         case .mini: return "mini"
+        case .fourthGen: return "4th gen"
         case .fifthGen: return "5th gen"
         }
     }
@@ -26,6 +28,7 @@ enum IPodModel: String, CaseIterable {
         case .secondGen: return "2nd generation"
         case .thirdGen: return "3rd generation"
         case .mini: return "iPod mini"
+        case .fourthGen: return "4th generation"
         case .fifthGen: return "5th generation"
         }
     }
@@ -36,6 +39,7 @@ enum IPodModel: String, CaseIterable {
         case .secondGen: return .secondGen
         case .thirdGen: return .thirdGen
         case .mini: return .mini
+        case .fourthGen: return .fourthGen
         case .fifthGen: return .fifthGen
         }
     }
@@ -60,35 +64,42 @@ struct ModelSpec: Equatable {
     let firmware: FirmwareProfile
     var material: Material = .whitePlastic
     /// Offered in several colours (Settings › Colour); the firmware profile says so.
-    var hasColours: Bool { firmware.colours }
+    var hasColours: Bool { firmware.colours != nil }
 }
 
-/// The iPod mini's five anodized colours (estimated; no published values).
-enum MiniColor: String, CaseIterable {
-    case silver, gold, pink, blue, green
+/// One colour a model was sold in: its front, click wheel, centre button and
+/// wheel labels (estimated; Apple published no values).
+struct BodyColour: Equatable, Identifiable {
+    let id: String
+    let label: String
+    let body: UInt32
+    let wheel: UInt32
+    let button: UInt32
+    let labels: UInt32
+}
 
-    var label: String { rawValue.prefix(1).uppercased() + rawValue.dropFirst() }
+/// The colours one model offers in Settings › Colour; `key` is where the
+/// choice is remembered, so each model keeps its own.
+struct ColourChoice: Equatable {
+    let key: String
+    let options: [BodyColour]
 
-    var body: UInt32 {
-        switch self {
-        case .silver: return 0xC8CACD
-        case .gold: return 0xD8C79F
-        case .pink: return 0xE4B7C6
-        case .blue: return 0x9DB6D3
-        case .green: return 0xB3C99A
-        }
-    }
+    func option(_ id: String) -> BodyColour? { options.first { $0.id == id } }
 
-    /// The click wheel: a lighter tint of the body.
-    var wheel: UInt32 {
-        switch self {
-        case .silver: return 0xE4E5E7
-        case .gold: return 0xECE3CC
-        case .pink: return 0xF2DBE2
-        case .blue: return 0xCFDCEA
-        case .green: return 0xDBE5CF
-        }
-    }
+    /// The iPod mini's five anodized colours; the wheel is a lighter tint of the body.
+    static let mini = ColourChoice(key: "mini", options: [
+        BodyColour(id: "silver", label: "Silver", body: 0xC8CACD, wheel: 0xE4E5E7, button: 0xE4E5E7, labels: 0x8E9399),
+        BodyColour(id: "gold", label: "Gold", body: 0xD8C79F, wheel: 0xECE3CC, button: 0xECE3CC, labels: 0x8E9399),
+        BodyColour(id: "pink", label: "Pink", body: 0xE4B7C6, wheel: 0xF2DBE2, button: 0xF2DBE2, labels: 0x8E9399),
+        BodyColour(id: "blue", label: "Blue", body: 0x9DB6D3, wheel: 0xCFDCEA, button: 0xCFDCEA, labels: 0x8E9399),
+        BodyColour(id: "green", label: "Green", body: 0xB3C99A, wheel: 0xDBE5CF, button: 0xDBE5CF, labels: 0x8E9399),
+    ])
+
+    /// The 4G in white, or the U2 Special Edition: black front, red wheel.
+    static let fourthGen = ColourChoice(key: "fourthGen", options: [
+        BodyColour(id: "white", label: "White", body: 0xF4F4F2, wheel: 0xEEEEEC, button: 0xF6F6F4, labels: 0x8E9399),
+        BodyColour(id: "u2", label: "U2 Special Edition", body: 0x1B1B1D, wheel: 0xC41E2A, button: 0xC41E2A, labels: 0x1A1A1A),
+    ])
 }
 
 /// Front face, in millimetres.
@@ -189,8 +200,8 @@ struct FirmwareProfile: Equatable {
     /// The screen is unlit until input lights it.
     let backlight: Bool
     let visibleRows: Int
-    /// Settings has a Colour row (models sold in several colours).
-    var colours = false
+    /// The colours Settings › Colour offers; nil for single-colour models.
+    var colours: ColourChoice? = nil
 }
 
 extension ModelSpec {
@@ -272,6 +283,24 @@ extension ModelSpec {
         controls: ControlSpec(kind: .clickWheel, outerDiameter: 37.95, wheelDiameter: 37.95,
                               buttonDiameter: 12.50, centerFromBottom: 28.75, sectorsPerStep: 6),
         firmware: FirmwareProfile(menuStyle: .thirdGenLate, holdMenu: .toggleBacklight, quickScroll: false,
-                                  backlight: true, visibleRows: 5, colours: true),
+                                  backlight: true, visibleRows: 5, colours: .mini),
         material: .aluminium)
+
+    /// iPod (4th generation), 2004: the click wheel comes to the full-size iPod.
+    /// Apple's drawing (docs/reference/ipod-4g-dimensions.md); firmware 3.x.
+    static let fourthGen = ModelSpec(
+        name: "iPod (4th generation)", year: 2004,
+        body: BodySpec(width: 61.80, height: 103.50, cornerRadius: 6.0, rimWidth: 0.4,
+                       edgeBand: 5.7, faceInsetTop: 5.6, faceInsetBottom: 6.0, faceCornerRadius: 3.4),
+        display: DisplaySpec(kind: .gray(LCDPalette(unlitTop: 0xA9AFA6, unlitBottom: 0xB7BCB3, unlitInk: 0x1E211D,
+                                                    litTop: 0xDCE4EE, litBottom: 0xEEF2F7, litInk: 0x1C2026)),
+                             windowSize: CGSize(width: 41.5, height: 34.0),
+                             windowTop: 23.59 - 34.0 / 2,
+                             windowCornerRadius: 1.0,
+                             pixels: CGSize(width: 160, height: 128), pixelPitch: 0.24,
+                             designSize: CGSize(width: 160, height: 128)),
+        controls: ControlSpec(kind: .clickWheel, outerDiameter: 42.06, wheelDiameter: 42.06,
+                              buttonDiameter: 13.9, centerFromBottom: 103.50 - 71.04, sectorsPerStep: 6),
+        firmware: FirmwareProfile(menuStyle: .thirdGenLate, holdMenu: .toggleBacklight, quickScroll: false,
+                                  backlight: true, visibleRows: 6, colours: .fourthGen))
 }

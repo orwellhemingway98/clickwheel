@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// The iPod mini's anodized aluminium in one of its five colours: the body,
-/// its click wheel (a lighter tint of the body) and the grey wheel labels.
-struct MiniFinish {
-    let colour: MiniColor
+/// A model drawn in one of its colours (the mini's aluminium, the 4G's white
+/// or U2 black): the front, the click wheel, its centre button and labels.
+struct BodyFinish {
+    let colour: BodyColour
 
-    static let label = Color(hex: 0x8E9399)
+    var label: Color { Color(hex: colour.labels) }
 
     /// Lit softly from above: a touch lighter at the top, darker at the bottom.
     var body: LinearGradient {
@@ -22,10 +22,10 @@ struct MiniFinish {
                        center: .center, startRadius: diameter * 0.15, endRadius: diameter * 0.5)
     }
 
-    /// The center button: the wheel's colour, matte and very slightly concave.
+    /// The center button, matte and very slightly concave.
     var button: LinearGradient {
-        LinearGradient(colors: [Self.mix(colour.wheel, toward: 0x000000, 0.04),
-                                Self.mix(colour.wheel, toward: 0xFFFFFF, 0.10)],
+        LinearGradient(colors: [Self.mix(colour.button, toward: 0x000000, 0.04),
+                                Self.mix(colour.button, toward: 0xFFFFFF, 0.10)],
                        startPoint: .top, endPoint: .bottom)
     }
 

@@ -81,8 +81,8 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertTrue(menu(nav)?.items.first?.opensSubmenu == true)
         nav.handle(.center)
         XCTAssertEqual(menu(nav)?.title, "Model")
-        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "5th generation"])
-        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2005"])
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "5th generation"])
+        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2005"])
         XCTAssertEqual(menu(nav)?.selectedIndex, 0)
     }
 
@@ -287,7 +287,7 @@ final class NavigatorFirstGenTests: XCTestCase {
         let nav = navigator(.secondGen)
         open(nav, "Settings")
         nav.handle(.center)
-        nav.choose(row: 4)
+        nav.choose(row: IPodModel.allCases.firstIndex(of: .fifthGen)!)
         XCTAssertEqual(settings.model, .fifthGen)
     }
 
@@ -326,9 +326,9 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertEqual(menu(nav)?.items.first?.detail(), "✓")
         XCTAssertEqual(menu(nav)?.selectedIndex, 0)
         nav.choose(row: 2)
-        XCTAssertEqual(settings.miniColor, .pink)
+        XCTAssertEqual(settings.colour(in: .mini).id, "pink")
         XCTAssertEqual(menu(nav)?.title, "Settings")
-        XCTAssertEqual(AppSettings(defaults: UserDefaults(suiteName: suiteName)!).miniColor, .pink)
+        XCTAssertEqual(AppSettings(defaults: UserDefaults(suiteName: suiteName)!).colour(in: .mini).id, "pink")
     }
 
     func testOtherModelsHaveNoColourRow() {
@@ -344,5 +344,44 @@ final class NavigatorFirstGenTests: XCTestCase {
         open(nav, "Music")
         nav.handle(.scroll(steps: 6))
         XCTAssertEqual(menu(nav)?.windowStart, 2)
+    }
+
+    // MARK: - iPod 4th gen
+
+    func testFourthGenSettingsHaveColour() {
+        let nav = navigator(.fourthGen)
+        open(nav, "Settings")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["Model", "Colour", "Source", "Backlight Timer", "Clicker"])
+        XCTAssertEqual(menu(nav)?.items[1].detail(), "White")
+    }
+
+    func testChoosingTheU2EditionPersistsPerModel() {
+        let nav = navigator(.fourthGen)
+        open(nav, "Settings")
+        open(nav, "Colour")
+        XCTAssertEqual(menu(nav)?.items.map(\.label), ["White", "U2 Special Edition"])
+        nav.choose(row: 1)
+        XCTAssertEqual(menu(nav)?.title, "Settings")
+        XCTAssertEqual(settings.colour(in: .fourthGen).id, "u2")
+        XCTAssertEqual(settings.colour(in: .mini).id, "silver", "each model keeps its own colour")
+    }
+
+    func testFifthGenHasNoColourRow() {
+        let nav = navigator(.fifthGen)
+        open(nav, "Settings")
+        XCTAssertFalse(menu(nav)!.items.map(\.label).contains("Colour"))
+    }
+
+    func testMiniReadsTheColourSavedBeforeColoursWerePerModel() {
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.set("blue", forKey: "miniColor")
+        XCTAssertEqual(AppSettings(defaults: defaults).colour(in: .mini).id, "blue")
+        XCTAssertEqual(AppSettings(defaults: defaults).colour(in: .fourthGen).id, "white")
+    }
+
+    func testAnUnknownSavedColourFallsBackToTheFirst() {
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.set("plaid", forKey: "colour.fourthGen")
+        XCTAssertEqual(AppSettings(defaults: defaults).colour(in: .fourthGen).id, "white")
     }
 }

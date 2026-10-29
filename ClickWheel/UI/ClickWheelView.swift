@@ -20,9 +20,9 @@ struct ClickWheelView: View {
 
     init(model: IPodModel) { _tracker = State(initialValue: WheelGestureTracker(model: model)) }
 
-    /// The mini's coloured aluminium, or nil for the 5G's white.
-    private var finish: MiniFinish? {
-        g.model.spec.material == .aluminium ? MiniFinish(colour: settings.miniColor) : nil
+    /// The chosen colour (mini, 4G), or nil for the 5G's own white.
+    private var finish: BodyFinish? {
+        g.model.spec.firmware.colours.map { BodyFinish(colour: settings.colour(in: $0)) }
     }
 
     private var size: CGFloat { g.wheelDiameter }
@@ -86,7 +86,7 @@ struct ClickWheelView: View {
             Text("▶❚❚").offset(y: offset)
         }
         .font(Theme.font(g.wheelLabelSize, semibold: true))
-        .foregroundStyle(finish == nil ? Theme.engravedLabel : MiniFinish.label)
+        .foregroundStyle(finish?.label ?? Theme.engravedLabel)
         // Engraved: a light edge just below each stroke (the mini's are printed).
         .shadow(color: .white.opacity(finish == nil ? 0.95 : 0.35), radius: 0, y: 1)
     }

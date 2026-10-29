@@ -17,9 +17,8 @@ final class AppSettings: ObservableObject {
     @Published var model: IPodModel {
         didSet { defaults.set(model.rawValue, forKey: Keys.model) }
     }
-    @Published var miniColor: MiniColor {
-        didSet { defaults.set(miniColor.rawValue, forKey: Keys.miniColor) }
-    }
+    /// Each model's chosen colour id, by `ColourChoice.key` (only those set this run).
+    @Published private var colourIDs: [String: String] = [:]
     @Published var backlightTimer: BacklightTimer {
         didSet { defaults.set(backlightTimer.rawValue, forKey: Keys.backlightTimer) }
     }
@@ -34,7 +33,20 @@ final class AppSettings: ObservableObject {
         keepOnTop = defaults.object(forKey: Keys.keepOnTop) as? Bool ?? true
         model = defaults.string(forKey: Keys.model).flatMap(IPodModel.init) ?? .fifthGen
         backlightTimer = defaults.string(forKey: Keys.backlightTimer).flatMap(BacklightTimer.init) ?? .ten
-        miniColor = defaults.string(forKey: Keys.miniColor).flatMap(MiniColor.init) ?? .silver
+    }
+
+    /// The colour chosen for a model, or its first colour. The mini's choice
+    /// was saved as `miniColor` before colours were per model.
+    func colour(in choice: ColourChoice) -> BodyColour {
+        let saved = colourIDs[choice.key]
+            ?? defaults.string(forKey: Keys.colour(choice.key))
+            ?? (choice.key == ColourChoice.mini.key ? defaults.string(forKey: Keys.legacyMiniColor) : nil)
+        return saved.flatMap(choice.option) ?? choice.options[0]
+    }
+
+    func setColour(_ colour: BodyColour, in choice: ColourChoice) {
+        colourIDs[choice.key] = colour.id
+        defaults.set(colour.id, forKey: Keys.colour(choice.key))
     }
 
     private enum Keys {
@@ -43,6 +55,7 @@ final class AppSettings: ObservableObject {
         static let keepOnTop = "keepOnTop"
         static let model = "model"
         static let backlightTimer = "backlightTimer"
-        static let miniColor = "miniColor"
+        static let legacyMiniColor = "miniColor"
+        static func colour(_ key: String) -> String { "colour.\(key)" }
     }
 }

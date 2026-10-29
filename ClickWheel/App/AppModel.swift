@@ -10,9 +10,16 @@ final class AppModel {
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 
-    /// Snapshot renders use throwaway settings so they never change the user's.
+    /// Snapshot renders use throwaway settings, fresh each run, so they never
+    /// change the user's and every render starts from the defaults.
     let settings = AppSettings(defaults: CommandLine.arguments.contains("--snapshot")
-                               ? UserDefaults(suiteName: "ClickWheel.snapshot")! : .standard)
+                               ? AppModel.freshSnapshotDefaults() : .standard)
+
+    private static func freshSnapshotDefaults() -> UserDefaults {
+        let suite = "ClickWheel.snapshot"
+        UserDefaults.standard.removePersistentDomain(forName: suite)
+        return UserDefaults(suiteName: suite)!
+    }
     let hub: PlayerHub
     let navigator: Navigator
     let input: WheelInput

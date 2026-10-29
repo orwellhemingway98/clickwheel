@@ -393,9 +393,9 @@ final class Navigator: ObservableObject {
             MenuItem("Model", detail: { settings.model.shortName },
                      action: .push { [unowned self] in self.modelMenu() }),
         ]
-        if profile.colours {
-            items.append(MenuItem("Colour", detail: { settings.miniColor.label },
-                                  action: .push { [unowned self] in self.colourMenu() }))
+        if let choice = profile.colours {
+            items.append(MenuItem("Colour", detail: { settings.colour(in: choice).label },
+                                  action: .push { [unowned self] in self.colourMenu(choice) }))
         }
         items += [
             MenuItem("Source", detail: { Self.label(for: settings.sourceMode) }, action: .run {
@@ -434,12 +434,12 @@ final class Navigator: ObservableObject {
 
     /// Settings › Colour (models that come in colours): opens at the top, the
     /// current colour ticked; choosing one sets it and goes back.
-    private func colourMenu() -> MenuScreen {
+    private func colourMenu(_ choice: ColourChoice) -> MenuScreen {
         let settings = self.settings
-        return MenuScreen(title: "Colour", items: MiniColor.allCases.map { colour in
-            MenuItem(colour.label, detail: { settings.miniColor == colour ? "✓" : nil },
+        return MenuScreen(title: "Colour", items: choice.options.map { colour in
+            MenuItem(colour.label, detail: { settings.colour(in: choice) == colour ? "✓" : nil },
                      action: .run { [unowned self] in
-                         settings.miniColor = colour
+                         settings.setColour(colour, in: choice)
                          self.back()
                      })
         })

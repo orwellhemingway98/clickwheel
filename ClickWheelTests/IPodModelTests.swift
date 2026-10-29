@@ -44,7 +44,7 @@ final class IPodModelTests: XCTestCase {
 
     func testModelsAreInReleaseOrder() {
         XCTAssertEqual(IPodModel.allCases.map(\.spec.year), IPodModel.allCases.map(\.spec.year).sorted())
-        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "5th gen"])
+        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "4th gen", "5th gen"])
     }
 
     func testSecondGenIsTheFirstGenWithATouchWheel() {
@@ -125,9 +125,54 @@ final class IPodModelTests: XCTestCase {
     }
 
     func testMiniColours() {
-        XCTAssertEqual(MiniColor.allCases.map(\.label), ["Silver", "Gold", "Pink", "Blue", "Green"])
-        XCTAssertEqual(MiniColor.silver.body, 0xC8CACD)
-        XCTAssertEqual(MiniColor.pink.wheel, 0xF2DBE2)
+        let choice = IPodModel.mini.spec.firmware.colours!
+        XCTAssertEqual(choice.key, "mini")
+        XCTAssertEqual(choice.options.map(\.label), ["Silver", "Gold", "Pink", "Blue", "Green"])
+        XCTAssertEqual(choice.options.map(\.id), ["silver", "gold", "pink", "blue", "green"])
+        XCTAssertEqual(choice.option("silver")?.body, 0xC8CACD)
+        let pink = choice.option("pink")!
+        XCTAssertEqual(pink.wheel, 0xF2DBE2)
+        XCTAssertEqual(pink.button, pink.wheel)
+        XCTAssertEqual(pink.labels, 0x8E9399)
+    }
+
+    func testFourthGenColours() {
+        let choice = IPodModel.fourthGen.spec.firmware.colours!
+        XCTAssertEqual(choice.key, "fourthGen")
+        XCTAssertEqual(choice.options.map(\.label), ["White", "U2 Special Edition"])
+        let white = choice.options[0], u2 = choice.options[1]
+        XCTAssertEqual([white.body, white.wheel, white.button, white.labels], [0xF4F4F2, 0xEEEEEC, 0xF6F6F4, 0x8E9399])
+        XCTAssertEqual([u2.body, u2.wheel, u2.button, u2.labels], [0x1B1B1D, 0xC41E2A, 0xC41E2A, 0x1A1A1A])
+        XCTAssertNil(choice.option("nope"))
+    }
+
+    func testFourthGenSpecFollowsApplesDrawing() {
+        let s = IPodModel.fourthGen.spec
+        XCTAssertEqual(IPodModel.fourthGen.generationName, "4th generation")
+        XCTAssertEqual(s.year, 2004)
+        XCTAssertEqual(s.material, .whitePlastic)
+        XCTAssertTrue(s.hasColours)
+        XCTAssertEqual(s.body.width, 61.80); XCTAssertEqual(s.body.height, 103.50)
+        XCTAssertEqual(s.body.cornerRadius, 6.0); XCTAssertEqual(s.body.rimWidth, 0.4)
+        XCTAssertEqual(s.body.edgeBand, 5.7)
+        XCTAssertEqual(s.body.faceInsetTop, 5.6); XCTAssertEqual(s.body.faceInsetBottom, 6.0)
+        XCTAssertEqual(s.display.windowSize, CGSize(width: 41.5, height: 34.0))
+        XCTAssertEqual(s.display.windowTop, 23.59 - 34.0 / 2, accuracy: 0.0001)
+        XCTAssertEqual(s.display.pixels, CGSize(width: 160, height: 128))
+        XCTAssertEqual(s.display.pixelPitch, 0.24)
+        XCTAssertTrue(s.display.pixelCrisp)
+        XCTAssertEqual(s.display.font, .chicago)
+        XCTAssertEqual(s.display.nowPlayingLines, 3)
+        XCTAssertEqual(s.controls.kind, .clickWheel)
+        XCTAssertEqual(s.controls.wheelDiameter, 42.06)
+        XCTAssertEqual(s.controls.buttonDiameter, 13.9)
+        XCTAssertEqual(s.controls.centerFromBottom, 103.50 - 71.04, accuracy: 0.0001)
+        XCTAssertEqual(s.controls.sectorsPerStep, 6)
+        XCTAssertEqual(s.firmware.menuStyle, .thirdGenLate)
+        XCTAssertEqual(s.firmware.visibleRows, 6)
+        XCTAssertEqual(s.firmware.holdMenu, .toggleBacklight)
+        XCTAssertFalse(s.firmware.quickScroll)
+        XCTAssertTrue(s.firmware.backlight)
     }
 
     func testHasColoursFollowsTheFirmwareProfile() {
@@ -136,7 +181,7 @@ final class IPodModelTests: XCTestCase {
                              controls: base.controls, firmware: base.firmware)
         XCTAssertTrue(spec.hasColours)
         for model in IPodModel.allCases {
-            XCTAssertEqual(model.spec.hasColours, model.spec.firmware.colours)
+            XCTAssertEqual(model.spec.hasColours, model.spec.firmware.colours != nil)
         }
     }
 }

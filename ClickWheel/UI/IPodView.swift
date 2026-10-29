@@ -13,6 +13,11 @@ struct IPodView: View {
 
     private var material: Material { g.model.spec.material }
 
+    /// The chosen colour, for models sold in several.
+    private var finish: BodyFinish? {
+        g.model.spec.firmware.colours.map { BodyFinish(colour: settings.colour(in: $0)) }
+    }
+
     private var faceShape: RoundedRectangle {
         RoundedRectangle(cornerRadius: g.cornerRadius - g.rimWidth)
     }
@@ -67,7 +72,7 @@ struct IPodView: View {
     /// soft highlight where the curve begins).
     private var aluminiumFace: some View {
         faceShape
-            .fill(MiniFinish(colour: settings.miniColor).body)
+            .fill(finish?.body ?? Theme.acrylic)
             .overlay { BrushedTexture() }
             .overlay {
                 HStack(spacing: 0) {
@@ -90,7 +95,7 @@ struct IPodView: View {
 
     private var plasticFace: some View {
         faceShape
-            .fill(g.model.spec.controls.kind == .clickWheel ? Theme.acrylic : Theme.firstGenFace)
+            .fill(finish?.body ?? (g.model.spec.controls.kind == .clickWheel ? Theme.acrylic : Theme.firstGenFace))
             .overlay { if g.edgeBand > 0 { roundedEdges } }
             .overlay {
                 faceShape
