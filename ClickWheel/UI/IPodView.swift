@@ -39,6 +39,10 @@ struct IPodView: View {
                 .allowsHitTesting(false)
             controls
                 .position(x: g.bodySize.width / 2, y: g.controlCenterY)
+            if g.model.spec.controls.kind == .buttonRow {
+                ButtonRowView()
+                    .position(x: g.bodySize.width / 2, y: g.rowCenterY)
+            }
         }
         .frame(width: g.bodySize.width, height: g.bodySize.height)
         .compositingGroup()
@@ -50,7 +54,8 @@ struct IPodView: View {
     /// meets the chrome and a faint line where the white begins.
     private var face: some View {
         faceShape
-            .fill(g.model.spec.controls.kind == .scrollWheel ? Theme.firstGenFace : Theme.acrylic)
+            .fill(g.model.spec.controls.kind == .clickWheel ? Theme.acrylic : Theme.firstGenFace)
+            .overlay { if g.edgeBand > 0 { roundedEdges } }
             .overlay {
                 faceShape
                     .stroke(Color.black.opacity(0.18), lineWidth: 2)
@@ -69,6 +74,24 @@ struct IPodView: View {
         switch g.model.spec.controls.kind {
         case .clickWheel: ClickWheelView()
         case .scrollWheel, .buttonRow: ScrollWheelView()
+        }
+    }
+
+    /// The 3G's rounded sides: soft shading across each edge band, and a faint
+    /// outline where the flat face begins.
+    private var roundedEdges: some View {
+        ZStack {
+            HStack(spacing: 0) {
+                LinearGradient(colors: [.black.opacity(0.10), .clear], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: g.edgeBand)
+                Spacer(minLength: 0)
+                LinearGradient(colors: [.clear, .black.opacity(0.10)], startPoint: .leading, endPoint: .trailing)
+                    .frame(width: g.edgeBand)
+            }
+            RoundedRectangle(cornerRadius: g.faceCornerRadius)
+                .stroke(Color.black.opacity(0.07), lineWidth: 0.5)
+                .padding(EdgeInsets(top: g.faceInsetTop - g.rimWidth, leading: g.edgeBand - g.rimWidth,
+                                    bottom: g.faceInsetBottom - g.rimWidth, trailing: g.edgeBand - g.rimWidth))
         }
     }
 

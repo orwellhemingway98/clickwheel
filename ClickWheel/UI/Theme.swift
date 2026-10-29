@@ -36,6 +36,9 @@ enum Theme {
     static let firstGenWheel = RadialGradient(colors: [Color(hex: 0xEAEAE8), Color(hex: 0xE4E4E2)],
                                               center: .center, startRadius: 20, endRadius: 110)
     static let firstGenLabel = Color(hex: 0x9A9A9E)
+    /// iPod (3rd generation): the touch buttons' red glow.
+    static let thirdGenGlow = Color(hex: 0xFF3B2F)
+
     /// iPod (2nd generation): a still, smooth touch wheel in the same white.
     static let touchWheel = RadialGradient(colors: [Color(hex: 0xEFEFED), Color(hex: 0xE6E6E4), Color(hex: 0xDEDEDC)],
                                            center: UnitPoint(x: 0.45, y: 0.4), startRadius: 10, endRadius: 120)

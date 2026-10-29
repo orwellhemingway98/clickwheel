@@ -37,7 +37,14 @@ struct ScrollWheelView: View {
 
     // MARK: - Drawing
 
-    private var ring: some View {
+    /// The 3G's touch wheel has no ring of buttons around it.
+    private var hasRing: Bool { g.ringDiameter > g.wheelDiameter + 0.5 }
+
+    @ViewBuilder private var ring: some View {
+        if hasRing { ringBody }
+    }
+
+    private var ringBody: some View {
         let gap = 0.6 * g.pointsPerMM
         let band = (g.ringDiameter - g.wheelDiameter) / 2
         return ZStack {
