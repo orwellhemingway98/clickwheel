@@ -58,8 +58,7 @@ Choose the iPod from the list in **Settings › Model** (the current one is tick
 | **iPod mini (2nd generation)** | 2005 | The mini in brighter pink, blue and green (silver unchanged, no gold), with wheel lettering that matches the body. |
 | **iPod (5th generation)** | 2005 | Click wheel and colour screen (see Features). |
 
-More models are coming, in release order: mini, 4G, photo, mini 2G, nano 1G,
-nano 2G, classic, nano 3G–5G.
+More models are coming, in release order: nano 1G, nano 2G, classic, nano 3G–5G.
 
 ## Build
 
