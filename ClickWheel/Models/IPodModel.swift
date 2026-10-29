@@ -13,6 +13,7 @@ enum IPodModel: String, CaseIterable {
     case nano
     case fifthGen
     case nanoSecondGen
+    case classic
 
     var shortName: String {
         switch self {
@@ -25,6 +26,7 @@ enum IPodModel: String, CaseIterable {
         case .miniSecondGen: return "mini 2G"
         case .nano: return "nano"
         case .nanoSecondGen: return "nano 2G"
+        case .classic: return "classic"
         case .fifthGen: return "5th gen"
         }
     }
@@ -41,6 +43,7 @@ enum IPodModel: String, CaseIterable {
         case .miniSecondGen: return "iPod mini (2nd gen)"
         case .nano: return "iPod nano"
         case .nanoSecondGen: return "iPod nano (2nd gen)"
+        case .classic: return "iPod classic"
         case .fifthGen: return "5th generation"
         }
     }
@@ -56,6 +59,7 @@ enum IPodModel: String, CaseIterable {
         case .miniSecondGen: return .miniSecondGen
         case .nano: return .nano
         case .nanoSecondGen: return .nanoSecondGen
+        case .classic: return .classic
         case .fifthGen: return .fifthGen
         }
     }
@@ -146,6 +150,12 @@ struct ColourChoice: Equatable {
         BodyColour(id: "blue", label: "Blue", body: 0x79B4E3, wheel: 0xF2F2F0, button: 0xF2F2F0, labels: 0x8E9399),
         BodyColour(id: "black", label: "Black", body: 0x2A2A2C, wheel: 0x1E1E20, button: 0x1E1E20, labels: 0x9A9A9E),
         BodyColour(id: "red", label: "(PRODUCT) RED", body: 0xC8202F, wheel: 0xF2F2F0, button: 0xF2F2F0, labels: 0x8E9399),
+    ])
+
+    /// The classic's anodized aluminium plate, silver or black.
+    static let classic = ColourChoice(key: "classic", options: [
+        BodyColour(id: "silver", label: "Silver", body: 0xC9CBCE, wheel: 0xE9EAEB, button: 0xD2D4D7, labels: 0x8E9399),
+        BodyColour(id: "black", label: "Black", body: 0x1F2022, wheel: 0x18181A, button: 0x18181A, labels: 0x8E9399),
     ])
 
     /// The mini 2G: brighter pink, blue and green, silver unchanged, no gold; the
@@ -242,6 +252,8 @@ enum MenuStyle: Equatable {
     case firstGenLate
     /// Firmware 2.3 (3G): Music, Extras, Settings, Shuffle Songs, Backlight.
     case thirdGenLate
+    /// The classic (2007): the 5G's menus, split-screen with album art.
+    case classic
 }
 
 enum HoldMenuAction: Equatable {
@@ -419,5 +431,22 @@ extension ModelSpec {
                               buttonDiameter: 13.11, centerFromBottom: 31.75, sectorsPerStep: 6),
         firmware: FirmwareProfile(menuStyle: .fifthGen, holdMenu: .toggleBacklight, quickScroll: false,
                                   backlight: true, visibleRows: 9, colours: .nanoSecondGen),
+        material: .aluminium)
+
+    /// iPod classic, 2007: an aluminium plate in a steel shell, the 5G's screen,
+    /// and a split-screen interface. Apple's drawing (docs/reference/ipod-classic-dimensions.md).
+    static let classic = ModelSpec(
+        name: "iPod classic", year: 2007,
+        body: BodySpec(width: 61.8, height: 103.5, cornerRadius: 6.8, rimWidth: 1.0),
+        display: DisplaySpec(kind: .color,
+                             windowSize: CGSize(width: 52.0, height: 39.5),
+                             windowTop: 24.7 - 39.5 / 2,
+                             windowCornerRadius: 1.0,
+                             pixels: fifthGen.display.pixels, pixelPitch: fifthGen.display.pixelPitch,
+                             designSize: fifthGen.display.designSize),
+        controls: ControlSpec(kind: .clickWheel, outerDiameter: 38.0, wheelDiameter: 38.0,
+                              buttonDiameter: 13.7, centerFromBottom: 30.4, sectorsPerStep: 6),
+        firmware: FirmwareProfile(menuStyle: .classic, holdMenu: .toggleBacklight, quickScroll: false,
+                                  backlight: true, visibleRows: 9, colours: .classic),
         material: .aluminium)
 }

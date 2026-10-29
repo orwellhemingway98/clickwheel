@@ -44,7 +44,7 @@ final class IPodModelTests: XCTestCase {
 
     func testModelsAreInReleaseOrder() {
         XCTAssertEqual(IPodModel.allCases.map(\.spec.year), IPodModel.allCases.map(\.spec.year).sorted())
-        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "4th gen", "photo", "mini 2G", "nano", "5th gen", "nano 2G"])
+        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "4th gen", "photo", "mini 2G", "nano", "5th gen", "nano 2G", "classic"])
     }
 
     func testSecondGenIsTheFirstGenWithATouchWheel() {
@@ -318,5 +318,41 @@ final class IPodModelTests: XCTestCase {
         XCTAssertTrue(ColourChoice.nano.option("black")!.hasDarkWheel)
         XCTAssertTrue(ColourChoice.fourthGen.option("u2")!.hasDarkWheel, "the U2's red wheel keeps its look")
         XCTAssertFalse(ColourChoice.mini.options.contains { $0.hasDarkWheel })
+    }
+
+    func testClassicSpecFollowsApplesDrawing() {
+        let s = IPodModel.classic.spec
+        XCTAssertEqual(IPodModel.classic.generationName, "iPod classic")
+        XCTAssertEqual(s.year, 2007)
+        XCTAssertEqual(s.material, .aluminium)
+        XCTAssertEqual(s.body.width, 61.8); XCTAssertEqual(s.body.height, 103.5)
+        XCTAssertEqual(s.body.cornerRadius, 6.8); XCTAssertEqual(s.body.rimWidth, 1.0)
+        XCTAssertEqual(s.body.edgeBand, 0)
+        XCTAssertEqual(s.display.kind, .color)
+        XCTAssertEqual(s.display.windowSize, CGSize(width: 52.0, height: 39.5))
+        XCTAssertEqual(s.display.windowTop, 24.7 - 39.5 / 2, accuracy: 0.0001)
+        XCTAssertEqual(s.display.pixels, IPodModel.fifthGen.spec.display.pixels)
+        XCTAssertEqual(s.display.pixelPitch, IPodModel.fifthGen.spec.display.pixelPitch)
+        XCTAssertEqual(s.display.designSize, CGSize(width: 240, height: 180))
+        XCTAssertEqual(s.controls.wheelDiameter, 38.0)
+        XCTAssertEqual(s.controls.buttonDiameter, 13.7)
+        XCTAssertEqual(s.controls.centerFromBottom, 30.4)
+        XCTAssertEqual(s.controls.sectorsPerStep, 6)
+        XCTAssertEqual(s.firmware.menuStyle, .classic)
+        XCTAssertEqual(s.firmware.holdMenu, .toggleBacklight)
+        XCTAssertTrue(s.firmware.backlight)
+        XCTAssertFalse(s.firmware.quickScroll)
+        XCTAssertEqual(s.firmware.visibleRows, 9)
+        XCTAssertEqual(s.firmware.colours, .classic)
+    }
+
+    func testClassicColours() {
+        let choice = ColourChoice.classic
+        XCTAssertEqual(choice.key, "classic")
+        XCTAssertEqual(choice.options.map(\.label), ["Silver", "Black"])
+        XCTAssertEqual(choice.options.map { [$0.body, $0.wheel, $0.button, $0.labels] },
+                       [[0xC9CBCE, 0xE9EAEB, 0xD2D4D7, 0x8E9399], [0x1F2022, 0x18181A, 0x18181A, 0x8E9399]])
+        XCTAssertFalse(choice.options[0].hasDarkWheel)
+        XCTAssertTrue(choice.options[1].hasDarkWheel)
     }
 }

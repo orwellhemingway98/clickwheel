@@ -166,4 +166,14 @@ final class IPodGeometryTests: XCTestCase {
         XCTAssertEqual(g.controlCenterY, 582.5, accuracy: 0.01)
         XCTAssertEqual(g.edgeBand, 43, accuracy: 0.01)
     }
+
+    func testClassicGeometryAtTen() {
+        let g = IPodGeometry(model: .classic, pointsPerMM: 10)
+        XCTAssertEqual(g.windowSize.width, 520, accuracy: 0.01)
+        XCTAssertEqual(g.windowSize.height, 395, accuracy: 0.01)
+        XCTAssertEqual(g.windowTop, 49.5, accuracy: 0.01)
+        XCTAssertEqual(g.wheelDiameter, 380, accuracy: 0.01)
+        XCTAssertEqual(g.controlCenterY, 731, accuracy: 0.01)
+        XCTAssertEqual(g.buttonDiameter, 137, accuracy: 0.01)
+    }
 }

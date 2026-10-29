@@ -349,8 +349,8 @@ final class Navigator: ObservableObject {
         var items: [MenuItem] = []
         let title: String
         switch profile.menuStyle {
-        case .fifthGen:
-            title = "ClickWheel"
+        case .fifthGen, .classic:
+            title = profile.menuStyle == .classic ? "iPod" : "ClickWheel"
             if let musicMenu {
                 items.append(MenuItem("Music", action: .push(musicMenu)))
             }
