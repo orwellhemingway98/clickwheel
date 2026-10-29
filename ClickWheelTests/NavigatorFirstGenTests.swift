@@ -446,4 +446,15 @@ final class NavigatorFirstGenTests: XCTestCase {
         nav.handle(.menuHold)
         XCTAssertEqual(menu(nav)?.title, "Settings", "hold MENU toggles the backlight, it doesn't go home")
     }
+
+    func testNanoBacklightTogglesAndTimesOut() {
+        settings.backlightTimer = .five
+        let nav = navigator(.nano)
+        nav.handle(.scroll(steps: 1))
+        XCTAssertTrue(nav.backlight.isOn, "input lights the nano's screen")
+        nav.handle(.tick(now: clock + 5.1))
+        XCTAssertFalse(nav.backlight.isOn, "and the timer dims it")
+        nav.handle(.menuHold)
+        XCTAssertTrue(nav.backlight.isOn, "hold MENU turns it back on")
+    }
 }
