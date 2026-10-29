@@ -23,8 +23,16 @@ struct CoverFlowLayout: Equatable {
         side = (min(canvas.width * 0.42, canvas.height * 0.5)).rounded()
         centre = CGPoint(x: canvas.width / 2, y: (canvas.height * 0.42).rounded())
         card = min((side * 1.4).rounded(), canvas.width - 16, canvas.height - 16)
-        titleY = canvas.height - 28
-        artistY = canvas.height - 13
+        // Just under the reflections, or as low as the screen allows.
+        let reflectionBottom = centre.y + side / 2 + side * 0.35
+        titleY = min(canvas.height - 28, (reflectionBottom + 16).rounded())
+        artistY = titleY + 15
+    }
+
+    /// A cover turning over: the front turns away to edge-on (0–90°), then the
+    /// back turns into view (90–180°), each drawn at its own angle.
+    static func flip(angle: Double) -> (showsBack: Bool, rotation: Double) {
+        angle < 90 ? (false, angle) : (true, angle - 180)
     }
 
     /// The middle cover faces you; the others stand at 60° on either side,
@@ -70,18 +78,11 @@ struct CoverFlowView: View {
                         .frame(width: g.designSize.width - 16)
                         .position(x: g.designSize.width / 2, y: layout.artistY)
                         .zIndex(CoverFlowLayout.textZ)
-                    if state.flipped {
-                        CoverBack(album: album, state: state, side: layout.card)
-                            .position(layout.centre)
-                            .transition(.flip)
-                            .zIndex(CoverFlowLayout.textZ + 1)
-                    }
                 }
             }
         }
         .frame(width: g.designSize.width, height: g.designSize.height)
         .animation(.easeOut(duration: 0.25), value: state.index)
-        .animation(.easeInOut(duration: 0.35), value: state.flipped)
     }
 
     private func message(_ text: String) -> some View {
@@ -93,11 +94,19 @@ struct CoverFlowView: View {
         return ForEach(Array(range), id: \.self) { i in
             let d = i - state.index
             let move = layout.transform(offset: d)
-            CoverImage(album: state.albums[i], side: layout.side, load: abs(d) <= CoverFlowLayout.loaded)
-                .rotation3DEffect(.degrees(move.rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
-                .position(x: layout.centre.x + move.x, y: layout.centre.y)
-                .zIndex(move.z)
-                .opacity(d == 0 && state.flipped ? 0 : 1)
+            let cover = CoverImage(album: state.albums[i], side: layout.side, load: abs(d) <= CoverFlowLayout.loaded)
+            Group {
+                if d == 0 {
+                    // The middle cover turns over to its songs.
+                    FlipCard(angle: state.flipped ? 180 : 0, front: cover,
+                             back: CoverBack(album: state.albums[i], state: state, side: layout.card))
+                        .animation(.easeInOut(duration: 0.4), value: state.flipped)
+                } else {
+                    cover.rotation3DEffect(.degrees(move.rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
+                }
+            }
+            .position(x: layout.centre.x + move.x, y: layout.centre.y)
+            .zIndex(d == 0 && state.flipped ? CoverFlowLayout.textZ + 1 : move.z)
         }
     }
 }
@@ -185,19 +194,23 @@ private struct CoverBack: View {
     }
 }
 
-private struct FlipModifier: ViewModifier {
-    let angle: Double
+/// A cover turning a full half-turn: its front turns away, then its back turns
+/// into view. The angle animates, so both halves are drawn at every step.
+private struct FlipCard<Front: View, Back: View>: View, Animatable {
+    var angle: Double
+    let front: Front
+    let back: Back
 
-    func body(content: Content) -> some View {
-        content
-            .rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
-            .opacity(abs(angle) >= 90 ? 0 : 1)
+    var animatableData: Double {
+        get { angle }
+        set { angle = newValue }
     }
-}
 
-private extension AnyTransition {
-    /// The cover turning over to show its back.
-    static var flip: AnyTransition {
-        .modifier(active: FlipModifier(angle: -90), identity: FlipModifier(angle: 0))
+    var body: some View {
+        let turn = CoverFlowLayout.flip(angle: angle)
+        ZStack {
+            if turn.showsBack { back } else { front }
+        }
+        .rotation3DEffect(.degrees(turn.rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
     }
 }

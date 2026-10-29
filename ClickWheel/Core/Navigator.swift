@@ -39,6 +39,8 @@ final class Navigator: ObservableObject {
     private let coverFlow: CoverFlowSource?
     /// The library's albums, once Cover Flow has fetched them.
     private var coverFlowAlbums: [CoverFlowAlbum]?
+    /// The album Cover Flow was last on, to come back to.
+    private var coverFlowIndex = 0
     private let now: () -> TimeInterval
     private let onPlayed: () -> Void
     private let onRowsMoved: (Int) -> Void
@@ -206,6 +208,7 @@ final class Navigator: ObservableObject {
             let before = state
             state.scroll(steps * accelerator.multiplier(forStep: steps, now: time))
             stack[stack.count - 1] = .coverFlow(state)
+            coverFlowIndex = state.index
             if state != before { onRowsMoved(abs(steps)) }
         case .clock, .stopwatch:
             break
@@ -355,7 +358,7 @@ final class Navigator: ObservableObject {
     /// Opens a fresh Cover Flow; the albums are fetched once and remembered.
     private func openCoverFlow() {
         if let albums = coverFlowAlbums {
-            push(.coverFlow(CoverFlowState(albums: albums, loading: false)))
+            push(.coverFlow(CoverFlowState(albums: albums, loading: false, index: coverFlowIndex)))
             return
         }
         let state = CoverFlowState(albums: [], loading: true)

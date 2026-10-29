@@ -71,4 +71,10 @@ final class CoverFlowStateTests: XCTestCase {
         XCTAssertEqual(empty.index, 0)
         XCTAssertNil(empty.center())
     }
+
+    func testStartingAlbumIsKeptInRange() {
+        XCTAssertEqual(CoverFlowState(albums: state(5).albums, loading: false, index: 3).index, 3)
+        XCTAssertEqual(CoverFlowState(albums: state(5).albums, loading: false, index: 9).index, 4)
+        XCTAssertEqual(CoverFlowState(albums: [], loading: false, index: 2).index, 0)
+    }
 }

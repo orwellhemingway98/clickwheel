@@ -48,4 +48,24 @@ final class CoverFlowLayoutTests: XCTestCase {
         XCTAssertEqual(CoverFlowLayout.drawn, 4)
         XCTAssertEqual(CoverFlowLayout.loaded, 3)
     }
+
+    func testTheFlipTurnsTheFrontAwayThenTheBackIntoView() {
+        XCTAssertEqual(CoverFlowLayout.flip(angle: 0).showsBack, false)
+        XCTAssertEqual(CoverFlowLayout.flip(angle: 0).rotation, 0)
+        XCTAssertEqual(CoverFlowLayout.flip(angle: 60).showsBack, false)
+        XCTAssertEqual(CoverFlowLayout.flip(angle: 60).rotation, 60)
+        XCTAssertEqual(CoverFlowLayout.flip(angle: 120).showsBack, true)
+        XCTAssertEqual(CoverFlowLayout.flip(angle: 120).rotation, -60)
+        XCTAssertEqual(CoverFlowLayout.flip(angle: 180).showsBack, true)
+        XCTAssertEqual(CoverFlowLayout.flip(angle: 180).rotation, 0)
+    }
+
+    func testTheTextSitsUnderTheReflectionsOnTallScreens() {
+        let tall = CoverFlowLayout(canvas: CGSize(width: 180, height: 282))
+        XCTAssertEqual(tall.titleY, 199)
+        XCTAssertEqual(tall.artistY, 214)
+        let nano4 = CoverFlowLayout(canvas: CGSize(width: 180, height: 240))
+        XCTAssertEqual(nano4.titleY, 182)
+        XCTAssertEqual(nano4.artistY, 197)
+    }
 }

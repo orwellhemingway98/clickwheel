@@ -16,8 +16,7 @@ struct ScreenView: View {
 
     private var colorScreen: some View {
         VStack(spacing: 0) {
-            // Cover Flow fills the whole screen.
-            if !onCoverFlow { header }
+            header
             ZStack {
                 content
                     .id(navigator.stack.count)
@@ -34,6 +33,14 @@ struct ScreenView: View {
             }
             .clipped()
             .overlay { QuickScrollOverlay(letter: navigator.quickScrollLetter) }
+        }
+        // Cover Flow fills the whole screen, title bar included, sliding in over
+        // it so nothing underneath moves.
+        .overlay {
+            if case .coverFlow(let state) = navigator.current {
+                CoverFlowView(state: state)
+                    .transition(.iPodPush(navigator.slideDirection, width: g.designSize.width))
+            }
         }
         .animation(ScreenTheme.transition, value: navigator.stack.count)
         .foregroundStyle(ScreenTheme.text)
@@ -93,11 +100,6 @@ struct ScreenView: View {
         }
     }
 
-    private var onCoverFlow: Bool {
-        if case .coverFlow = navigator.current { return true }
-        return false
-    }
-
     /// The classic's main and Music menus split the screen with album art.
     private var classicSplit: Bool {
         guard g.model.spec.firmware.menuStyle == .classic, ClassicLayout.splits(canvas: g.designSize),
@@ -116,7 +118,7 @@ struct ScreenView: View {
         case .nowPlaying: NowPlayingView()
         case .clock: ClockView()
         case .stopwatch: StopwatchView()
-        case .coverFlow(let state): CoverFlowView(state: state)
+        case .coverFlow: Color.black   // drawn full-screen above
         }
     }
 }

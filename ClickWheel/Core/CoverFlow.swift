@@ -29,9 +29,10 @@ struct CoverFlowState: Equatable {
     private(set) var trackIndex = 0
     private(set) var trackWindowStart = 0
 
-    init(albums: [CoverFlowAlbum], loading: Bool) {
+    init(albums: [CoverFlowAlbum], loading: Bool, index: Int = 0) {
         self.albums = albums
         self.loading = loading
+        self.index = min(max(index, 0), max(albums.count - 1, 0))
     }
 
     var current: CoverFlowAlbum? { albums.indices.contains(index) ? albums[index] : nil }

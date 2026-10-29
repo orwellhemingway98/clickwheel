@@ -119,4 +119,14 @@ final class NavigatorCoverFlowTests: XCTestCase {
         XCTAssertEqual(coverFlow(nav)?.flipped, true)
         XCTAssertEqual(coverFlow(nav)?.index, 1)
     }
+
+    func testReopeningReturnsToTheAlbumYouLeftOn() async {
+        let nav = navigator(.classic)
+        await openCoverFlow(nav)
+        nav.handle(.scroll(steps: 1))
+        nav.handle(.menu)
+        nav.handle(.center)
+        XCTAssertEqual(coverFlow(nav)?.index, 1)
+        XCTAssertEqual(coverFlow(nav)?.flipped, false)
+    }
 }
