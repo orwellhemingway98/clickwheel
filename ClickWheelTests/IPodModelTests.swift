@@ -44,7 +44,7 @@ final class IPodModelTests: XCTestCase {
 
     func testModelsAreInReleaseOrder() {
         XCTAssertEqual(IPodModel.allCases.map(\.spec.year), IPodModel.allCases.map(\.spec.year).sorted())
-        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "4th gen", "photo", "mini 2G", "nano", "5th gen", "nano 2G", "classic", "nano 3G", "nano 4G"])
+        XCTAssertEqual(IPodModel.allCases.map(\.shortName), ["1st gen", "2nd gen", "3rd gen", "mini", "4th gen", "photo", "mini 2G", "nano", "5th gen", "nano 2G", "classic", "nano 3G", "nano 4G", "nano 5G"])
     }
 
     func testSecondGenIsTheFirstGenWithATouchWheel() {
@@ -424,6 +424,50 @@ final class IPodModelTests: XCTestCase {
         for colour in choice.options {
             let wheel: UInt32 = colour.id == "black" ? 0x18181A : 0xF2F2F0
             XCTAssertEqual([colour.wheel, colour.button, colour.labels], [wheel, wheel, 0x8E9399], colour.label)
+        }
+    }
+
+    func testNanoFifthGenSpecFollowsApplesDrawing() {
+        let s = IPodModel.nanoFifthGen.spec
+        XCTAssertEqual(IPodModel.nanoFifthGen.generationName, "iPod nano (5th gen)")
+        XCTAssertEqual(s.year, 2009)
+        XCTAssertEqual(s.material, .polishedAluminium)
+        XCTAssertEqual(s.body, IPodModel.nanoFourthGen.spec.body)
+        XCTAssertEqual(s.display.kind, .color)
+        XCTAssertEqual(s.display.windowSize, CGSize(width: 29.9, height: 46.8))
+        XCTAssertEqual(s.display.windowTop, 27.8 - 46.8 / 2, accuracy: 0.0001)
+        XCTAssertEqual(s.display.pixels, CGSize(width: 240, height: 376))
+        XCTAssertEqual(s.display.pixelPitch, 0.124)
+        XCTAssertEqual(s.display.designSize, CGSize(width: 180, height: 282))
+        XCTAssertEqual(s.controls.wheelDiameter, 27.1)
+        XCTAssertEqual(s.controls.buttonDiameter, 13.2)
+        XCTAssertEqual(s.controls.centerFromBottom, 20.0)
+        XCTAssertEqual(s.firmware.menuStyle, .classic)
+        XCTAssertEqual(s.firmware.visibleRows, 14)
+        XCTAssertEqual(s.firmware.holdMenu, .toggleBacklight)
+        XCTAssertTrue(s.firmware.backlight)
+        XCTAssertEqual(s.firmware.colours, .nanoFifthGen)
+    }
+
+    func testNanoFifthGenColours() {
+        let choice = ColourChoice.nanoFifthGen
+        XCTAssertEqual(choice.key, "nanoFifthGen")
+        XCTAssertEqual(choice.options.map(\.label),
+                       ["Silver", "Black", "Purple", "Blue", "Green", "Yellow", "Orange", "Pink", "(PRODUCT) RED"])
+        XCTAssertEqual(choice.options.map(\.body),
+                       [0xC9CBCE, 0x1F2022, 0x8E62B8, 0x4F93D6, 0x7FC24A, 0xF5D33C, 0xF28A2E, 0xEC6FA6, 0xC8202F])
+        for colour in choice.options {
+            let wheel: UInt32 = colour.id == "black" ? 0x18181A : 0xF2F2F0
+            XCTAssertEqual([colour.wheel, colour.button, colour.labels], [wheel, wheel, 0x8E9399], colour.label)
+        }
+    }
+
+    func testMaterialFlags() {
+        XCTAssertEqual([Material.aluminium.isMetal, Material.aluminium.isBrushed, Material.aluminium.showsGloss], [true, true, false])
+        XCTAssertEqual([Material.polishedAluminium.isMetal, Material.polishedAluminium.isBrushed,
+                        Material.polishedAluminium.showsGloss], [true, false, true])
+        for plastic in [Material.whitePlastic, .chromeAcrylic] {
+            XCTAssertEqual([plastic.isMetal, plastic.isBrushed, plastic.showsGloss], [false, false, true])
         }
     }
 }

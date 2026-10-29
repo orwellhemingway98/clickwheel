@@ -199,4 +199,13 @@ final class IPodGeometryTests: XCTestCase {
         XCTAssertEqual(g.lcdSize.width, 297.6, accuracy: 0.01)
         XCTAssertEqual(g.lcdSize.height, 396.8, accuracy: 0.01)
     }
+
+    func testNanoFifthGenGeometryAtTen() {
+        let g = IPodGeometry(model: .nanoFifthGen, pointsPerMM: 10)
+        XCTAssertEqual(g.windowTop, 44, accuracy: 0.01)
+        XCTAssertEqual(g.wheelDiameter, 271, accuracy: 0.01)
+        XCTAssertEqual(g.controlCenterY, 707, accuracy: 0.01)
+        XCTAssertEqual(g.lcdSize.width, 297.6, accuracy: 0.01)
+        XCTAssertEqual(g.lcdSize.height, 466.24, accuracy: 0.01)
+    }
 }

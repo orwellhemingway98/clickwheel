@@ -16,6 +16,7 @@ enum IPodModel: String, CaseIterable {
     case classic
     case nanoThirdGen
     case nanoFourthGen
+    case nanoFifthGen
 
     var shortName: String {
         switch self {
@@ -31,6 +32,7 @@ enum IPodModel: String, CaseIterable {
         case .classic: return "classic"
         case .nanoThirdGen: return "nano 3G"
         case .nanoFourthGen: return "nano 4G"
+        case .nanoFifthGen: return "nano 5G"
         case .fifthGen: return "5th gen"
         }
     }
@@ -50,6 +52,7 @@ enum IPodModel: String, CaseIterable {
         case .classic: return "iPod classic"
         case .nanoThirdGen: return "iPod nano (3rd gen)"
         case .nanoFourthGen: return "iPod nano (4th gen)"
+        case .nanoFifthGen: return "iPod nano (5th gen)"
         case .fifthGen: return "5th generation"
         }
     }
@@ -68,6 +71,7 @@ enum IPodModel: String, CaseIterable {
         case .classic: return .classic
         case .nanoThirdGen: return .nanoThirdGen
         case .nanoFourthGen: return .nanoFourthGen
+        case .nanoFifthGen: return .nanoFifthGen
         case .fifthGen: return .fifthGen
         }
     }
@@ -79,8 +83,17 @@ enum Material: Equatable {
     case chromeAcrylic
     /// "iBook white" plastic (1G–3G).
     case whitePlastic
-    /// Anodized aluminium in a chosen colour (mini).
+    /// Anodized aluminium in a chosen colour, brushed (mini, classic, nanos).
     case aluminium
+    /// Polished, glossy anodized aluminium (nano 5G).
+    case polishedAluminium
+
+    /// Drawn as an aluminium face (tinted, curved sides) rather than plastic.
+    var isMetal: Bool { self == .aluminium || self == .polishedAluminium }
+    /// Has the fine brushed grain.
+    var isBrushed: Bool { self == .aluminium }
+    /// Has the clear-front gloss sweeping across it.
+    var showsGloss: Bool { self != .aluminium }
 }
 
 struct ModelSpec: Equatable {
@@ -181,6 +194,16 @@ struct ColourChoice: Equatable {
         ("silver", "Silver", 0xC9CBCE), ("black", "Black", 0x1F2022), ("purple", "Purple", 0x9A7FC0),
         ("blue", "Blue", 0x6FA8DC), ("green", "Green", 0x9CCB6B), ("yellow", "Yellow", 0xF1D46A),
         ("orange", "Orange", 0xF3A25A), ("pink", "Pink", 0xEE9FC0), ("red", "(PRODUCT) RED", 0xC8202F),
+    ] as [(String, String, UInt32)]).map { id, label, body in
+        let wheel: UInt32 = id == "black" ? 0x18181A : 0xF2F2F0
+        return BodyColour(id: id, label: label, body: body, wheel: wheel, button: wheel, labels: 0x8E9399)
+    })
+
+    /// The nano 5G's polished colours, deeper than the 4G's; white wheels but black.
+    static let nanoFifthGen = ColourChoice(key: "nanoFifthGen", options: ([
+        ("silver", "Silver", 0xC9CBCE), ("black", "Black", 0x1F2022), ("purple", "Purple", 0x8E62B8),
+        ("blue", "Blue", 0x4F93D6), ("green", "Green", 0x7FC24A), ("yellow", "Yellow", 0xF5D33C),
+        ("orange", "Orange", 0xF28A2E), ("pink", "Pink", 0xEC6FA6), ("red", "(PRODUCT) RED", 0xC8202F),
     ] as [(String, String, UInt32)]).map { id, label, body in
         let wheel: UInt32 = id == "black" ? 0x18181A : 0xF2F2F0
         return BodyColour(id: id, label: label, body: body, wheel: wheel, button: wheel, labels: 0x8E9399)
@@ -512,4 +535,21 @@ extension ModelSpec {
         firmware: FirmwareProfile(menuStyle: .classic, holdMenu: .toggleBacklight, quickScroll: false,
                                   backlight: true, visibleRows: 12, colours: .nanoFourthGen),
         material: .aluminium)
+
+    /// iPod nano (5th generation), 2009: the 4G's outline in polished aluminium,
+    /// with a taller screen. Apple's drawing (docs/reference/ipod-nano-5g-dimensions.md).
+    static let nanoFifthGen = ModelSpec(
+        name: "iPod nano (5th generation)", year: 2009,
+        body: nanoFourthGen.body,
+        display: DisplaySpec(kind: .color,
+                             windowSize: CGSize(width: 29.9, height: 46.8),
+                             windowTop: 27.8 - 46.8 / 2,
+                             windowCornerRadius: 0.6,
+                             pixels: CGSize(width: 240, height: 376), pixelPitch: 0.124,
+                             designSize: CGSize(width: 180, height: 282)),
+        controls: ControlSpec(kind: .clickWheel, outerDiameter: 27.1, wheelDiameter: 27.1,
+                              buttonDiameter: 13.2, centerFromBottom: 20.0, sectorsPerStep: 6),
+        firmware: FirmwareProfile(menuStyle: .classic, holdMenu: .toggleBacklight, quickScroll: false,
+                                  backlight: true, visibleRows: 14, colours: .nanoFifthGen),
+        material: .polishedAluminium)
 }

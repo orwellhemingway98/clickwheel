@@ -41,7 +41,7 @@ struct IPodView: View {
             .position(x: g.bodySize.width / 2, y: g.windowTop + g.windowSize.height / 2)
             // One clear layer covers the white and the screen alike, so its gloss
             // runs across both. The wheel is a separate part on top.
-            if material != .aluminium {
+            if material.showsGloss {
                 gloss
                     .padding(g.rimWidth)
                     .allowsHitTesting(false)
@@ -64,7 +64,7 @@ struct IPodView: View {
     /// The white layer under the clear front, with a shadowed edge where it
     /// meets the chrome and a faint line where the white begins.
     @ViewBuilder private var face: some View {
-        if material == .aluminium { aluminiumFace } else { plasticFace }
+        if material.isMetal { aluminiumFace } else { plasticFace }
     }
 
     /// The mini's anodized tube: the chosen colour, a fine lengthwise grain, and
@@ -73,7 +73,7 @@ struct IPodView: View {
     private var aluminiumFace: some View {
         faceShape
             .fill(finish?.body ?? Theme.acrylic)
-            .overlay { BrushedTexture() }
+            .overlay { if material.isBrushed { BrushedTexture() } }
             .overlay {
                 HStack(spacing: 0) {
                     sideBand(leading: true)
