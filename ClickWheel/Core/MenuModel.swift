@@ -98,9 +98,6 @@ enum NavigationDirection: Equatable {
 /// Which rows of a list are on screen: like the iPod, the window only moves
 /// when the selection would leave it.
 enum MenuWindow {
-    /// Rows that fit on the screen below the header.
-    static let visibleRows = 9
-
     static func start(previous: Int, selected: Int, visible: Int, count: Int) -> Int {
         guard count > visible else { return 0 }
         var start = previous

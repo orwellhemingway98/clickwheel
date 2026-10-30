@@ -13,8 +13,8 @@
 **State** (`Core/CoverFlow.swift`, pure and tested):
 - `CoverFlowAlbum`: name, artist, `trackIDs`, `trackNames`; `artworkTrackID` = the first track.
 - `CoverFlowState`: `albums`, `loading`, `index`, `flipped`, `trackIndex`, `trackWindowStart`; `static let backRows = 6`.
-- `scroll(_ steps:)`: not flipped → `index` moves and clamps (and resets `trackIndex`/`trackWindowStart` to 0); flipped → `trackIndex` moves and clamps, `trackWindowStart` follows (`MenuWindow.start`, 6 rows).
-- `center() -> CoverFlowAction?`: not flipped → flips (`trackIndex` 0), returns nil; flipped → `.play(trackIDs:, startIndex:)`. Nothing while loading or empty.
+- `scroll(_ steps:)`: not flipped → `index` moves and clamps (`trackIndex`/`trackWindowStart` reset to 0 when the cover flips, not here); flipped → `trackIndex` moves and clamps, `trackWindowStart` follows (`MenuWindow.start`, 6 rows).
+- `center() -> CoverFlowAction?`: not flipped → flips (`trackIndex` and `trackWindowStart` 0), returns nil; flipped → `.play(trackIDs:, startIndex:)`. Nothing while loading or empty.
 - `menu() -> Bool`: flipped → flips back, returns true (handled); else false (the Navigator leaves).
 
 **Navigator.** Takes `coverFlow: CoverFlowSource?` (`albums() async throws -> [CoverFlowAlbum]`, `play(trackIDs:startIndex:) async throws`). Opening pushes a loading state, then fills it if it's still on top. Wheel steps are accelerated as in menus; each step clicks. Centre and MENU go to the state; a `.play` uses the existing play path (Now Playing follows). Every `switch` over `Screen` handles `.coverFlow`.
@@ -31,7 +31,7 @@
 - Only covers within 3 of the centre load artwork; placeholder grey with ♪.
 
 ## Plan (native, TDD)
-1. **State.** `CoverFlowState` tests (scroll clamp both ways, reset on album change, flip, play action, track window, menu unflip, loading/empty inert). Then the model.
+1. **State.** `CoverFlowState` tests (scroll clamp both ways, reset on flip, flip, play action, track window, menu unflip, loading/empty inert). Then the model.
 2. **Library.** `CoverArtCache` tests with a fake loader (caches, evicts beyond capacity, retries failures); `AppleMusicScripts.artwork(trackID:)` script text test. Then the code and `MusicLibrary.artwork`.
 3. **Navigator.** Tests with a fake source: Music has Cover Flow first on `.classic` only; opening loads albums; scroll/centre/MENU behave; picking plays and lands on Now Playing; MENU twice leaves. Then the Navigator and `AppModel` source.
 4. **View.** `CoverFlowLayout` tests; then `CoverFlowView`, ScreenView hides the header on Cover Flow.

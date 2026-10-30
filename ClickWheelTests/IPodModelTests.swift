@@ -185,7 +185,7 @@ final class IPodModelTests: XCTestCase {
         }
     }
 
-    func testOnlyTheU2FrontIsDark() {
+    func testU2IsTheOnlyDarkFourthGenAndNoMiniIsDark() {
         XCTAssertTrue(ColourChoice.fourthGen.option("u2")!.isDark)
         XCTAssertFalse(ColourChoice.fourthGen.option("white")!.isDark)
         XCTAssertFalse(ColourChoice.mini.options.contains { $0.isDark })

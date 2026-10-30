@@ -21,7 +21,7 @@ Silver `#C9CBCE`, Black `#1F2022`, Purple `#9A7FC0`, Blue `#6FA8DC`, Green `#9CC
 **Portrait.**
 - Colour menu lists show the model's `visibleRows` (was a fixed 9; every existing colour model has 9).
 - The classic split screen only on landscape canvases (`ClassicLayout.splits(canvas:)`).
-- `NowPlayingLayout(canvas:)`: landscape returns today's positions (art 11, 46, 72 × 72; info at 90, 52, leading, width w − 98; bar 15, 137, w − 30 × 11). Portrait: art 96 × 96 centred at y 30; info centred, x 8, width w − 16, first line at y 146; bar 15, 196, w − 30 × 11.
+- `NowPlayingLayout(canvas:)`: landscape returns today's positions (art 11, 46, 72 × 72; info at 90, 52, leading, width w − 98; bar 15, 137, w − 30 × 11). Portrait (as built): the counter centred on its own row at y 22; art a square of side min(h − 160, w − 16), centred, at y 42 (80 on the nano 4G, 122 on the 5G); info centred, x 8, width w − 16, first line at art bottom + 18; bar 15, h − 34, w − 30 × 11.
 
 Cover Flow on rotation is out of scope (no tilt sensor).
 

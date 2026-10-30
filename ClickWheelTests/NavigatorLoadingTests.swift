@@ -140,12 +140,12 @@ final class NavigatorLoadingTests: XCTestCase {
         items[12] = MenuItem("Song", action: .play {})
         let nav = navigator(items)
         nav.handle(.scroll(steps: 12))
-        XCTAssertEqual(menu(nav)?.windowStart, 12 - MenuWindow.visibleRows + 1)
+        XCTAssertEqual(menu(nav)?.windowStart, 12 - IPodModel.fifthGen.spec.firmware.visibleRows + 1)
         nav.handle(.center)
         await nav.lastTask?.value
         nav.handle(.menu)
         XCTAssertEqual(menu(nav)?.selectedIndex, 12)
-        XCTAssertEqual(menu(nav)?.windowStart, 12 - MenuWindow.visibleRows + 1)
+        XCTAssertEqual(menu(nav)?.windowStart, 12 - IPodModel.fifthGen.spec.firmware.visibleRows + 1)
     }
 
     func testSelectionStartsOnFirstSelectableRow() {

@@ -81,8 +81,10 @@ final class NavigatorFirstGenTests: XCTestCase {
         XCTAssertTrue(menu(nav)?.items.first?.opensSubmenu == true)
         nav.handle(.center)
         XCTAssertEqual(menu(nav)?.title, "Model")
-        XCTAssertEqual(menu(nav)?.items.map(\.label), ["1st generation", "2nd generation", "3rd generation", "iPod mini", "4th generation", "iPod photo", "iPod mini (2nd gen)", "iPod nano", "5th generation", "iPod nano (2nd gen)", "iPod classic", "iPod nano (3rd gen)", "iPod nano (4th gen)", "iPod nano (5th gen)"])
-        XCTAssertEqual(menu(nav)?.items.map { $0.detail() }, ["✓ 2001", "2002", "2003", "2004", "2004", "2004", "2005", "2005", "2005", "2006", "2007", "2007", "2008", "2009"])
+        // One row per model, in release order (IPodModelTests pins that order).
+        XCTAssertEqual(menu(nav)?.items.map(\.label), IPodModel.allCases.map(\.generationName))
+        XCTAssertEqual(menu(nav)?.items.map { $0.detail() },
+                       IPodModel.allCases.map { ($0 == .firstGen ? "✓ " : "") + String($0.spec.year) })
         XCTAssertEqual(menu(nav)?.selectedIndex, 0)
     }
 
