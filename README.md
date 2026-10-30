@@ -69,6 +69,18 @@ Choose the iPod from the list in **Settings › Model** (the current one is tick
 
 That completes the click-wheel timeline, from the 2001 original to the 2009 nano.
 
+## Download
+
+Get **ClickWheel.zip** from the [latest release](https://github.com/orwellhemingway98/clickwheel/releases/latest),
+unzip it and move **ClickWheel.app** to Applications. It runs on macOS 14 or later,
+on Apple Silicon and Intel Macs.
+
+ClickWheel isn't notarized by Apple (that needs a paid developer account), so the
+first time you open it macOS says it can't check it for malicious software.
+Right-click the app and choose **Open**, then **Open** again; or open it once, then
+go to System Settings → Privacy & Security and click **Open Anyway**. After that it
+opens normally.
+
 ## Build
 
 Requires macOS 14+, Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
@@ -79,7 +91,8 @@ xcodegen generate
 open ClickWheel.xcodeproj   # then Run
 ```
 
-Run the tests with `./scripts/test.sh`.
+Run the tests with `./scripts/test.sh`. `./scripts/release.sh` builds the
+downloadable zip into `releases/`.
 
 The first time ClickWheel talks to Music or Spotify, macOS asks for permission
 to control it. Click **Allow**. You can change this later in
@@ -91,6 +104,7 @@ System Settings → Privacy & Security → Automation.
 2. ✅ Apple Music library menus (Playlists, Artists, Albums, Songs)
    - ✅ Every click-wheel iPod, 2001–2009, life size (Settings › Model)
    - ✅ Cover Flow
+   - ✅ Downloadable app (GitHub Releases)
 3. Spotify library menus (via the Spotify Web API)
 4. Extras: alternate skins, more settings
 
