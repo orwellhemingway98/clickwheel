@@ -8,7 +8,7 @@ import ImageIO
 @MainActor
 final class CoverArtCache: ObservableObject {
     /// Plenty for a cover drawn at most ~130 points wide at 2×.
-    static let maxPixels = 400
+    nonisolated static let maxPixels = 400
 
     private let capacity: Int
     private let load: (String) async -> Data?
