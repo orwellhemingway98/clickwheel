@@ -71,7 +71,7 @@ That completes the click-wheel timeline, from the 2001 original to the 2009 nano
 
 ## Download
 
-Get **ClickWheel.zip** from the [latest release](https://github.com/orwellhemingway98/clickwheel/releases/latest),
+Get the **ClickWheel** zip from the [latest release](https://github.com/orwellhemingway98/clickwheel/releases/latest),
 unzip it and move **ClickWheel.app** to Applications. It runs on macOS 14 or later,
 on Apple Silicon and Intel Macs.
 
