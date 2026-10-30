@@ -94,19 +94,16 @@ struct CoverFlowView: View {
         return ForEach(Array(range), id: \.self) { i in
             let d = i - state.index
             let move = layout.transform(offset: d)
-            let cover = CoverImage(album: state.albums[i], side: layout.side, load: abs(d) <= CoverFlowLayout.loaded)
-            Group {
-                if d == 0 {
-                    // The middle cover turns over to its songs.
-                    FlipCard(angle: state.flipped ? 180 : 0, front: cover,
-                             back: CoverBack(album: state.albums[i], state: state, side: layout.card))
-                        .animation(.easeInOut(duration: 0.4), value: state.flipped)
-                } else {
-                    cover.rotation3DEffect(.degrees(move.rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
-                }
-            }
-            .position(x: layout.centre.x + move.x, y: layout.centre.y)
-            .zIndex(d == 0 && state.flipped ? CoverFlowLayout.textZ + 1 : move.z)
+            // Every cover is built the same way, so one sliding into the middle
+            // keeps turning rather than being swapped for a new view.
+            FlipCard(angle: d == 0 && state.flipped ? 180 : 0,
+                     front: CoverImage(album: state.albums[i], side: layout.side, load: abs(d) <= CoverFlowLayout.loaded),
+                     back: CoverBack(album: state.albums[i], state: state, side: layout.card))
+                .animation(.easeInOut(duration: 0.4), value: state.flipped)
+                .rotation3DEffect(.degrees(move.rotation), axis: (x: 0, y: 1, z: 0), perspective: 0.6)
+                .position(x: layout.centre.x + move.x, y: layout.centre.y)
+                // The middle cover stays above the text for the whole turn.
+                .zIndex(d == 0 ? CoverFlowLayout.textZ + 1 : move.z)
         }
     }
 }
