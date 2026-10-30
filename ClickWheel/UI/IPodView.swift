@@ -7,6 +7,7 @@ struct IPodView: View {
     var includesWindowControls = true
 
     @Environment(\.ipodGeometry) private var g
+    @Environment(\.appMenu) private var appMenu
     @EnvironmentObject private var navigator: Navigator
     @EnvironmentObject private var settings: AppSettings
     @EnvironmentObject private var hub: PlayerHub
@@ -30,7 +31,7 @@ struct IPodView: View {
                 .padding(g.rimWidth)
                 .overlay {
                     if includesWindowControls {
-                        WindowDragArea(keepOnTop: settings.keepOnTop) { settings.keepOnTop.toggle() }
+                        WindowDragArea(menu: appMenu)
                             .clipShape(RoundedRectangle(cornerRadius: g.cornerRadius))
                     }
                 }

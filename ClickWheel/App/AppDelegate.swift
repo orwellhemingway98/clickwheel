@@ -5,6 +5,8 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var model: AppModel?
     private var window: FloatingWindow?
+    private var menuController: AppMenuController?
+    private var statusItem: NSStatusItem?
     private var keyMonitor: Any?
     private var trackpadMonitor: Any?
     private var cancellables: Set<AnyCancellable> = []
@@ -15,10 +17,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let model = AppModel()
         self.model = model
 
-        let root = model.rootView().padding(Self.shadowMargin)
-        let host = NSHostingView(rootView: root)
+        let host = NSHostingView(rootView: AnyView(EmptyView()))
         let window = FloatingWindow(contentView: host, size: windowSize(for: model.display.geometry))
         self.window = window
+        let menuController = AppMenuController(window: window, settings: model.settings,
+                                               loginItem: MainAppLoginItem(),
+                                               onError: { NSAlert(error: $0).runModal() })
+        self.menuController = menuController
+        host.rootView = AnyView(model.rootView()
+            .environment(\.appMenu) { [weak menuController] in menuController?.menu() }
+            .padding(Self.shadowMargin))
+
+        // The menu bar icon: show or hide the iPod, and the app's options.
+        let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        statusItem.button?.image = StatusIcon.image()
+        statusItem.button?.toolTip = "ClickWheel"
+        let statusMenu = NSMenu()
+        statusMenu.delegate = menuController
+        statusItem.menu = statusMenu
+        self.statusItem = statusItem
 
         // Stay life size: re-measure whenever the window lands on another display.
         model.display.update(for: window.screen)
@@ -89,5 +106,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                height: geometry.bodySize.height + Self.shadowMargin * 2)
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    // No applicationShouldTerminateAfterLastWindowClosed: hiding the iPod
+    // (menu bar icon › Hide) leaves no visible window, and that must not quit.
+
+    /// Clicking the Dock icon brings a hidden iPod back.
+    @MainActor
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        menuController?.showWindow()
+        return false
+    }
 }

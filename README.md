@@ -39,7 +39,10 @@ whichever one is playing.
   as covers with reflections. Turn the wheel to flip through them; press the centre
   to turn a cover over to its songs, and again to play one. MENU turns it back.
 - **Settings**: source (Auto / Apple Music / Spotify), clicker on/off.
-- Borderless floating window: drag it anywhere; right-click for **Keep on Top** or **Quit**.
+- Borderless floating window: drag it anywhere, and it reopens where you left it.
+- **Menu bar icon** (a little iPod): **Show/Hide ClickWheel**, **Keep on Top**,
+  **Launch at Login** and **Quit**. Right-click the iPod for the same menu; clicking
+  the Dock icon also brings a hidden iPod back.
 
 Albums, artists, Songs and Shuffle Songs play through a playlist named
 **ClickWheel**, which ClickWheel creates in your Music library and refills each

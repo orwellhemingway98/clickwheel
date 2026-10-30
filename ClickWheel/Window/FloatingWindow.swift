@@ -35,37 +35,35 @@ final class FloatingWindow: NSWindow {
 }
 
 /// Sits behind the iPod body: dragging it moves the window, right-clicking
-/// shows the Keep on Top / Quit menu.
+/// shows the app menu (the same one as the menu bar icon's).
 struct WindowDragArea: NSViewRepresentable {
-    let keepOnTop: Bool
-    let toggleKeepOnTop: () -> Void
+    let menu: () -> NSMenu?
 
     func makeNSView(context: Context) -> DragView { DragView() }
 
     func updateNSView(_ view: DragView, context: Context) {
-        view.keepOnTop = keepOnTop
-        view.toggleKeepOnTop = toggleKeepOnTop
+        view.makeMenu = menu
     }
 
     final class DragView: NSView {
-        var keepOnTop = false
-        var toggleKeepOnTop: () -> Void = {}
+        var makeMenu: () -> NSMenu? = { nil }
 
         override func mouseDown(with event: NSEvent) {
             window?.performDrag(with: event)
         }
 
-        override func menu(for event: NSEvent) -> NSMenu? {
-            let menu = NSMenu()
-            let top = NSMenuItem(title: "Keep on Top", action: #selector(toggleTop), keyEquivalent: "")
-            top.target = self
-            top.state = keepOnTop ? .on : .off
-            menu.addItem(top)
-            menu.addItem(.separator())
-            menu.addItem(NSMenuItem(title: "Quit ClickWheel", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
-            return menu
-        }
+        override func menu(for event: NSEvent) -> NSMenu? { makeMenu() }
+    }
+}
 
-        @objc private func toggleTop() { toggleKeepOnTop() }
+private struct AppMenuKey: EnvironmentKey {
+    static let defaultValue: () -> NSMenu? = { nil }
+}
+
+extension EnvironmentValues {
+    /// Builds the app menu for a right-click on the iPod.
+    var appMenu: () -> NSMenu? {
+        get { self[AppMenuKey.self] }
+        set { self[AppMenuKey.self] = newValue }
     }
 }
