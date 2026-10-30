@@ -66,7 +66,9 @@ protocol LoginItem: AnyObject {
 
 /// The app itself as a login item (System Settings › General › Login Items).
 final class MainAppLoginItem: LoginItem {
-    var isEnabled: Bool { SMAppService.mainApp.status == .enabled }
+    /// Waiting for approval in System Settings counts as on, so choosing it
+    /// again turns it off.
+    var isEnabled: Bool { [.enabled, .requiresApproval].contains(SMAppService.mainApp.status) }
 
     func setEnabled(_ on: Bool) throws {
         if on {
@@ -87,13 +89,16 @@ final class AppMenuController: NSObject, NSMenuDelegate {
     private let settings: AppSettings
     private let loginItem: LoginItem
     private let onError: (Error) -> Void
+    private let hideApp: () -> Void
 
     init(window: NSWindow, settings: AppSettings, loginItem: LoginItem,
-         onError: @escaping (Error) -> Void) {
+         onError: @escaping (Error) -> Void,
+         hideApp: @escaping () -> Void = { NSApp.hide(nil) }) {
         self.window = window
         self.settings = settings
         self.loginItem = loginItem
         self.onError = onError
+        self.hideApp = hideApp
     }
 
     var state: AppMenuState {
@@ -112,11 +117,19 @@ final class AppMenuController: NSObject, NSMenuDelegate {
     }
 
     func showWindow() {
+        // A hidden app asking politely (`activate()`) is refused from the menu
+        // bar icon, so the iPod would come back without the keyboard.
+        NSApp.unhide(nil)
         window.makeKeyAndOrderFront(nil)
-        NSApp.activate()
+        NSApp.activate(ignoringOtherApps: true)
     }
 
-    private func hideWindow() { window.orderOut(nil) }
+    /// Hides the iPod and the app with it, so the keyboard goes back to the
+    /// app you were using rather than steering music with nothing on screen.
+    private func hideWindow() {
+        window.orderOut(nil)
+        hideApp()
+    }
 
     func menu() -> NSMenu {
         let menu = NSMenu()

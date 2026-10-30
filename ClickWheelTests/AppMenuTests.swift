@@ -76,6 +76,7 @@ final class AppMenuControllerTests: XCTestCase {
     private var window: NSWindow!
     private var login: FakeLoginItem!
     private var errors: [Error] = []
+    private var appHides = 0
 
     override func setUp() {
         let defaults = UserDefaults(suiteName: "AppMenuControllerTests")!
@@ -86,13 +87,15 @@ final class AppMenuControllerTests: XCTestCase {
         window.isReleasedWhenClosed = false
         login = FakeLoginItem()
         errors = []
+        appHides = 0
     }
 
     override func tearDown() { window.orderOut(nil) }
 
     private func controller() -> AppMenuController {
         AppMenuController(window: window, settings: settings, loginItem: login,
-                          onError: { [unowned self] in self.errors.append($0) })
+                          onError: { [unowned self] in self.errors.append($0) },
+                          hideApp: { [unowned self] in self.appHides += 1 })
     }
 
     func testStateReadsTheWindowSettingsAndLoginItem() {
@@ -108,6 +111,7 @@ final class AppMenuControllerTests: XCTestCase {
         window.orderFront(nil)
         c.perform(.toggleWindow)
         XCTAssertFalse(window.isVisible)
+        XCTAssertEqual(appHides, 1, "hiding hands the keyboard back to the previous app")
         c.perform(.toggleWindow)
         XCTAssertTrue(window.isVisible)
     }

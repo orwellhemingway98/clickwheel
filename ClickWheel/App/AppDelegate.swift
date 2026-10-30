@@ -22,20 +22,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.window = window
         let menuController = AppMenuController(window: window, settings: model.settings,
                                                loginItem: MainAppLoginItem(),
-                                               onError: { NSAlert(error: $0).runModal() })
+                                               onError: { error in
+                                                   // Menu bar choices don't bring the app forward.
+                                                   NSApp.activate()
+                                                   NSAlert(error: error).runModal()
+                                               })
         self.menuController = menuController
         host.rootView = AnyView(model.rootView()
             .environment(\.appMenu) { [weak menuController] in menuController?.menu() }
             .padding(Self.shadowMargin))
 
         // The menu bar icon: show or hide the iPod, and the app's options.
-        let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = StatusIcon.image()
-        statusItem.button?.toolTip = "ClickWheel"
-        let statusMenu = NSMenu()
-        statusMenu.delegate = menuController
-        statusItem.menu = statusMenu
-        self.statusItem = statusItem
+        // Snapshot renders quit straight away and don't need one.
+        if !CommandLine.arguments.contains("--snapshot") {
+            let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+            statusItem.button?.image = StatusIcon.image()
+            statusItem.button?.toolTip = "ClickWheel"
+            let statusMenu = NSMenu()
+            statusMenu.delegate = menuController
+            statusItem.menu = statusMenu
+            self.statusItem = statusItem
+        }
 
         // Stay life size: re-measure whenever the window lands on another display.
         model.display.update(for: window.screen)
@@ -75,8 +82,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return nil
         }
 
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak model] event in
-            guard let model else { return event }
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak model, weak window] event in
+            // Only while the iPod has the keyboard: not hidden, not behind an alert.
+            guard let model, let window, window.isKeyWindow else { return event }
             // Key-ups always count, even with ⌘ held, so a hold can't get stuck;
             // key-downs with modifiers belong to menu shortcuts.
             if event.type == .keyDown, !event.modifierFlags.intersection([.command, .control, .option]).isEmpty {
