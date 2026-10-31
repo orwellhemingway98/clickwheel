@@ -1,5 +1,7 @@
 *.xcodeproj/
 build/
+# Build output; .noindex keeps the built apps out of Spotlight.
+build.noindex/
 DerivedData/
 .DS_Store
 xcuserdata/
